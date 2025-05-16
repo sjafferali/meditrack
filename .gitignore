@@ -175,3 +175,8 @@ cython_debug/
 
 # Claude
 .claude/
+
+# Node modules
+node_modules/
+frontend/node_modules/
+
