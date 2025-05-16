@@ -79,9 +79,7 @@ def get_medication(medication_id: int, db: Session = Depends(get_db)):
 
     doses_today = (
         db.query(Dose)
-        .filter(
-            and_(Dose.medication_id == medication.id, Dose.taken_at >= today_start)
-        )
+        .filter(and_(Dose.medication_id == medication.id, Dose.taken_at >= today_start))
         .all()
     )
 

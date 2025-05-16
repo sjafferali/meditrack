@@ -31,9 +31,7 @@ def record_dose(medication_id: int, db: Session = Depends(get_db)):
 
     doses_today = (
         db.query(Dose)
-        .filter(
-            and_(Dose.medication_id == medication_id, Dose.taken_at >= today_start)
-        )
+        .filter(and_(Dose.medication_id == medication_id, Dose.taken_at >= today_start))
         .count()
     )
 
