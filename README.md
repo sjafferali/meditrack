@@ -15,7 +15,7 @@ A web application for tracking daily medication doses, built with FastAPI (backe
 
 ## Tech Stack
 
-- **Backend**: FastAPI, SQLAlchemy, SQLite, Alembic
+- **Backend**: FastAPI, SQLAlchemy, SQLite, Alembic (migrations)
 - **Frontend**: React, Axios
 - **Testing**: pytest, Jest
 - **Deployment**: Docker, Docker Compose
@@ -54,8 +54,7 @@ cd backend
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
-alembic upgrade head
-python scripts/seed_data.py  # Optional: Add sample data
+alembic upgrade head  # Apply database migrations
 uvicorn app.main:app --reload
 ```
 
@@ -126,6 +125,21 @@ For detailed Docker deployment instructions, see [DOCKER_GUIDE.md](DOCKER_GUIDE.
 - `GET /api/v1/doses/medications/{id}/doses` - Get dose history
 - `GET /api/v1/doses/daily-summary` - Get daily summary
 
+## Database Migrations
+
+### Apply migrations
+```bash
+cd backend
+alembic upgrade head
+```
+
+### Create new migration
+```bash
+alembic revision --autogenerate -m "description"
+```
+
+For detailed migration instructions, see [Migration Guide](backend/MIGRATIONS.md).
+
 ## Testing
 
 ### Backend Tests
@@ -182,6 +196,7 @@ meditrack/
 - [Development Guide](DEVELOPMENT.md) - Detailed development setup
 - [Docker Guide](DOCKER_GUIDE.md) - Docker deployment instructions
 - [Deployment Guide](DEPLOYMENT.md) - Production deployment options
+- [Migration Guide](backend/MIGRATIONS.md) - Database migration instructions
 
 ## Contributing
 
