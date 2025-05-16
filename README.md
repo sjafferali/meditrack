@@ -203,6 +203,27 @@ meditrack/
 - [Deployment Guide](DEPLOYMENT.md) - Production deployment options
 - [Migration Guide](backend/MIGRATIONS.md) - Database migration instructions
 
+## GitHub Secrets Required
+
+To run the CI/CD pipeline successfully, add these secrets to your GitHub repository:
+
+1. **CODECOV_TOKEN** - Token for uploading coverage reports
+   - Get your token from [codecov.io](https://codecov.io/)
+   - Add it at: Settings → Secrets and variables → Actions → New repository secret
+
+2. **DOCKER_USERNAME** - Docker Hub username
+   - Your Docker Hub username for pushing images
+
+3. **DOCKER_PASSWORD** - Docker Hub password or access token
+   - Create an access token at [hub.docker.com](https://hub.docker.com/)
+   - Use the token instead of your password for better security
+
+To add secrets:
+1. Go to your repository on GitHub
+2. Click on Settings → Secrets and variables → Actions
+3. Click "New repository secret"
+4. Add each secret with the exact name as listed above
+
 ## Contributing
 
 1. Create a feature branch
