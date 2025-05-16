@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.endpoints import medications, doses
+from app.api.endpoints import doses, medications
 
 api_router = APIRouter()
 

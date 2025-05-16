@@ -1,8 +1,9 @@
+from datetime import datetime, timedelta, timezone
+
 import pytest
-from datetime import datetime, timezone, timedelta
 from sqlalchemy.orm import Session
 
-from app.models import Medication, Dose
+from app.models import Dose, Medication
 
 
 class TestDoses:

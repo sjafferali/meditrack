@@ -1,19 +1,20 @@
-from logging.config import fileConfig
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
-from alembic import context
 import os
 import sys
+from logging.config import fileConfig
 from pathlib import Path
+
+from sqlalchemy import engine_from_config, pool
+
+from alembic import context
 
 # Add parent directory to path to import app
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from app.db.base import Base
 from app.core.config import settings
+from app.db.base import Base
 
 # Import all models to ensure they're registered with Base.metadata
-from app.models import medication, dose
+from app.models import dose, medication
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

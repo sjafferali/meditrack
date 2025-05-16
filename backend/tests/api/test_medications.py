@@ -1,5 +1,6 @@
-import pytest
 from datetime import datetime, timezone
+
+import pytest
 from sqlalchemy.orm import Session
 
 from app.models import Medication

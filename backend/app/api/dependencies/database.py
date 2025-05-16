@@ -1,5 +1,7 @@
 from typing import Generator
+
 from sqlalchemy.orm import Session
+
 from app.db.session import SessionLocal
 
 

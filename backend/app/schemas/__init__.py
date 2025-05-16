@@ -1,10 +1,10 @@
+from .dose import DoseCreate, DoseInDB
 from .medication import (
     MedicationCreate,
-    MedicationUpdate,
     MedicationInDB,
+    MedicationUpdate,
     MedicationWithDoses,
 )
-from .dose import DoseCreate, DoseInDB
 
 __all__ = [
     "MedicationCreate",

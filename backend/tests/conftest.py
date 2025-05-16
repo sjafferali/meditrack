@@ -1,15 +1,16 @@
-import pytest
 from typing import Generator
+
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from app.api.dependencies.database import get_db
 from app.db.base import Base
 from app.db.session import SessionLocal
 from app.main import app
-from app.api.dependencies.database import get_db
-from app.models import Medication, Dose
+from app.models import Dose, Medication
 
 # Create test database
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"

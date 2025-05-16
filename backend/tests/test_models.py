@@ -1,8 +1,9 @@
-import pytest
 from datetime import datetime, timezone
+
+import pytest
 from sqlalchemy.exc import IntegrityError
 
-from app.models import Medication, Dose
+from app.models import Dose, Medication
 
 
 class TestMedicationModel:

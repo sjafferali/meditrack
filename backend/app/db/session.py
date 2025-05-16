@@ -1,10 +1,10 @@
+# Create database directory if it doesn't exist
+import os
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.core.config import settings
-
-# Create database directory if it doesn't exist
-import os
 
 db_path = settings.DATABASE_URL.replace("sqlite:///", "")
 os.makedirs(os.path.dirname(db_path), exist_ok=True)
