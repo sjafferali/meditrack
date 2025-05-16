@@ -1,5 +1,5 @@
 # Build stage
-FROM node:16-alpine as build
+FROM node:16-alpine AS build
 
 # Set working directory
 WORKDIR /app
@@ -7,8 +7,8 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install all dependencies (including dev dependencies for building)
+RUN npm ci --legacy-peer-deps
 
 # Copy application code
 COPY . .
