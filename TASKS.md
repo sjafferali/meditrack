@@ -43,23 +43,23 @@
 ## Frontend Integration
 
 ### API Client
-- [ ] Create API client service in React
-- [ ] Implement medication CRUD operations
-- [ ] Implement dose tracking operations
-- [ ] Add error handling for API calls
+- [✅] Create API client service in React
+- [✅] Implement medication CRUD operations
+- [✅] Implement dose tracking operations
+- [✅] Add error handling for API calls
 
 ### State Management
-- [ ] Replace static state with API data
-- [ ] Implement loading states
-- [ ] Add error states for failed requests
+- [✅] Replace static state with API data
+- [✅] Implement loading states
+- [✅] Add error states for failed requests
 - [ ] Cache management for offline capability
 
 ### UI Updates
-- [ ] Connect medication list to API
-- [ ] Connect "Take Now" button to dose endpoint
-- [ ] Add medication creation form
-- [ ] Add medication edit/delete functionality
-- [ ] Display real-time dose counts
+- [✅] Connect medication list to API
+- [✅] Connect "Take Now" button to dose endpoint
+- [✅] Add medication creation form
+- [✅] Add medication edit/delete functionality
+- [✅] Display real-time dose counts
 
 ---
 
@@ -99,23 +99,23 @@
 - [✅] Document environment variables
 
 ### Frontend Setup
-- [ ] Update package.json with scripts
-- [ ] Configure proxy for API calls
-- [ ] Add development server command
-- [ ] Document environment variables
+- [✅] Update package.json with scripts
+- [✅] Configure proxy for API calls
+- [✅] Add development server command
+- [✅] Document environment variables
 
 ---
 
 ## MVP Feature Checklist
 
 ### Must Have
-- [ ] View list of medications
-- [ ] Track daily doses taken
-- [ ] Enforce maximum daily doses
-- [ ] Record dose timestamps
-- [ ] Display last taken time
-- [ ] Add new medications
-- [ ] Basic data persistence
+- [✅] View list of medications
+- [✅] Track daily doses taken
+- [✅] Enforce maximum daily doses
+- [✅] Record dose timestamps
+- [✅] Display last taken time
+- [✅] Add new medications
+- [✅] Basic data persistence
 
 ### Out of Scope for MVP
 - ❌ User authentication
