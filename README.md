@@ -1,127 +1,134 @@
-# MediTrack - Medication Tracker
+# MediTrack 💊
 
 [![CI Pipeline](https://github.com/sjafferali/meditrack/actions/workflows/ci.yml/badge.svg)](https://github.com/sjafferali/meditrack/actions/workflows/ci.yml)
 [![Security Scan](https://github.com/sjafferali/meditrack/actions/workflows/security.yml/badge.svg)](https://github.com/sjafferali/meditrack/actions/workflows/security.yml)
 [![codecov](https://codecov.io/gh/sjafferali/meditrack/branch/main/graph/badge.svg)](https://codecov.io/gh/sjafferali/meditrack)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A web application for tracking daily medication doses, built with FastAPI (backend) and React (frontend).
+MediTrack is a modern medication tracking application that helps users manage their daily medication schedules and maintain adherence to their prescribed regimens. Built with FastAPI and React, it provides a clean, intuitive interface for medication management with robust API support.
 
-## Features
+## 🌟 Features
 
-- ✅ View and manage medications
-- ✅ Track daily doses with automatic counting
-- ✅ Enforce maximum daily dose limits
-- ✅ Record dose timestamps
-- ✅ Display last taken time
-- ✅ Add, edit, and delete medications
-- ✅ Real-time dose count updates
-- ✅ Data persistence with SQLite
+- **Medication Management**: Add, edit, and delete medications with detailed information
+- **Dose Tracking**: Record when medications are taken with automatic daily limit enforcement
+- **Daily Summary**: View comprehensive daily medication status and history
+- **Real-time Updates**: Instant UI updates when doses are recorded
+- **Progress Tracking**: Visual progress bars showing daily dose completion
+- **Data Persistence**: Reliable SQLite database with migration support
+- **RESTful API**: Full-featured API with automatic documentation
+- **Responsive Design**: Works seamlessly on desktop and mobile devices
+- **Security First**: Regular vulnerability scanning and security best practices
 
-## Tech Stack
+## 🚀 Quick Start
 
-- **Backend**: FastAPI, SQLAlchemy, SQLite, Alembic (migrations)
-- **Frontend**: React, Axios
-- **Testing**: pytest, Jest
-- **Deployment**: Docker, Docker Compose
+### Prerequisites
 
-## Quick Start
+- Python 3.11+
+- Node.js 18+
+- Docker (optional)
+- Git
 
 ### Using Docker (Recommended)
 
-1. Clone the repository:
 ```bash
+# Clone the repository
 git clone https://github.com/sjafferali/meditrack.git
 cd meditrack
-```
 
-2. Start with Docker Compose:
-```bash
+# Start with Docker Compose
 docker compose up
-```
 
-3. Access the application:
-   - Frontend: http://localhost:3000
-   - API Documentation: http://localhost:8000/docs
+# Access the application
+# Frontend: http://localhost:3000
+# API Docs: http://localhost:8000/docs
+```
 
 ### Manual Installation
 
-#### Prerequisites
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/sjafferali/meditrack.git
+   cd meditrack
+   ```
 
-- Python 3.9+
-- Node.js 16+
-- npm or yarn
+2. **Set up the backend**:
+   ```bash
+   cd backend
+   python3 -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   pip install -r requirements.txt
+   
+   # Set up the database
+   alembic upgrade head
+   
+   # Run the backend server
+   uvicorn app.main:app --reload
+   ```
 
-#### Backend Setup
+3. **Set up the frontend** (in a new terminal):
+   ```bash
+   cd frontend
+   npm install
+   npm start
+   ```
 
-```bash
-cd backend
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
-alembic upgrade head  # Apply database migrations
-uvicorn app.main:app --reload
-```
+4. **Access the application**:
+   - Frontend: http://localhost:3000
+   - API Documentation: http://localhost:8000/docs
+   - Alternative API Docs: http://localhost:8000/redoc
 
-#### Frontend Setup
-
-```bash
-cd frontend
-npm install
-npm start
-```
-
-#### Start Both Servers
-
-```bash
-./start_dev.sh
-```
-
-## Docker Deployment
-
-### Development
-
-```bash
-docker compose up --build
-```
-
-### Production
-
-```bash
-# Build production images
-./build_images.sh
-
-# Run with production config
-docker compose -f docker-compose.prod.yml up -d
-```
-
-For detailed Docker deployment instructions, see [DOCKER_GUIDE.md](DOCKER_GUIDE.md).
-
-## Usage
-
-1. Access the frontend at http://localhost:3000
-2. API documentation is available at http://localhost:8000/docs
+## 📱 Usage
 
 ### Managing Medications
 
-- Click "Add Medication" to create a new medication
-- Click "Edit" to modify medication details
-- Click "Delete" to remove a medication (with confirmation)
-- Click "Take Now" to record a dose
+1. **Add a Medication**: Click "Add Medication" and fill in the details
+2. **Edit Medication**: Click "Edit" on any medication card to modify details
+3. **Delete Medication**: Click "Delete" to remove (with confirmation)
+4. **Record a Dose**: Click "Take Now" to record taking a medication
 
-### Tracking Doses
+### Tracking Your Doses
 
-- The app displays how many doses have been taken today
-- A progress bar shows daily dose completion
-- The "Take Now" button is disabled when the daily limit is reached
-- Last taken time is displayed for each medication
+- View daily dose count for each medication
+- Progress bars show completion towards daily limits
+- "Take Now" button disables when daily limit is reached
+- Last taken time displayed for each medication
+- Daily summary available through the API
 
-## API Endpoints
+## 🏗️ Architecture
+
+```
+meditrack/
+├── backend/              # FastAPI backend
+│   ├── app/             # Application code
+│   │   ├── api/         # API endpoints
+│   │   ├── core/        # Core configurations
+│   │   ├── db/          # Database configurations
+│   │   ├── models/      # SQLAlchemy models
+│   │   ├── schemas/     # Pydantic schemas
+│   │   └── services/    # Business logic
+│   ├── tests/           # Backend tests
+│   ├── alembic/         # Database migrations
+│   └── requirements.txt # Python dependencies
+│
+├── frontend/            # React frontend
+│   ├── src/
+│   │   ├── components/  # React components
+│   │   ├── services/    # API services
+│   │   └── __tests__/   # Frontend tests
+│   ├── public/          # Static assets
+│   └── package.json     # Node dependencies
+│
+├── .github/workflows/   # CI/CD configurations
+├── docker-compose.yml   # Docker orchestration
+└── docs/               # Documentation
+```
+
+## 🔌 API Endpoints
 
 ### Medications
 - `GET /api/v1/medications/` - List all medications
-- `POST /api/v1/medications/` - Create new medication
-- `GET /api/v1/medications/{id}` - Get medication details
+- `POST /api/v1/medications/` - Create a new medication
+- `GET /api/v1/medications/{id}` - Get specific medication
 - `PUT /api/v1/medications/{id}` - Update medication
 - `DELETE /api/v1/medications/{id}` - Delete medication
 
@@ -130,108 +137,111 @@ For detailed Docker deployment instructions, see [DOCKER_GUIDE.md](DOCKER_GUIDE.
 - `GET /api/v1/doses/medications/{id}/doses` - Get dose history
 - `GET /api/v1/doses/daily-summary` - Get daily summary
 
-## Database Migrations
+Full API documentation available at `/docs` when running the backend.
 
-### Apply migrations
+## 💻 Development
+
+### Running Tests
+
 ```bash
+# Backend tests
 cd backend
-alembic upgrade head
-```
+pytest -v --cov=app
 
-### Create new migration
-```bash
-alembic revision --autogenerate -m "description"
-```
-
-For detailed migration instructions, see [Migration Guide](backend/MIGRATIONS.md).
-
-## Testing
-
-### Backend Tests
-
-```bash
-cd backend
-pytest -v
-```
-
-### Frontend Tests
-
-```bash
+# Frontend tests
 cd frontend
-npm test
+npm test -- --coverage
 ```
 
-## Development
+### Code Quality
 
-- Backend development server: http://localhost:8000
-- Frontend development server: http://localhost:3000
-- API documentation: http://localhost:8000/docs
+```bash
+# Backend
+cd backend
+black .          # Format code
+isort .          # Sort imports
+flake8 .         # Lint code
+mypy app/        # Type checking
 
-## Project Structure
-
-```
-meditrack/
-├── backend/
-│   ├── app/
-│   │   ├── api/        # API endpoints
-│   │   ├── core/       # Core configuration
-│   │   ├── db/         # Database setup
-│   │   ├── models/     # SQLAlchemy models
-│   │   ├── schemas/    # Pydantic schemas
-│   │   └── services/   # Business logic
-│   ├── alembic/        # Database migrations
-│   ├── tests/          # Backend tests
-│   ├── Dockerfile      # Backend container
-│   └── requirements.txt
-├── frontend/
-│   ├── src/
-│   │   ├── components/ # React components
-│   │   ├── services/   # API client
-│   │   └── App.js      # Main app component
-│   ├── public/
-│   ├── Dockerfile      # Frontend container
-│   └── package.json
-├── docker-compose.yml  # Development setup
-├── docker-compose.prod.yml # Production setup
-└── README.md
+# Frontend
+cd frontend
+npm run lint     # ESLint
+npm run format   # Prettier
 ```
 
-## Documentation
+### Database Migrations
 
-- [Development Guide](DEVELOPMENT.md) - Detailed development setup
-- [Docker Guide](DOCKER_GUIDE.md) - Docker deployment instructions
-- [Deployment Guide](DEPLOYMENT.md) - Production deployment options
-- [Migration Guide](backend/MIGRATIONS.md) - Database migration instructions
+```bash
+cd backend
+# Create a new migration
+alembic revision --autogenerate -m "Description"
 
-## GitHub Secrets Required
+# Apply migrations
+alembic upgrade head
 
-To run the CI/CD pipeline successfully, add these secrets to your GitHub repository:
+# Rollback
+alembic downgrade -1
+```
 
-1. **CODECOV_TOKEN** - Token for uploading coverage reports
-   - Get your token from [codecov.io](https://codecov.io/)
-   - Add it at: Settings → Secrets and variables → Actions → New repository secret
+## 🚀 Deployment
 
-2. **DOCKER_USERNAME** - Docker Hub username
-   - Your Docker Hub username for pushing images
+### Production with Docker
 
-3. **DOCKER_PASSWORD** - Docker Hub password or access token
-   - Create an access token at [hub.docker.com](https://hub.docker.com/)
-   - Use the token instead of your password for better security
+```bash
+# Build production images
+docker compose -f docker-compose.prod.yml build
 
-To add secrets:
-1. Go to your repository on GitHub
-2. Click on Settings → Secrets and variables → Actions
-3. Click "New repository secret"
-4. Add each secret with the exact name as listed above
+# Run production containers
+docker compose -f docker-compose.prod.yml up -d
 
-## Contributing
+# View logs
+docker compose -f docker-compose.prod.yml logs -f
+```
 
-1. Create a feature branch
-2. Make your changes
-3. Write or update tests
-4. Ensure all tests pass
-5. Submit a pull request
+See [Deployment Guide](docs/DEPLOYMENT.md) for detailed instructions on deploying to various platforms.
 
-## License
+## 🔒 Security
 
-[MIT License](LICENSE)
+- Regular dependency scanning with Dependabot
+- Vulnerability scanning with Trivy
+- Code analysis with CodeQL
+- Input validation and sanitization
+- CORS configuration for production
+- Regular security updates
+
+## 📚 Documentation
+
+- [API Documentation](docs/API.md) - Detailed API reference
+- [Architecture Guide](docs/ARCHITECTURE.md) - System design and architecture
+- [Deployment Guide](docs/DEPLOYMENT.md) - Deployment instructions
+- [User Guide](docs/USER_GUIDE.md) - End-user documentation
+- [Contributing Guidelines](CONTRIBUTING.md) - How to contribute
+- [Code of Conduct](CODE_OF_CONDUCT.md) - Community guidelines
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details on how to get started.
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 👥 Authors
+
+- **Saad Jafferali** - *Initial work* - [sjafferali](https://github.com/sjafferali)
+
+## 🙏 Acknowledgments
+
+- FastAPI for the excellent web framework
+- React team for the frontend framework
+- All contributors and users of MediTrack
+
+## 🆘 Support
+
+- **Issues**: [GitHub Issues](https://github.com/sjafferali/meditrack/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/sjafferali/meditrack/discussions)
+- **Email**: saad@example.com
+
+## 🏗️ Roadmap
+
+See [TASKS.md](TASKS.md) for the current development roadmap and upcoming features.
