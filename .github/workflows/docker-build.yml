@@ -77,31 +77,3 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
-  test:
-    runs-on: ubuntu-latest
-    needs: build
-    
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
-
-    - name: Install dependencies
-      run: |
-        cd backend
-        pip install -r requirements.txt
-        pip install pytest pytest-cov
-
-    - name: Run tests
-      run: |
-        cd backend
-        pytest --cov=app tests/
-
-    - name: Upload coverage reports
-      uses: codecov/codecov-action@v3
-      env:
-        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

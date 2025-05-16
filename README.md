@@ -1,5 +1,10 @@
 # MediTrack - Medication Tracker
 
+[![CI Pipeline](https://github.com/sjafferali/meditrack/actions/workflows/ci.yml/badge.svg)](https://github.com/sjafferali/meditrack/actions/workflows/ci.yml)
+[![Security Scan](https://github.com/sjafferali/meditrack/actions/workflows/security.yml/badge.svg)](https://github.com/sjafferali/meditrack/actions/workflows/security.yml)
+[![codecov](https://codecov.io/gh/sjafferali/meditrack/branch/main/graph/badge.svg)](https://codecov.io/gh/sjafferali/meditrack)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 A web application for tracking daily medication doses, built with FastAPI (backend) and React (frontend).
 
 ## Features
