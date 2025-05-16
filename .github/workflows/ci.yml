@@ -160,6 +160,9 @@ jobs:
   security-scan:
     runs-on: ubuntu-latest
     name: Security Scanning
+    permissions:
+      security-events: write
+      contents: read
     
     steps:
     - name: Checkout code
