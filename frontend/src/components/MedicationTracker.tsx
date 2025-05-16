@@ -30,7 +30,7 @@ const MedicationTracker = () => {
       const data = await medicationApi.getAll();
       setMedications(data);
     } catch (err) {
-      setError(err.message);
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
     }
@@ -43,7 +43,7 @@ const MedicationTracker = () => {
       // Reload medications to update dose count
       await loadMedications();
     } catch (err) {
-      setError(err.message);
+      setError(err instanceof Error ? err.message : 'An error occurred');
     }
   };
 
@@ -56,7 +56,7 @@ const MedicationTracker = () => {
       setIsAddingMedication(false);
       resetForm();
     } catch (err) {
-      setError(err.message);
+      setError(err instanceof Error ? err.message : 'An error occurred');
     }
   };
 
@@ -71,7 +71,7 @@ const MedicationTracker = () => {
       setEditingMedication(null);
       resetForm();
     } catch (err) {
-      setError(err.message);
+      setError(err instanceof Error ? err.message : 'An error occurred');
     }
   };
 
@@ -82,7 +82,7 @@ const MedicationTracker = () => {
       setMedications(medications.filter(med => med.id !== id));
       setDeleteConfirmId(null);
     } catch (err) {
-      setError(err.message);
+      setError(err instanceof Error ? err.message : 'An error occurred');
     }
   };
 
