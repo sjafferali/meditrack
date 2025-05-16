@@ -106,6 +106,15 @@
 - [✅] Code coverage reporting (Codecov)
 - [✅] Docker image building and pushing
 
+### Dependency Management
+- [✅] Update all backend Python dependencies to latest versions
+- [✅] Update frontend dependencies maintaining compatibility
+- [✅] Configure pytest-asyncio to fix deprecation warnings
+- [✅] Keep React at v18 for react-scripts compatibility
+- [✅] Update web-vitals to v3.5.1
+- [✅] Add @testing-library/dom dependency
+- [✅] Fix MedicationTracker test mocking issues
+
 ### Documentation
 - [✅] Create README with setup instructions
 - [✅] Document API endpoints (OpenAPI/Swagger)
@@ -186,3 +195,14 @@
 
 Last Updated: 2025-05-16
 Next Review: 2025-05-17
+
+---
+
+## Completed Updates (2025-05-16)
+
+### Dependencies Update
+- Updated all backend Python packages to latest versions
+- Updated frontend packages while maintaining react-scripts v5.0.1 compatibility
+- Fixed pytest-asyncio deprecation warning
+- Fixed MedicationTracker test mocking for proper API calls
+- All tests passing with updated dependencies
