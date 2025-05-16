@@ -38,7 +38,7 @@ def record_dose(medication_id: int, db: Session = Depends(get_db)):
     if doses_today >= medication.max_doses_per_day:
         raise HTTPException(
             status_code=400,
-            detail=f"Maximum doses ({medication.max_doses_per_day}) already taken today",
+            detail=f"Maximum doses ({medication.max_doses_per_day}) taken today",
         )
 
     # Create new dose

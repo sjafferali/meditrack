@@ -8,7 +8,6 @@ from sqlalchemy.pool import StaticPool
 
 from app.api.dependencies.database import get_db
 from app.db.base import Base
-from app.db.session import SessionLocal
 from app.main import app
 from app.models import Dose, Medication
 

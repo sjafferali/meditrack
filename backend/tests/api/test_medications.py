@@ -1,8 +1,5 @@
-from datetime import datetime, timezone
 
 import pytest
-
-from app.models import Medication
 
 
 class TestMedications:

@@ -40,7 +40,6 @@ def count_records():
 
 def backup_database(filename=None):
     """Create a backup of the database"""
-    import os
     from shutil import copyfile
 
     if filename is None:
@@ -74,7 +73,7 @@ def restore_database(backup_file):
 
     db_path = engine.url.database
 
-    response = input(f"This will overwrite the current database. Continue? (y/N): ")
+    response = input("This will overwrite the current database. Continue? (y/N): ")
     if response.lower() != "y":
         print("Restore cancelled")
         return False

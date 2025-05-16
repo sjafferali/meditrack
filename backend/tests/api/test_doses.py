@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from app.models import Dose, Medication
+from app.models import Dose
 
 
 class TestDoses:

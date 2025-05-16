@@ -10,10 +10,10 @@ from alembic import context
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Import all models to ensure they're registered with Base.metadata
-import app.models.dose  # noqa: F401
-import app.models.medication  # noqa: F401
-from app.core.config import settings
-from app.db.base import Base
+import app.models.dose  # noqa: F401, E402
+import app.models.medication  # noqa: F401, E402
+from app.core.config import settings  # noqa: E402
+from app.db.base import Base  # noqa: E402
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

@@ -1,7 +1,5 @@
 import pytest
 
-from app.main import app
-
 
 class TestMainApp:
     """Test main application endpoints"""
