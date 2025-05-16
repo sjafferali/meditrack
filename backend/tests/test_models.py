@@ -7,7 +7,7 @@ from app.models import Medication, Dose
 
 class TestMedicationModel:
     """Test Medication model"""
-    
+
     @pytest.mark.unit
     def test_create_medication(self, db_session):
         """Test creating a medication"""
@@ -16,11 +16,11 @@ class TestMedicationModel:
             dosage="100mg",
             frequency="Once daily",
             max_doses_per_day=1,
-            instructions="Test instructions"
+            instructions="Test instructions",
         )
         db_session.add(medication)
         db_session.commit()
-        
+
         assert medication.id is not None
         assert medication.created_at is not None
         assert medication.updated_at is None
@@ -30,12 +30,10 @@ class TestMedicationModel:
         """Test medication required fields"""
         # Missing required field (name)
         medication = Medication(
-            dosage="100mg",
-            frequency="Once daily",
-            max_doses_per_day=1
+            dosage="100mg", frequency="Once daily", max_doses_per_day=1
         )
         db_session.add(medication)
-        
+
         with pytest.raises(IntegrityError):
             db_session.commit()
 
@@ -53,7 +51,7 @@ class TestMedicationModel:
         dose2 = Dose(medication_id=sample_medication.id)
         db_session.add_all([dose1, dose2])
         db_session.commit()
-        
+
         # Check relationship
         assert len(sample_medication.doses) == 2
         assert dose1 in sample_medication.doses
@@ -66,27 +64,27 @@ class TestMedicationModel:
         dose = Dose(medication_id=sample_medication.id)
         db_session.add(dose)
         db_session.commit()
-        
+
         dose_id = dose.id
-        
+
         # Delete medication
         db_session.delete(sample_medication)
         db_session.commit()
-        
+
         # Check that dose is also deleted
         assert db_session.query(Dose).filter_by(id=dose_id).first() is None
 
 
 class TestDoseModel:
     """Test Dose model"""
-    
+
     @pytest.mark.unit
     def test_create_dose(self, db_session, sample_medication):
         """Test creating a dose"""
         dose = Dose(medication_id=sample_medication.id)
         db_session.add(dose)
         db_session.commit()
-        
+
         assert dose.id is not None
         assert dose.taken_at is not None
         assert dose.medication_id == sample_medication.id
@@ -98,10 +96,10 @@ class TestDoseModel:
         db_session.add(dose)
         db_session.commit()
         db_session.refresh(dose)  # Refresh to get server defaults
-        
+
         # Check that the timestamp is set
         assert dose.taken_at is not None
-        
+
         # Check it's a datetime object
         assert isinstance(dose.taken_at, datetime)
 
@@ -111,7 +109,7 @@ class TestDoseModel:
         dose = Dose(medication_id=sample_medication.id)
         db_session.add(dose)
         db_session.commit()
-        
+
         assert dose.medication == sample_medication
         assert dose.medication.name == sample_medication.name
 

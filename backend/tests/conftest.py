@@ -61,7 +61,7 @@ def sample_medication_data():
         "dosage": "100mg",
         "frequency": "Twice daily",
         "max_doses_per_day": 2,
-        "instructions": "Take with food"
+        "instructions": "Take with food",
     }
 
 
@@ -94,34 +94,34 @@ def multiple_medications(db_session: Session) -> list[Medication]:
             "dosage": "100mg",
             "frequency": "Once daily",
             "max_doses_per_day": 1,
-            "instructions": "Take with water"
+            "instructions": "Take with water",
         },
         {
             "name": "Ibuprofen",
             "dosage": "200mg",
             "frequency": "Every 6 hours",
             "max_doses_per_day": 4,
-            "instructions": "Take with food"
+            "instructions": "Take with food",
         },
         {
             "name": "Paracetamol",
             "dosage": "500mg",
             "frequency": "Every 4 hours",
             "max_doses_per_day": 6,
-            "instructions": "Take as needed"
-        }
+            "instructions": "Take as needed",
+        },
     ]
-    
+
     medications = []
     for data in medications_data:
         medication = Medication(**data)
         db_session.add(medication)
         medications.append(medication)
-    
+
     db_session.commit()
     for med in medications:
         db_session.refresh(med)
-    
+
     return medications
 
 

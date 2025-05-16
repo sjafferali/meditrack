@@ -13,5 +13,5 @@ class DoseCreate(DoseBase):
 class DoseInDB(DoseBase):
     id: int
     taken_at: datetime
-    
+
     model_config = ConfigDict(from_attributes=True)

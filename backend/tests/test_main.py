@@ -4,7 +4,7 @@ from app.main import app
 
 class TestMainApp:
     """Test main application endpoints"""
-    
+
     @pytest.mark.unit
     def test_health_check(self, client):
         """Test health check endpoint"""
@@ -53,8 +53,7 @@ class TestMainApp:
         """Test CORS headers are present"""
         # Use GET request with Origin header to test CORS
         response = client.get(
-            "/api/v1/medications/",
-            headers={"Origin": "http://localhost:3000"}
+            "/api/v1/medications/", headers={"Origin": "http://localhost:3000"}
         )
         assert response.status_code == 200
         assert "access-control-allow-origin" in response.headers
@@ -71,7 +70,7 @@ class TestMainApp:
         # v1 endpoints should work
         response = client.get("/api/v1/medications/")
         assert response.status_code == 200
-        
+
         # Non-versioned endpoints should not work
         response = client.get("/medications/")
         assert response.status_code == 404

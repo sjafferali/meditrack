@@ -7,7 +7,7 @@ from app.models import Medication
 
 class TestMedications:
     """Test medication endpoints"""
-    
+
     @pytest.mark.unit
     def test_create_medication_success(self, client, sample_medication_data):
         """Test successful medication creation"""
@@ -30,7 +30,7 @@ class TestMedications:
             "dosage": "100mg",
             "frequency": "Daily",
             "max_doses_per_day": 25,  # Too high (max is 20)
-            "instructions": "Test"
+            "instructions": "Test",
         }
         response = client.post("/api/v1/medications/", json=invalid_data)
         assert response.status_code == 422
@@ -92,13 +92,9 @@ class TestMedications:
     @pytest.mark.unit
     def test_update_medication_success(self, client, sample_medication):
         """Test updating a medication"""
-        update_data = {
-            "dosage": "200mg",
-            "max_doses_per_day": 3
-        }
+        update_data = {"dosage": "200mg", "max_doses_per_day": 3}
         response = client.put(
-            f"/api/v1/medications/{sample_medication.id}", 
-            json=update_data
+            f"/api/v1/medications/{sample_medication.id}", json=update_data
         )
         assert response.status_code == 200
         data = response.json()
@@ -118,8 +114,7 @@ class TestMedications:
         """Test updating medication with invalid data"""
         update_data = {"max_doses_per_day": 30}  # Too high
         response = client.put(
-            f"/api/v1/medications/{sample_medication.id}", 
-            json=update_data
+            f"/api/v1/medications/{sample_medication.id}", json=update_data
         )
         assert response.status_code == 422
 
@@ -128,7 +123,7 @@ class TestMedications:
         """Test deleting a medication"""
         response = client.delete(f"/api/v1/medications/{sample_medication.id}")
         assert response.status_code == 204
-        
+
         # Verify it's deleted
         get_response = client.get(f"/api/v1/medications/{sample_medication.id}")
         assert get_response.status_code == 404
@@ -140,7 +135,9 @@ class TestMedications:
         assert response.status_code == 404
 
     @pytest.mark.integration
-    def test_medication_with_doses_information(self, client, sample_medication, sample_dose):
+    def test_medication_with_doses_information(
+        self, client, sample_medication, sample_dose
+    ):
         """Test medication with dose information"""
         # Get medication with dose taken today
         response = client.get(f"/api/v1/medications/{sample_medication.id}")
@@ -153,24 +150,26 @@ class TestMedications:
     def test_medication_lifecycle(self, client, sample_medication_data):
         """Test complete medication lifecycle"""
         # Create
-        create_response = client.post("/api/v1/medications/", json=sample_medication_data)
+        create_response = client.post(
+            "/api/v1/medications/", json=sample_medication_data
+        )
         assert create_response.status_code == 201
         med_id = create_response.json()["id"]
-        
+
         # Read
         get_response = client.get(f"/api/v1/medications/{med_id}")
         assert get_response.status_code == 200
-        
+
         # Update
         update_data = {"dosage": "150mg"}
         update_response = client.put(f"/api/v1/medications/{med_id}", json=update_data)
         assert update_response.status_code == 200
         assert update_response.json()["dosage"] == "150mg"
-        
+
         # Delete
         delete_response = client.delete(f"/api/v1/medications/{med_id}")
         assert delete_response.status_code == 204
-        
+
         # Verify deleted
         final_response = client.get(f"/api/v1/medications/{med_id}")
         assert final_response.status_code == 404

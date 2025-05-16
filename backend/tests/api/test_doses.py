@@ -7,7 +7,7 @@ from app.models import Medication, Dose
 
 class TestDoses:
     """Test dose tracking endpoints"""
-    
+
     @pytest.mark.unit
     def test_record_dose_success(self, client, sample_medication):
         """Test successfully recording a dose"""
@@ -30,13 +30,18 @@ class TestDoses:
         """Test recording dose when daily limit reached"""
         # Record doses up to the limit
         for _ in range(sample_medication.max_doses_per_day):
-            response = client.post(f"/api/v1/doses/medications/{sample_medication.id}/dose")
+            response = client.post(
+                f"/api/v1/doses/medications/{sample_medication.id}/dose"
+            )
             assert response.status_code == 201
-        
+
         # Try to record one more dose
         response = client.post(f"/api/v1/doses/medications/{sample_medication.id}/dose")
         assert response.status_code == 400
-        assert f"Maximum doses ({sample_medication.max_doses_per_day}) already taken today" in response.json()["detail"]
+        assert (
+            f"Maximum doses ({sample_medication.max_doses_per_day}) already taken today"
+            in response.json()["detail"]
+        )
 
     @pytest.mark.unit
     def test_get_doses_empty(self, client, sample_medication):
@@ -51,7 +56,7 @@ class TestDoses:
         # Record multiple doses
         for _ in range(2):
             client.post(f"/api/v1/doses/medications/{sample_medication.id}/dose")
-        
+
         response = client.get(f"/api/v1/doses/medications/{sample_medication.id}/doses")
         assert response.status_code == 200
         data = response.json()
@@ -72,12 +77,14 @@ class TestDoses:
         for i in range(5):
             dose = Dose(
                 medication_id=sample_medication.id,
-                taken_at=datetime.now(timezone.utc) - timedelta(days=i)
+                taken_at=datetime.now(timezone.utc) - timedelta(days=i),
             )
             db_session.add(dose)
         db_session.commit()
-        
-        response = client.get(f"/api/v1/doses/medications/{sample_medication.id}/doses?skip=1&limit=2")
+
+        response = client.get(
+            f"/api/v1/doses/medications/{sample_medication.id}/doses?skip=1&limit=2"
+        )
         assert response.status_code == 200
         data = response.json()
         assert len(data) == 2
@@ -98,14 +105,14 @@ class TestDoses:
         client.post(f"/api/v1/doses/medications/{multiple_medications[0].id}/dose")
         client.post(f"/api/v1/doses/medications/{multiple_medications[1].id}/dose")
         client.post(f"/api/v1/doses/medications/{multiple_medications[1].id}/dose")
-        
+
         response = client.get("/api/v1/doses/daily-summary")
         assert response.status_code == 200
         data = response.json()
-        
+
         assert "date" in data
         assert len(data["medications"]) == 3
-        
+
         # Check medication summaries
         for med_summary in data["medications"]:
             if med_summary["medication_id"] == multiple_medications[0].id:
@@ -126,20 +133,24 @@ class TestDoses:
         assert summary_response.status_code == 200
         initial_summary = summary_response.json()
         medication_summary = next(
-            m for m in initial_summary["medications"] 
+            m
+            for m in initial_summary["medications"]
             if m["medication_id"] == sample_medication.id
         )
         assert medication_summary["doses_taken"] == 0
-        
+
         # Record a dose
-        dose_response = client.post(f"/api/v1/doses/medications/{sample_medication.id}/dose")
+        dose_response = client.post(
+            f"/api/v1/doses/medications/{sample_medication.id}/dose"
+        )
         assert dose_response.status_code == 201
-        
+
         # Check updated summary
         updated_response = client.get("/api/v1/doses/daily-summary")
         updated_summary = updated_response.json()
         medication_summary = next(
-            m for m in updated_summary["medications"] 
+            m
+            for m in updated_summary["medications"]
             if m["medication_id"] == sample_medication.id
         )
         assert medication_summary["doses_taken"] == 1
@@ -151,19 +162,19 @@ class TestDoses:
         # Record dose yesterday
         yesterday_dose = Dose(
             medication_id=sample_medication.id,
-            taken_at=datetime.now(timezone.utc) - timedelta(days=1)
+            taken_at=datetime.now(timezone.utc) - timedelta(days=1),
         )
         db_session.add(yesterday_dose)
         db_session.commit()
-        
+
         # Record dose today
         client.post(f"/api/v1/doses/medications/{sample_medication.id}/dose")
-        
+
         # Check that yesterday's dose doesn't count toward today's limit
         response = client.get(f"/api/v1/medications/{sample_medication.id}")
         data = response.json()
         assert data["doses_taken_today"] == 1  # Only today's dose counts
-        
+
         # Can still take another dose today
         response = client.post(f"/api/v1/doses/medications/{sample_medication.id}/dose")
         assert response.status_code == 201

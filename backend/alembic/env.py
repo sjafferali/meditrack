@@ -11,6 +11,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from app.db.base import Base
 from app.core.config import settings
+
 # Import all models to ensure they're registered with Base.metadata
 from app.models import medication, dose
 
@@ -74,9 +75,7 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()
