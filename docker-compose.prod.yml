@@ -2,17 +2,17 @@ version: '3.8'
 
 services:
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: meditrack-backend:latest
+    restart: unless-stopped
     ports:
       - "8000:8000"
     environment:
       - DATABASE_URL=sqlite:///./data/meditrack.db
       - PYTHONUNBUFFERED=1
-      - ENVIRONMENT=development
+      - ENVIRONMENT=production
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key-here}
     volumes:
-      - ./backend/data:/app/data
+      - backend-data:/app/data
     networks:
       - meditrack-network
     healthcheck:
@@ -23,17 +23,27 @@ services:
       start_period: 40s
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
+    image: meditrack-frontend:latest
+    restart: unless-stopped
     ports:
-      - "3000:80"
+      - "80:80"
     depends_on:
       - backend
     networks:
       - meditrack-network
     environment:
       - NODE_ENV=production
+
+  # Optional: Database viewer (remove in production)
+  # adminer:
+  #   image: adminer
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8080:8080"
+  #   networks:
+  #     - meditrack-network
+  #   environment:
+  #     - ADMINER_DEFAULT_SERVER=sqlite
 
 networks:
   meditrack-network:
