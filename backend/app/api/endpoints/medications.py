@@ -1,8 +1,8 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import and_, func
+from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.database import get_db
@@ -79,7 +79,9 @@ def get_medication(medication_id: int, db: Session = Depends(get_db)):
 
     doses_today = (
         db.query(Dose)
-        .filter(and_(Dose.medication_id == medication.id, Dose.taken_at >= today_start))
+        .filter(
+            and_(Dose.medication_id == medication.id, Dose.taken_at >= today_start)
+        )
         .all()
     )
 

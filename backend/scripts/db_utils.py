@@ -8,13 +8,13 @@ from pathlib import Path
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-import json
-from datetime import datetime, timezone
+import json  # noqa: E402
+from datetime import datetime, timezone  # noqa: E402
 
-from sqlalchemy import inspect, text
+from sqlalchemy import inspect  # noqa: E402
 
-from app.db.session import SessionLocal, engine
-from app.models import Dose, Medication
+from app.db.session import SessionLocal, engine  # noqa: E402
+from app.models import Dose, Medication  # noqa: E402
 
 
 def check_tables():

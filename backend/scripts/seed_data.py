@@ -4,8 +4,8 @@ from pathlib import Path
 # Add the parent directory to the Python path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from app.db.session import SessionLocal
-from app.models import Medication
+from app.db.session import SessionLocal  # noqa: E402
+from app.models import Medication  # noqa: E402
 
 
 def seed_database():

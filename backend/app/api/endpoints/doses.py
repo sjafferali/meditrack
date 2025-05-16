@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.api.dependencies.database import get_db
 from app.models import Dose, Medication
-from app.schemas import DoseCreate, DoseInDB
+from app.schemas import DoseInDB
 
 router = APIRouter()
 
@@ -31,7 +31,9 @@ def record_dose(medication_id: int, db: Session = Depends(get_db)):
 
     doses_today = (
         db.query(Dose)
-        .filter(and_(Dose.medication_id == medication_id, Dose.taken_at >= today_start))
+        .filter(
+            and_(Dose.medication_id == medication_id, Dose.taken_at >= today_start)
+        )
         .count()
     )
 
