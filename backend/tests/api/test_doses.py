@@ -39,7 +39,7 @@ class TestDoses:
         response = client.post(f"/api/v1/doses/medications/{sample_medication.id}/dose")
         assert response.status_code == 400
         assert (
-            f"Maximum doses ({sample_medication.max_doses_per_day}) already taken today"
+            f"Maximum doses ({sample_medication.max_doses_per_day}) taken today"
             in response.json()["detail"]
         )
 
