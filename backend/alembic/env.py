@@ -9,12 +9,11 @@ from alembic import context
 # Add parent directory to path to import app
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from app.core.config import settings
-from app.db.base import Base
-
 # Import all models to ensure they're registered with Base.metadata
 import app.models.dose  # noqa: F401
 import app.models.medication  # noqa: F401
+from app.core.config import settings
+from app.db.base import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
