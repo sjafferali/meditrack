@@ -80,7 +80,7 @@ def get_daily_summary(db: Session = Depends(get_db)):
     )
 
     medications = db.query(Medication).all()
-    summary = {"date": today_start.date().isoformat(), "medications": []}
+    summary: dict = {"date": today_start.date().isoformat(), "medications": []}
 
     for medication in medications:
         doses_today = (

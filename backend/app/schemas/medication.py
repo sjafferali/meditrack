@@ -16,7 +16,7 @@ class MedicationCreate(MedicationBase):
     pass
 
 
-class MedicationUpdate(MedicationBase):
+class MedicationUpdate(BaseModel):
     name: Optional[str] = None
     dosage: Optional[str] = None
     frequency: Optional[str] = None
