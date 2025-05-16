@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { medicationApi, doseApi } from '../services/api';
 
 const MedicationTracker = () => {
-  const [medications, setMedications] = useState([]);
+  const [medications, setMedications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [isAddingMedication, setIsAddingMedication] = useState(false);
-  const [editingMedication, setEditingMedication] = useState(null);
-  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+  const [editingMedication, setEditingMedication] = useState<any>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
   // Form state for adding/editing medications
   const [formData, setFormData] = useState({
@@ -36,7 +36,7 @@ const MedicationTracker = () => {
     }
   };
 
-  const handleTakeMedication = async (medicationId) => {
+  const handleTakeMedication = async (medicationId: number) => {
     try {
       setError(null);
       await doseApi.recordDose(medicationId);
@@ -47,7 +47,7 @@ const MedicationTracker = () => {
     }
   };
 
-  const handleAddMedication = async (e) => {
+  const handleAddMedication = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       setError(null);
@@ -60,7 +60,7 @@ const MedicationTracker = () => {
     }
   };
 
-  const handleUpdateMedication = async (e) => {
+  const handleUpdateMedication = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       setError(null);
@@ -75,7 +75,7 @@ const MedicationTracker = () => {
     }
   };
 
-  const handleDeleteMedication = async (id) => {
+  const handleDeleteMedication = async (id: number) => {
     try {
       setError(null);
       await medicationApi.delete(id);
@@ -86,7 +86,7 @@ const MedicationTracker = () => {
     }
   };
 
-  const startEdit = (medication) => {
+  const startEdit = (medication: any) => {
     setEditingMedication(medication);
     setFormData({
       name: medication.name,
@@ -107,7 +107,7 @@ const MedicationTracker = () => {
     });
   };
 
-  const formatTime = (dateString) => {
+  const formatTime = (dateString: string) => {
     if (!dateString) return null;
     const date = new Date(dateString);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -199,7 +199,7 @@ const MedicationTracker = () => {
                 <textarea
                   value={formData.instructions}
                   onChange={(e) => setFormData({...formData, instructions: e.target.value})}
-                  rows="2"
+                  rows={2}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
                 />
               </div>
