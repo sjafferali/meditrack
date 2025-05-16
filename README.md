@@ -22,13 +22,7 @@ A web application for tracking daily medication doses, built with FastAPI (backe
 
 ## Quick Start
 
-### Prerequisites
-
-- Python 3.9+
-- Node.js 16+
-- npm or yarn
-
-### Installation
+### Using Docker (Recommended)
 
 1. Clone the repository:
 ```bash
@@ -36,12 +30,22 @@ git clone https://github.com/sjafferali/meditrack.git
 cd meditrack
 ```
 
-2. Start both servers:
+2. Start with Docker Compose:
 ```bash
-./start_dev.sh
+docker compose up
 ```
 
-Or start them separately:
+3. Access the application:
+   - Frontend: http://localhost:3000
+   - API Documentation: http://localhost:8000/docs
+
+### Manual Installation
+
+#### Prerequisites
+
+- Python 3.9+
+- Node.js 16+
+- npm or yarn
 
 #### Backend Setup
 
@@ -62,6 +66,32 @@ cd frontend
 npm install
 npm start
 ```
+
+#### Start Both Servers
+
+```bash
+./start_dev.sh
+```
+
+## Docker Deployment
+
+### Development
+
+```bash
+docker compose up --build
+```
+
+### Production
+
+```bash
+# Build production images
+./build_images.sh
+
+# Run with production config
+docker compose -f docker-compose.prod.yml up -d
+```
+
+For detailed Docker deployment instructions, see [DOCKER_GUIDE.md](DOCKER_GUIDE.md).
 
 ## Usage
 
@@ -95,14 +125,6 @@ npm start
 - `POST /api/v1/doses/medications/{id}/dose` - Record a dose
 - `GET /api/v1/doses/medications/{id}/doses` - Get dose history
 - `GET /api/v1/doses/daily-summary` - Get daily summary
-
-## Docker Support
-
-Build and run with Docker Compose:
-
-```bash
-docker-compose up
-```
 
 ## Testing
 
@@ -140,6 +162,7 @@ meditrack/
 │   │   └── services/   # Business logic
 │   ├── alembic/        # Database migrations
 │   ├── tests/          # Backend tests
+│   ├── Dockerfile      # Backend container
 │   └── requirements.txt
 ├── frontend/
 │   ├── src/
@@ -147,10 +170,18 @@ meditrack/
 │   │   ├── services/   # API client
 │   │   └── App.js      # Main app component
 │   ├── public/
+│   ├── Dockerfile      # Frontend container
 │   └── package.json
-├── docker-compose.yml
+├── docker-compose.yml  # Development setup
+├── docker-compose.prod.yml # Production setup
 └── README.md
 ```
+
+## Documentation
+
+- [Development Guide](DEVELOPMENT.md) - Detailed development setup
+- [Docker Guide](DOCKER_GUIDE.md) - Docker deployment instructions
+- [Deployment Guide](DEPLOYMENT.md) - Production deployment options
 
 ## Contributing
 
