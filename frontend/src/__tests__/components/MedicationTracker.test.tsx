@@ -56,7 +56,8 @@ describe('MedicationTracker', () => {
     render(<MedicationTracker />);
     
     await waitFor(() => {
-      expect(screen.getByText(/Today: /i)).toBeInTheDocument();
+      // Look for the Today text in the green badge when today's date is selected
+      expect(screen.getByText('Today')).toBeInTheDocument();
     });
   });
 
@@ -196,8 +197,10 @@ describe('MedicationTracker', () => {
   test('disables Take Now button for future dates', async () => {
     render(<MedicationTracker />);
     
-    const dateInput = document.querySelector('input[type="date"]');
-    fireEvent.change(dateInput, { target: { value: '2025-01-10' } });
+    await waitFor(() => {
+      const dateInput = screen.getByDisplayValue(/\d{4}-\d{2}-\d{2}/);
+      fireEvent.change(dateInput, { target: { value: '2025-01-10' } });
+    });
     
     // Wait for API call and re-render
     await waitFor(() => {
@@ -205,13 +208,20 @@ describe('MedicationTracker', () => {
         expect.objectContaining({ date: '2025-01-10' })
       );
     });
+    
+    await waitFor(() => {
+      // For future dates, there should not be a Take Now button
+      const buttons = screen.getAllByRole('button');
+      const takeNowButton = buttons.find(btn => btn.textContent === 'Take Now');
+      expect(takeNowButton).toBeUndefined();
+    });
   });
 
   test('shows Record Dose for past dates', async () => {
     render(<MedicationTracker />);
     
     await waitFor(() => {
-      const dateInput = document.querySelector('input[type="date"]');
+      const dateInput = screen.getByDisplayValue(/\d{4}-\d{2}-\d{2}/);
       fireEvent.change(dateInput, { target: { value: '2022-01-10' } });
     });
     

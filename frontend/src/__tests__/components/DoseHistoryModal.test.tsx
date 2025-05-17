@@ -64,12 +64,13 @@ describe('DoseHistoryModal', () => {
       />
     );
     
-    await waitFor(() => {
-      // Dates might be formatted differently, so use a more flexible check
-      expect(screen.getByText(/\d+\/\d+\/\d+/)).toBeInTheDocument();
-      expect(screen.getByText('Dose 1:')).toBeInTheDocument();
-      expect(screen.getByText('Dose 2:')).toBeInTheDocument();
-    });
+    // Wait for the specific dates to appear
+    expect(await screen.findByText('1/1/2023')).toBeInTheDocument();
+    expect(await screen.findByText('1/2/2023')).toBeInTheDocument();
+    
+    // Check for dose information
+    expect(screen.getAllByText('Dose 1:').length).toBeGreaterThan(0);
+    expect(screen.getByText('Dose 2:')).toBeInTheDocument();
   });
 
   test('displays error message when API call fails', async () => {
