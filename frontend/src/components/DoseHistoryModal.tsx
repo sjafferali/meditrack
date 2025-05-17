@@ -21,18 +21,13 @@ const DoseHistoryModal: React.FC<DoseHistoryModalProps> = ({ medication, isOpen,
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  console.log('DoseHistoryModal rendered:', { medication, isOpen });
-
   const loadDoseHistory = useCallback(async () => {
     try {
-      console.log('Loading dose history for medication:', medication.id);
       setLoading(true);
       setError(null);
       const data = await doseApi.getDoses(medication.id);
-      console.log('Dose history loaded:', data);
       setDoses(data);
     } catch (err) {
-      console.error('Error loading dose history:', err);
       setError(err instanceof Error ? err.message : 'Failed to load dose history');
     } finally {
       setLoading(false);
@@ -70,13 +65,20 @@ const DoseHistoryModal: React.FC<DoseHistoryModalProps> = ({ medication, isOpen,
   const groupedDoses = groupDosesByDate(doses);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center" style={{ zIndex: 9999 }}>
-      <div className="bg-white rounded-lg p-6 max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col" style={{ zIndex: 10000 }}>
+    <>
+      {/* Modal backdrop */}
+      <div 
+        className="fixed inset-0 bg-black bg-opacity-50 z-[9999]"
+        onClick={onClose}
+      />
+      
+      {/* Modal content */}
+      <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-6 max-w-lg w-[90%] max-h-[80vh] overflow-hidden flex flex-col z-[10000] shadow-2xl">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-bold">Dose History - {medication.name}</h2>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 text-2xl"
+            className="text-gray-500 hover:text-gray-700 text-2xl p-1"
             aria-label="Close"
           >
             ×
@@ -131,7 +133,7 @@ const DoseHistoryModal: React.FC<DoseHistoryModalProps> = ({ medication, isOpen,
           </button>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

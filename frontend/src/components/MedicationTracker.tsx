@@ -48,21 +48,16 @@ const MedicationTracker = () => {
         // For past dates, use current browser time
         const currentTime = new Date();
         const time = currentTime.toTimeString().slice(0, 5); // Format as HH:MM
-        
         const dateStr = selectedDate.toISOString().split('T')[0];
         await doseApi.recordDoseForDate(medicationId, dateStr, time);
-      } else if (isToday(selectedDate)) {
-        // For today, record dose with current time
-        await doseApi.recordDose(medicationId);
       } else {
-        setError('Cannot record doses for future dates');
-        return;
+        // For today, use the regular endpoint
+        await doseApi.recordDose(medicationId);
       }
       
-      // Reload medications to update dose count
       await loadMedications();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : 'Failed to record dose');
     }
   };
 
@@ -70,27 +65,27 @@ const MedicationTracker = () => {
     e.preventDefault();
     try {
       setError(null);
-      const newMedication = await medicationApi.create(formData);
-      setMedications([...medications, newMedication]);
+      await medicationApi.create(formData);
       setIsAddingMedication(false);
       resetForm();
+      await loadMedications();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : 'Failed to add medication');
     }
   };
 
   const handleUpdateMedication = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!editingMedication) return;
+    
     try {
       setError(null);
-      const updated = await medicationApi.update(editingMedication.id, formData);
-      setMedications(medications.map(med => 
-        med.id === editingMedication.id ? updated : med
-      ));
+      await medicationApi.update(editingMedication.id, formData);
       setEditingMedication(null);
       resetForm();
+      await loadMedications();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : 'Failed to update medication');
     }
   };
 
@@ -98,10 +93,10 @@ const MedicationTracker = () => {
     try {
       setError(null);
       await medicationApi.delete(id);
-      setMedications(medications.filter(med => med.id !== id));
       setDeleteConfirmId(null);
+      await loadMedications();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : 'Failed to delete medication');
     }
   };
 
@@ -112,7 +107,7 @@ const MedicationTracker = () => {
       dosage: medication.dosage,
       frequency: medication.frequency,
       max_doses_per_day: medication.max_doses_per_day,
-      instructions: medication.instructions
+      instructions: medication.instructions || ''
     });
   };
 
@@ -126,10 +121,14 @@ const MedicationTracker = () => {
     });
   };
 
-  const formatTime = (dateString: string) => {
-    if (!dateString) return null;
-    const date = new Date(dateString);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSelectedDate(new Date(e.target.value + 'T00:00:00'));
+  };
+
+  const navigateDate = (direction: 'prev' | 'next') => {
+    const newDate = new Date(selectedDate);
+    newDate.setDate(newDate.getDate() + (direction === 'next' ? 1 : -1));
+    setSelectedDate(newDate);
   };
 
   const isToday = (date: Date) => {
@@ -140,46 +139,37 @@ const MedicationTracker = () => {
   const isPastDate = (date: Date) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    return date < today;
+    const compareDate = new Date(date);
+    compareDate.setHours(0, 0, 0, 0);
+    return compareDate < today;
   };
 
   const isFutureDate = (date: Date) => {
     const today = new Date();
-    today.setHours(23, 59, 59, 999);
-    return date > today;
+    today.setHours(0, 0, 0, 0);
+    const compareDate = new Date(date);
+    compareDate.setHours(0, 0, 0, 0);
+    return compareDate > today;
   };
 
-  const navigateDate = (direction: 'prev' | 'next') => {
-    const newDate = new Date(selectedDate);
-    if (direction === 'prev') {
-      newDate.setDate(newDate.getDate() - 1);
-    } else {
-      newDate.setDate(newDate.getDate() + 1);
-    }
-    setSelectedDate(newDate);
-  };
-
-  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newDate = new Date(e.target.value);
-    setSelectedDate(newDate);
-  };
+  interface Medication {
+    id: number;
+    name: string;
+    dosage: string;
+    frequency: string;
+    max_doses_per_day: number;
+    instructions?: string;
+    doses_taken_today: number;
+    last_taken_at?: string | null;
+  }
 
   if (loading) {
-    return (
-      <div className="container mx-auto p-4 max-w-4xl">
-        <div className="text-center">
-          <div className="text-gray-500">Loading medications...</div>
-        </div>
-      </div>
-    );
+    return <div className="text-center p-4">Loading medications...</div>;
   }
 
   return (
-    <div className="container mx-auto p-4 max-w-4xl">
-      <div className="text-center mb-6">
-        <h1 className="text-3xl font-bold text-primary mb-2">Medication Tracker</h1>
-        <p className="text-gray-600">Track your daily medications</p>
-      </div>
+    <div className="container mx-auto p-4">
+      <h1 className="text-3xl font-bold mb-6">Medication Tracker</h1>
 
       {/* Date Navigation */}
       <div className="bg-white shadow rounded-lg p-4 mb-6">
@@ -194,7 +184,7 @@ const MedicationTracker = () => {
             </svg>
           </button>
           
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center gap-4">
             <input
               type="date"
               value={selectedDate.toISOString().split('T')[0]}
@@ -251,58 +241,63 @@ const MedicationTracker = () => {
           <form onSubmit={editingMedication ? handleUpdateMedication : handleAddMedication}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Name</label>
+                <label className="block text-sm font-medium mb-1">Name</label>
                 <input
                   type="text"
-                  required
                   value={formData.name}
-                  onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-md"
+                  required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Dosage</label>
+                <label className="block text-sm font-medium mb-1">Dosage</label>
                 <input
                   type="text"
-                  required
                   value={formData.dosage}
-                  onChange={(e) => setFormData({...formData, dosage: e.target.value})}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                  onChange={(e) => setFormData({ ...formData, dosage: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-md"
+                  required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Frequency</label>
+                <label className="block text-sm font-medium mb-1">Frequency</label>
                 <input
                   type="text"
-                  required
                   value={formData.frequency}
-                  onChange={(e) => setFormData({...formData, frequency: e.target.value})}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                  onChange={(e) => setFormData({ ...formData, frequency: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-md"
+                  required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Max Doses Per Day</label>
+                <label className="block text-sm font-medium mb-1">Max Doses Per Day</label>
                 <input
                   type="number"
-                  required
-                  min="1"
-                  max="20"
                   value={formData.max_doses_per_day}
-                  onChange={(e) => setFormData({...formData, max_doses_per_day: parseInt(e.target.value)})}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700">Instructions</label>
-                <textarea
-                  value={formData.instructions}
-                  onChange={(e) => setFormData({...formData, instructions: e.target.value})}
-                  rows={2}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                  onChange={(e) => setFormData({ ...formData, max_doses_per_day: parseInt(e.target.value) })}
+                  className="w-full px-3 py-2 border rounded-md"
+                  min="1"
+                  required
                 />
               </div>
             </div>
-            <div className="mt-4 flex justify-end space-x-2">
+            <div className="mt-4">
+              <label className="block text-sm font-medium mb-1">Instructions</label>
+              <textarea
+                value={formData.instructions}
+                onChange={(e) => setFormData({ ...formData, instructions: e.target.value })}
+                className="w-full px-3 py-2 border rounded-md"
+                rows={3}
+              />
+            </div>
+            <div className="flex gap-2 mt-4">
+              <button
+                type="submit"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
+              >
+                {editingMedication ? 'Update' : 'Add'}
+              </button>
               <button
                 type="button"
                 onClick={() => {
@@ -310,112 +305,96 @@ const MedicationTracker = () => {
                   setEditingMedication(null);
                   resetForm();
                 }}
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md"
               >
                 Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
-              >
-                {editingMedication ? 'Update' : 'Add'} Medication
               </button>
             </div>
           </form>
         </div>
       )}
 
-      {/* Medication List */}
-      <div className="shadow rounded-lg overflow-hidden">
-        {medications.map((medication) => (
-          <div key={medication.id} className="bg-white border-b last:border-b-0 p-4">
-            <div className="flex flex-col md:flex-row md:items-center justify-between">
-              {/* Medication Info */}
-              <div className="flex-1 mb-4 md:mb-0">
-                <h2 className="text-xl font-semibold text-gray-800">{medication.name}</h2>
-                <div className="flex flex-wrap text-sm text-gray-600 mt-1">
-                  <span className="mr-4">{medication.dosage}</span>
-                  <span>{medication.frequency}</span>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">{medication.instructions}</p>
+      {/* Medications List */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {medications.map((medication: Medication) => (
+          <div key={medication.id} className="bg-white shadow rounded-lg p-4">
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold">{medication.name}</h3>
+              <p className="text-gray-600">{medication.dosage}</p>
+              <p className="text-sm text-gray-500">{medication.frequency}</p>
+              {medication.instructions && (
+                <p className="text-sm text-gray-500 mt-1">{medication.instructions}</p>
+              )}
+            </div>
+            
+            <div className="mb-4">
+              <div className="flex justify-between text-sm">
+                <span>Daily Progress</span>
+                <span>{medication.doses_taken_today} of {medication.max_doses_per_day}</span>
               </div>
+              {medication.last_taken_at && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Last taken: {new Date(medication.last_taken_at).toLocaleTimeString()}
+                </p>
+              )}
+            </div>
 
-              {/* Dose Counter & Last Taken */}
-              <div className="flex flex-col md:items-end md:mr-4">
-                <div className="mb-1 text-sm font-medium">
-                  <span className="text-blue-600">{medication.doses_taken_today}</span>
-                  <span className="text-gray-500"> / {medication.max_doses_per_day} doses taken</span>
-                </div>
-                <div className="text-xs text-gray-500">
-                  {medication.last_taken_at 
-                    ? `Last taken: ${formatTime(medication.last_taken_at)}` 
-                    : "Not taken today"}
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="md:ml-4 flex space-x-2">
-                <button
-                  onClick={() => handleTakeMedication(medication.id)}
-                  disabled={
-                    medication.doses_taken_today >= medication.max_doses_per_day ||
-                    isFutureDate(selectedDate)
-                  }
-                  className={`px-4 py-2 rounded-md text-white font-medium ${
-                    medication.doses_taken_today >= medication.max_doses_per_day
-                      ? "bg-gray-300 cursor-not-allowed"
-                      : isFutureDate(selectedDate)
-                      ? "bg-gray-300 cursor-not-allowed"
-                      : "bg-blue-600 hover:bg-blue-700"
-                  }`}
-                >
-                  {medication.doses_taken_today >= medication.max_doses_per_day
-                    ? "Max Taken"
-                    : isFutureDate(selectedDate)
-                    ? "Future Date"
-                    : isPastDate(selectedDate) && !isToday(selectedDate)
-                    ? "Record Dose"
-                    : "Take Now"}
-                </button>
-                <button
-                  onClick={() => {
-                    console.log('History button clicked for medication:', medication);
-                    setSelectedMedicationForHistory(medication);
-                  }}
-                  className="px-3 py-2 text-purple-600 hover:bg-purple-50 rounded-md"
-                >
-                  History
-                </button>
-                <button
-                  onClick={() => startEdit(medication)}
-                  className="px-3 py-2 text-blue-600 hover:bg-blue-50 rounded-md"
-                >
-                  Edit
-                </button>
-                {deleteConfirmId === medication.id ? (
-                  <>
-                    <button
-                      onClick={() => handleDeleteMedication(medication.id)}
-                      className="px-3 py-2 text-white bg-red-600 hover:bg-red-700 rounded-md"
-                    >
-                      Confirm
-                    </button>
-                    <button
-                      onClick={() => setDeleteConfirmId(null)}
-                      className="px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-md"
-                    >
-                      Cancel
-                    </button>
-                  </>
-                ) : (
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => handleTakeMedication(medication.id)}
+                disabled={
+                  medication.doses_taken_today >= medication.max_doses_per_day || 
+                  isFutureDate(selectedDate)
+                }
+                className={`px-3 py-2 rounded-md ${
+                  medication.doses_taken_today >= medication.max_doses_per_day || isFutureDate(selectedDate)
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-blue-600 hover:bg-blue-700 text-white"
+                }`}
+              >
+                {medication.doses_taken_today >= medication.max_doses_per_day
+                  ? "Max Taken"
+                  : isFutureDate(selectedDate)
+                  ? "Future Date"
+                  : isPastDate(selectedDate) && !isToday(selectedDate)
+                  ? "Record Dose"
+                  : "Take Now"}
+              </button>
+              <button
+                onClick={() => setSelectedMedicationForHistory(medication)}
+                className="px-3 py-2 text-purple-600 hover:bg-purple-50 rounded-md"
+              >
+                History
+              </button>
+              <button
+                onClick={() => startEdit(medication)}
+                className="px-3 py-2 text-blue-600 hover:bg-blue-50 rounded-md"
+              >
+                Edit
+              </button>
+              {deleteConfirmId === medication.id ? (
+                <>
                   <button
-                    onClick={() => setDeleteConfirmId(medication.id)}
-                    className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-md"
+                    onClick={() => handleDeleteMedication(medication.id)}
+                    className="px-3 py-2 text-white bg-red-600 hover:bg-red-700 rounded-md"
                   >
-                    Delete
+                    Confirm
                   </button>
-                )}
-              </div>
+                  <button
+                    onClick={() => setDeleteConfirmId(null)}
+                    className="px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-md"
+                  >
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => setDeleteConfirmId(medication.id)}
+                  className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-md"
+                >
+                  Delete
+                </button>
+              )}
             </div>
 
             {/* Progress Bar */}
@@ -444,10 +423,7 @@ const MedicationTracker = () => {
         <DoseHistoryModal
           medication={selectedMedicationForHistory}
           isOpen={true}
-          onClose={() => {
-            console.log('Closing dose history modal');
-            setSelectedMedicationForHistory(null);
-          }}
+          onClose={() => setSelectedMedicationForHistory(null)}
         />
       )}
     </div>
