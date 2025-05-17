@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { medicationApi, doseApi } from '../services/api';
+import DailyDoseLog from './DailyDoseLog';
 
 const MedicationTracker = () => {
   const [medications, setMedications] = useState<any[]>([]);
@@ -12,6 +13,7 @@ const MedicationTracker = () => {
   const [doseHistories, setDoseHistories] = useState<{ [key: number]: any[] }>({});
   const [loadingHistory, setLoadingHistory] = useState<{ [key: number]: boolean }>({});
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [showDailyLog, setShowDailyLog] = useState(false);
 
   // Form state for adding/editing medications
   const [formData, setFormData] = useState({
@@ -264,6 +266,12 @@ const MedicationTracker = () => {
         
         <div className="text-center mt-3">
           <p className="text-lg font-medium">{selectedDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+          <button
+            onClick={() => setShowDailyLog(true)}
+            className="mt-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-sm"
+          >
+            View Daily Log
+          </button>
         </div>
       </div>
 
@@ -503,6 +511,13 @@ const MedicationTracker = () => {
           + Add Medication
         </button>
       </div>
+
+      {/* Daily Dose Log Modal */}
+      <DailyDoseLog
+        selectedDate={selectedDate}
+        isOpen={showDailyLog}
+        onClose={() => setShowDailyLog(false)}
+      />
     </div>
   );
 };

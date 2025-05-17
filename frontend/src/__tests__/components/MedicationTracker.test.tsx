@@ -225,7 +225,7 @@ describe('MedicationTracker', () => {
     const originalDate = global.Date;
     
     jest.spyOn(global, 'Date').mockImplementation((...args: any[]) => {
-      const date = new originalDate(...args);
+      const date = args.length > 0 ? new originalDate(args[0]) : new originalDate();
       if (args.length === 0) {
         // For new Date() without arguments, return our mocked time
         date.toTimeString = mockToTimeString;
