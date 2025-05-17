@@ -26,14 +26,12 @@ print_error() {
 
 # Backend Tests
 print_header "Backend Tests"
-cd backend
-if python -m pytest -v --cov=app --cov-report=xml --cov-report=term-missing; then
+if docker run --rm -v $(pwd)/backend:/app meditrack:latest pytest -v --cov=app --cov-report=xml --cov-report=term-missing; then
     print_success "Backend tests passed"
 else
     print_error "Backend tests failed"
     exit 1
 fi
-cd ..
 
 # Frontend Tests  
 print_header "Frontend Tests"
@@ -48,47 +46,39 @@ cd ..
 
 # Backend Linting - Black
 print_header "Backend Linting - Black"
-cd backend
-if black --check .; then
+if docker run --rm -v $(pwd)/backend:/app meditrack:latest black --check .; then
     print_success "Black check passed"
 else
     print_error "Black check failed - run 'black .' to fix"
     exit 1
 fi
-cd ..
 
 # Backend Linting - isort
 print_header "Backend Linting - isort"
-cd backend
-if isort --check-only .; then
+if docker run --rm -v $(pwd)/backend:/app meditrack:latest isort --check-only .; then
     print_success "isort check passed"
 else
     print_error "isort check failed - run 'isort .' to fix"
     exit 1
 fi
-cd ..
 
 # Backend Linting - Flake8
 print_header "Backend Linting - Flake8"
-cd backend
-if flake8 .; then
+if docker run --rm -v $(pwd)/backend:/app meditrack:latest flake8 .; then
     print_success "Flake8 check passed"
 else
     print_error "Flake8 check failed"
     exit 1
 fi
-cd ..
 
 # Backend Linting - MyPy
 print_header "Backend Linting - MyPy"
-cd backend
-if mypy app/ --ignore-missing-imports; then
+if docker run --rm -v $(pwd)/backend:/app meditrack:latest mypy app/ --ignore-missing-imports; then
     print_success "MyPy check passed"
 else
     print_error "MyPy check failed"
     exit 1
 fi
-cd ..
 
 # Frontend Linting - ESLint
 print_header "Frontend Linting - ESLint"
@@ -114,15 +104,12 @@ cd ..
 
 # Security Scanning - Python
 print_header "Security Scanning - Python Dependencies"
-cd backend
-pip install safety >/dev/null 2>&1
-if safety check -r requirements.txt --json; then
+if docker run --rm -v $(pwd)/backend:/app meditrack:latest sh -c "pip install safety >/dev/null 2>&1 && safety check -r requirements.txt --json"; then
     print_success "Python dependency security check passed"
 else
     print_error "Python dependency security check failed"
     # Don't exit on security errors (matching CI behavior)
 fi
-cd ..
 
 # Security Scanning - npm
 print_header "Security Scanning - npm Dependencies"
