@@ -378,7 +378,10 @@ const MedicationTracker = () => {
                     : "Take Now"}
                 </button>
                 <button
-                  onClick={() => setSelectedMedicationForHistory(medication)}
+                  onClick={() => {
+                    console.log('History button clicked for medication:', medication);
+                    setSelectedMedicationForHistory(medication);
+                  }}
                   className="px-3 py-2 text-purple-600 hover:bg-purple-50 rounded-md"
                 >
                   History
@@ -441,7 +444,10 @@ const MedicationTracker = () => {
         <DoseHistoryModal
           medication={selectedMedicationForHistory}
           isOpen={true}
-          onClose={() => setSelectedMedicationForHistory(null)}
+          onClose={() => {
+            console.log('Closing dose history modal');
+            setSelectedMedicationForHistory(null);
+          }}
         />
       )}
     </div>
