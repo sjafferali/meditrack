@@ -123,7 +123,6 @@ meditrack/
 │   └── package.json     # Node dependencies
 │
 ├── .github/workflows/   # CI/CD configurations
-├── docker-compose.yml   # Docker orchestration
 └── docs/               # Documentation
 ```
 
@@ -197,9 +196,6 @@ docker compose -f docker-compose.simple.yml up -d
 
 # Option 2: With PostgreSQL database
 docker compose -f docker-compose.postgres.yml up -d
-
-# Option 3: Full production setup (nginx, PostgreSQL, etc.)
-docker compose -f docker-compose.prod.yml up -d
 
 # View logs
 docker compose logs -f

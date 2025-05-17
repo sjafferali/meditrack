@@ -43,9 +43,6 @@ cd meditrack
 
 3. **Configure environment**
 ```bash
-# Copy production compose file
-cp docker-compose.prod.yml docker-compose.yml
-
 # Create .env file
 cat > .env << EOF
 SECRET_KEY=your-generated-secret-key
@@ -59,11 +56,15 @@ EOF
 # Build images
 ./build_images.sh
 
-# Start services
-docker compose up -d
+# Start services using appropriate compose file
+# For SQLite deployment
+docker compose -f docker-compose.simple.yml up -d
 
-# Check status
-docker compose ps
+# OR for PostgreSQL deployment
+docker compose -f docker-compose.postgres.yml up -d
+
+# Check status (example with simple deployment)
+docker compose -f docker-compose.simple.yml ps
 ```
 
 5. **Set up reverse proxy (Nginx)**
@@ -128,7 +129,11 @@ echo "your-secret-key" | docker secret create meditrack_secret_key -
 
 3. **Deploy stack**
 ```bash
-docker stack deploy -c docker-compose.prod.yml meditrack
+# Deploy with SQLite
+docker stack deploy -c docker-compose.simple.yml meditrack
+
+# OR deploy with PostgreSQL
+docker stack deploy -c docker-compose.postgres.yml meditrack
 ```
 
 ### Option 3: Kubernetes Deployment
@@ -289,8 +294,8 @@ app.mount("/metrics", metrics_app)
 
 2. **Deploy monitoring stack**
 ```yaml
-# docker-compose.monitoring.yml
-version: '3.8'
+# Configure in your chosen docker-compose file
+# Add these services to docker-compose.simple.yml or docker-compose.postgres.yml
 
 services:
   prometheus:
@@ -311,8 +316,8 @@ services:
 ### ELK Stack
 
 ```yaml
-# docker-compose.logging.yml
-version: '3.8'
+# Add these services to your chosen docker-compose file
+# docker-compose.simple.yml or docker-compose.postgres.yml
 
 services:
   elasticsearch:
@@ -361,14 +366,14 @@ find $BACKUP_DIR -type f -mtime +7 -delete
 ### Restore Procedure
 
 ```bash
-# Stop services
-docker compose down
+# Stop services (example with simple deployment)
+docker compose -f docker-compose.simple.yml down
 
 # Restore database
 docker cp /backups/meditrack/meditrack_20240116_120000.db meditrack-backend-1:/app/data/meditrack.db
 
 # Start services
-docker compose up -d
+docker compose -f docker-compose.simple.yml up -d
 ```
 
 ## Security Checklist
@@ -444,17 +449,17 @@ python -m cProfile -o profile.out app/main.py
 # Check connections
 docker exec meditrack-backend-1 fuser /app/data/meditrack.db
 
-# Restart backend
-docker compose restart backend
+# Restart backend (example with simple deployment)
+docker compose -f docker-compose.simple.yml restart backend
 ```
 
 ## Maintenance
 
 ### Rolling Updates
 ```bash
-# Update one container at a time
-docker compose up -d --no-deps --build backend
-docker compose up -d --no-deps --build frontend
+# Update one container at a time (example with simple deployment)
+docker compose -f docker-compose.simple.yml up -d --no-deps --build backend
+docker compose -f docker-compose.simple.yml up -d --no-deps --build frontend
 ```
 
 ### Health Monitoring

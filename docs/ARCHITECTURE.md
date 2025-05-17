@@ -293,7 +293,8 @@ meditrack/
 │       └── security.yml
 │
 ├── docs/                   # Documentation
-├── docker-compose.yml      # Multi-container orchestration
+├── docker-compose.simple.yml  # SQLite deployment configuration
+├── docker-compose.postgres.yml # PostgreSQL deployment configuration
 └── README.md              # Project overview
 ```
 

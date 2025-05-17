@@ -212,7 +212,11 @@ docker compose exec backend alembic upgrade head
 ### Production
 Include in your deployment script:
 ```bash
-docker compose -f docker-compose.prod.yml exec backend alembic upgrade head
+# For SQLite deployment
+docker compose -f docker-compose.simple.yml exec backend alembic upgrade head
+
+# For PostgreSQL deployment
+docker compose -f docker-compose.postgres.yml exec backend alembic upgrade head
 ```
 
 ### Dockerfile

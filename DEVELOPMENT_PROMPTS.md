@@ -68,10 +68,10 @@ Please:
    - Install dependencies
    - Build React app
    - Use nginx to serve static files
-3. Update docker-compose.yml if needed
+3. Update docker-compose files as needed (docker-compose.simple.yml or docker-compose.postgres.yml)
 4. Add .dockerignore files for both services
-5. Test the complete stack with docker-compose up
-6. Create a docker-compose.prod.yml for production settings
+5. Test the complete stack with docker-compose -f docker-compose.simple.yml up
+6. Update the existing docker-compose files for production settings
 
 After each step:
 - Build and test the Docker images

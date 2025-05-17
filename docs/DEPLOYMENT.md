@@ -34,13 +34,17 @@ git clone https://github.com/sjafferali/meditrack.git
 cd meditrack
 
 # Build and run with Docker Compose
-docker compose up -d
+# Option 1: Simple deployment with SQLite
+docker compose -f docker-compose.simple.yml up -d
+
+# Option 2: Deployment with PostgreSQL
+docker compose -f docker-compose.postgres.yml up -d
 
 # Check status
-docker compose ps
+docker compose -f docker-compose.simple.yml ps
 
 # View logs
-docker compose logs -f
+docker compose -f docker-compose.simple.yml logs -f
 ```
 
 ### Production Docker Deployment
@@ -64,72 +68,14 @@ DEBUG=false
 REACT_APP_API_URL=https://api.yourdomain.com
 ```
 
-3. Use production Docker Compose:
-
-```yaml
-# docker-compose.prod.yml
-version: '3.8'
-
-services:
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile.prod
-    environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - SECRET_KEY=${SECRET_KEY}
-      - ENVIRONMENT=production
-    volumes:
-      - ./data:/app/data
-    networks:
-      - meditrack
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile.prod
-      args:
-        - REACT_APP_API_URL=${REACT_APP_API_URL}
-    networks:
-      - meditrack
-
-  nginx:
-    image: nginx:alpine
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./ssl:/etc/nginx/ssl
-    depends_on:
-      - backend
-      - frontend
-    networks:
-      - meditrack
-
-  db:
-    image: postgres:15
-    environment:
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_DB=meditrack
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - meditrack
-
-networks:
-  meditrack:
-    driver: bridge
-
-volumes:
-  postgres_data:
-```
-
-4. Deploy:
+3. Deploy using the available Docker Compose configurations:
 
 ```bash
-docker compose -f docker-compose.prod.yml up -d
+# For SQLite deployment
+docker compose -f docker-compose.simple.yml up -d
+
+# For PostgreSQL deployment
+docker compose -f docker-compose.postgres.yml up -d
 ```
 
 ## AWS Deployment
@@ -478,7 +424,10 @@ ssh root@your-droplet-ip
 ```bash
 git clone https://github.com/sjafferali/meditrack.git
 cd meditrack
-docker compose -f docker-compose.prod.yml up -d
+# Choose your deployment option
+docker compose -f docker-compose.simple.yml up -d
+# OR
+docker compose -f docker-compose.postgres.yml up -d
 ```
 
 ## Kubernetes Deployment

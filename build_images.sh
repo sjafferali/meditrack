@@ -12,8 +12,6 @@ docker build -t meditrack-frontend:latest ./frontend
 
 echo "Docker images built successfully!"
 echo ""
-echo "To run in production mode:"
-echo "  docker-compose -f docker-compose.prod.yml up -d"
-echo ""
-echo "To run in development mode:"
-echo "  docker-compose up"
+echo "To run the application:"
+echo "  With SQLite: docker-compose -f docker-compose.simple.yml up -d"
+echo "  With PostgreSQL: docker-compose -f docker-compose.postgres.yml up -d"

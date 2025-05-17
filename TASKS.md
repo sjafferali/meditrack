@@ -78,7 +78,7 @@
 ### Containerization
 - [✅] Create backend Dockerfile
 - [✅] Create frontend Dockerfile  
-- [✅] Create docker-compose.yml for local development
+- [✅] Create docker-compose files for deployment (docker-compose.simple.yml and docker-compose.postgres.yml)
 - [✅] Add .dockerignore files
 
 ### GitHub Actions

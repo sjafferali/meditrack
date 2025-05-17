@@ -23,16 +23,20 @@ MediTrack is fully containerized with Docker, making deployment consistent acros
 
 ```bash
 # Build and start all services
-docker compose up --build
+# Option 1: Simple deployment with SQLite
+docker compose -f docker-compose.simple.yml up --build
+
+# Option 2: Deployment with PostgreSQL  
+docker compose -f docker-compose.postgres.yml up --build
 
 # Run in background
-docker compose up -d
+docker compose -f docker-compose.simple.yml up -d
 
 # View logs
-docker compose logs -f
+docker compose -f docker-compose.simple.yml logs -f
 
 # Stop services
-docker compose down
+docker compose -f docker-compose.simple.yml down
 ```
 
 Access:
@@ -47,13 +51,17 @@ Access:
 ./build_images.sh
 
 # Start services
-docker compose -f docker-compose.prod.yml up -d
+# Option 1: Simple deployment with SQLite
+docker compose -f docker-compose.simple.yml up -d
 
-# View logs
-docker compose -f docker-compose.prod.yml logs -f
+# Option 2: Deployment with PostgreSQL
+docker compose -f docker-compose.postgres.yml up -d
 
-# Stop services
-docker compose -f docker-compose.prod.yml down
+# View logs (example with simple deployment)
+docker compose -f docker-compose.simple.yml logs -f
+
+# Stop services (example with simple deployment)
+docker compose -f docker-compose.simple.yml down
 ```
 
 Access:
@@ -135,25 +143,25 @@ Features:
 
 ### Container won't start
 ```bash
-# Check logs
-docker compose logs backend
-docker compose logs frontend
+# Check logs (example with simple deployment)
+docker compose -f docker-compose.simple.yml logs backend
+docker compose -f docker-compose.simple.yml logs frontend
 
 # Check container status
-docker compose ps
+docker compose -f docker-compose.simple.yml ps
 
 # Inspect container
-docker compose exec backend sh
+docker compose -f docker-compose.simple.yml exec backend sh
 ```
 
 ### Database issues
 ```bash
-# Access database file
-docker compose exec backend ls -la /app/data/
+# Access database file (example with simple deployment)
+docker compose -f docker-compose.simple.yml exec backend ls -la /app/data/
 
 # Reset database
-docker compose down -v
-docker compose up --build
+docker compose -f docker-compose.simple.yml down -v
+docker compose -f docker-compose.simple.yml up --build
 ```
 
 ### Port conflicts
@@ -162,7 +170,7 @@ docker compose up --build
 netstat -an | grep -E '(3000|8000|80)'
 
 # Use different ports
-# Edit docker-compose.yml ports section
+# Edit docker-compose.simple.yml or docker-compose.postgres.yml ports section
 ```
 
 ### Build issues
@@ -177,20 +185,20 @@ docker compose build --no-cache
 
 ### Backup database
 ```bash
-# Create backup
-docker compose exec backend cp /app/data/meditrack.db /app/data/meditrack.db.backup
+# Create backup (example with simple deployment)
+docker compose -f docker-compose.simple.yml exec backend cp /app/data/meditrack.db /app/data/meditrack.db.backup
 
 # Copy to host
-docker cp $(docker compose ps -q backend):/app/data/meditrack.db.backup ./backup/
+docker cp $(docker compose -f docker-compose.simple.yml ps -q backend):/app/data/meditrack.db.backup ./backup/
 ```
 
 ### Restore database
 ```bash
-# Copy backup to container
-docker cp ./backup/meditrack.db.backup $(docker compose ps -q backend):/app/data/
+# Copy backup to container (example with simple deployment)
+docker cp ./backup/meditrack.db.backup $(docker compose -f docker-compose.simple.yml ps -q backend):/app/data/
 
 # Restore
-docker compose exec backend cp /app/data/meditrack.db.backup /app/data/meditrack.db
+docker compose -f docker-compose.simple.yml exec backend cp /app/data/meditrack.db.backup /app/data/meditrack.db
 ```
 
 ## Monitoring
@@ -203,8 +211,8 @@ curl http://localhost:8000/health
 # Check frontend
 curl http://localhost:3000
 
-# Docker health status
-docker compose ps
+# Docker health status (example with simple deployment)
+docker compose -f docker-compose.simple.yml ps
 ```
 
 ### Resource usage
@@ -212,8 +220,8 @@ docker compose ps
 # View resource usage
 docker stats
 
-# View detailed info
-docker compose top
+# View detailed info (example with simple deployment)
+docker compose -f docker-compose.simple.yml top
 ```
 
 ## Deployment Checklist
@@ -254,12 +262,12 @@ To update the application:
 # Pull latest code
 git pull
 
-# Rebuild images
-docker compose build
+# Rebuild images (example with simple deployment)
+docker compose -f docker-compose.simple.yml build
 
 # Restart services
-docker compose up -d
+docker compose -f docker-compose.simple.yml up -d
 
 # Run migrations if needed
-docker compose exec backend alembic upgrade head
+docker compose -f docker-compose.simple.yml exec backend alembic upgrade head
 ```
