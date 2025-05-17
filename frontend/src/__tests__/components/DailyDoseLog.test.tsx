@@ -109,8 +109,11 @@ describe('DailyDoseLog Component', () => {
     const copyButton = screen.getByText('Copy to Clipboard');
     fireEvent.click(copyButton);
 
+    await waitFor(() => {
+      expect(screen.getByText('Copied!')).toBeInTheDocument();
+    });
+    
     expect(navigator.clipboard.writeText).toHaveBeenCalled();
-    expect(screen.getByText('Copied!')).toBeInTheDocument();
   });
 
   test('calls onClose when close button is clicked', async () => {
