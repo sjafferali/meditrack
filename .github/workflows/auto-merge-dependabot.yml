@@ -1,11 +1,10 @@
-name: Auto-merge Dependabot
+name: Dependabot PR Comment
 
 on:
   pull_request:
     types: [opened, synchronize, reopened]
 
 permissions:
-  contents: write
   pull-requests: write
   
 jobs:
@@ -23,22 +22,18 @@ jobs:
       with:
         github-token: "${{ secrets.GITHUB_TOKEN }}"
         
-    # Note: GitHub Actions cannot approve PRs, so we skip the approval step
-    # and go directly to auto-merge, which will merge when all checks pass
-        
-    - name: Enable auto-merge for Dependabot PR
-      run: gh pr merge --auto --merge "$PR_URL"
-      env:
-        PR_URL: ${{ github.event.pull_request.html_url }}
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    # Auto-merge is disabled to prevent merging PRs that break the build
+    # PRs will need to be manually reviewed and merged
         
     - name: Comment on PR
       run: |
-        gh pr comment "$PR_URL" --body "Auto-merge enabled for this Dependabot PR. It will merge automatically once all checks pass.
+        gh pr comment "$PR_URL" --body "Dependabot update detected.
         
         Update type: ${{ steps.metadata.outputs.update-type }}
         Dependency: ${{ steps.metadata.outputs.dependency-names }}
-        Version: ${{ steps.metadata.outputs.previous-version }} → ${{ steps.metadata.outputs.new-version }}"
+        Version: ${{ steps.metadata.outputs.previous-version }} → ${{ steps.metadata.outputs.new-version }}
+        
+        ⚠️ Auto-merge is currently disabled. Please review the changes and test that they don't break the build before merging."
       env:
         PR_URL: ${{ github.event.pull_request.html_url }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
