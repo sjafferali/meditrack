@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { medicationApi, doseApi } from '../services/api';
 import DoseHistoryModal from './DoseHistoryModal';
 
@@ -21,12 +21,7 @@ const MedicationTracker = () => {
     instructions: ''
   });
 
-  // Load medications on component mount and when date changes
-  useEffect(() => {
-    loadMedications();
-  }, [selectedDate]);
-
-  const loadMedications = async () => {
+  const loadMedications = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -38,7 +33,12 @@ const MedicationTracker = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedDate]);
+
+  // Load medications on component mount and when date changes
+  useEffect(() => {
+    loadMedications();
+  }, [loadMedications]);
 
   const handleTakeMedication = async (medicationId: number) => {
     try {

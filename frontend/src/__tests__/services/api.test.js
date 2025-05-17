@@ -1,3 +1,5 @@
+import { medicationApi, doseApi } from '../../services/api';
+
 // Mock the api module
 jest.mock('../../services/api', () => ({
   medicationApi: {
@@ -12,8 +14,6 @@ jest.mock('../../services/api', () => ({
     getDailySummary: jest.fn(),
   },
 }));
-
-import { medicationApi, doseApi } from '../../services/api';
 
 describe('API Service', () => {
   beforeEach(() => {

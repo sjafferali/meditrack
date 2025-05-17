@@ -71,8 +71,8 @@ describe('MedicationTracker', () => {
     
     await waitFor(() => {
       expect(screen.getByText('Test Medication')).toBeInTheDocument();
-      expect(screen.getByText('10mg')).toBeInTheDocument();
     });
+    expect(screen.getByText('10mg')).toBeInTheDocument();
   });
 
   test('handles error state', async () => {
@@ -97,10 +97,8 @@ describe('MedicationTracker', () => {
   test('opens dose history modal when History button is clicked', async () => {
     render(<MedicationTracker />);
     
-    await waitFor(() => {
-      const historyButton = screen.getByText('History');
-      fireEvent.click(historyButton);
-    });
+    const historyButton = await screen.findByText('History');
+    fireEvent.click(historyButton);
     
     // The modal should open showing the dose history title
     await waitFor(() => {
@@ -121,17 +119,15 @@ describe('MedicationTracker', () => {
     expect(screen.getByLabelText('Next day')).toBeInTheDocument();
     
     // Check for date input
-    const dateInput = document.querySelector('input[type="date"]');
+    const dateInput = screen.getByDisplayValue(/\d{4}-\d{2}-\d{2}/);
     expect(dateInput).toBeInTheDocument();
   });
 
   test('navigates to previous day when prev button clicked', async () => {
     render(<MedicationTracker />);
     
-    await waitFor(() => {
-      const prevButton = screen.getByLabelText('Previous day');
-      fireEvent.click(prevButton);
-    });
+    const prevButton = await screen.findByLabelText('Previous day');
+    fireEvent.click(prevButton);
     
     // Medications should be reloaded with the previous date
     expect(api.medicationApi.getAll).toHaveBeenCalledWith(
@@ -142,10 +138,8 @@ describe('MedicationTracker', () => {
   test('navigates to next day when next button clicked', async () => {
     render(<MedicationTracker />);
     
-    await waitFor(() => {
-      const nextButton = screen.getByLabelText('Next day');
-      fireEvent.click(nextButton);
-    });
+    const nextButton = await screen.findByLabelText('Next day');
+    fireEvent.click(nextButton);
     
     // Medications should be reloaded with the next date
     expect(api.medicationApi.getAll).toHaveBeenCalledWith(
@@ -156,10 +150,8 @@ describe('MedicationTracker', () => {
   test('updates date when date input changes', async () => {
     render(<MedicationTracker />);
     
-    await waitFor(() => {
-      const dateInput = document.querySelector('input[type="date"]');
-      fireEvent.change(dateInput, { target: { value: '2023-01-10' } });
-    });
+    const dateInput = await screen.findByDisplayValue(/\d{4}-\d{2}-\d{2}/);
+    fireEvent.change(dateInput, { target: { value: '2023-01-10' } });
     
     // Medications should be reloaded with the selected date
     expect(api.medicationApi.getAll).toHaveBeenCalledWith(
@@ -184,10 +176,8 @@ describe('MedicationTracker', () => {
   test('displays Past indicator for past dates', async () => {
     render(<MedicationTracker />);
     
-    await waitFor(() => {
-      const dateInput = document.querySelector('input[type="date"]');
-      fireEvent.change(dateInput, { target: { value: '2022-01-10' } });
-    });
+    const dateInput = await screen.findByDisplayValue(/\d{4}-\d{2}-\d{2}/);
+    fireEvent.change(dateInput, { target: { value: '2022-01-10' } });
     
     await waitFor(() => {
       expect(screen.getByText('Past')).toBeInTheDocument();
@@ -197,10 +187,8 @@ describe('MedicationTracker', () => {
   test('disables Take Now button for future dates', async () => {
     render(<MedicationTracker />);
     
-    await waitFor(() => {
-      const dateInput = screen.getByDisplayValue(/\d{4}-\d{2}-\d{2}/);
-      fireEvent.change(dateInput, { target: { value: '2025-01-10' } });
-    });
+    const dateInput = await screen.findByDisplayValue(/\d{4}-\d{2}-\d{2}/);
+    fireEvent.change(dateInput, { target: { value: '2025-01-10' } });
     
     // Wait for API call and re-render
     await waitFor(() => {
@@ -220,10 +208,8 @@ describe('MedicationTracker', () => {
   test('shows Record Dose for past dates', async () => {
     render(<MedicationTracker />);
     
-    await waitFor(() => {
-      const dateInput = screen.getByDisplayValue(/\d{4}-\d{2}-\d{2}/);
-      fireEvent.change(dateInput, { target: { value: '2022-01-10' } });
-    });
+    const dateInput = await screen.findByDisplayValue(/\d{4}-\d{2}-\d{2}/);
+    fireEvent.change(dateInput, { target: { value: '2022-01-10' } });
     
     await waitFor(() => {
       expect(screen.getByText('Record Dose')).toBeInTheDocument();

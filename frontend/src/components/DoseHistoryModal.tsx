@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { doseApi } from '../services/api';
 
 interface DoseHistoryModalProps {
@@ -21,13 +21,7 @@ const DoseHistoryModal: React.FC<DoseHistoryModalProps> = ({ medication, isOpen,
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (isOpen && medication) {
-      loadDoseHistory();
-    }
-  }, [isOpen, medication]);
-
-  const loadDoseHistory = async () => {
+  const loadDoseHistory = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -38,7 +32,13 @@ const DoseHistoryModal: React.FC<DoseHistoryModalProps> = ({ medication, isOpen,
     } finally {
       setLoading(false);
     }
-  };
+  }, [medication.id]);
+
+  useEffect(() => {
+    if (isOpen && medication) {
+      loadDoseHistory();
+    }
+  }, [isOpen, medication, loadDoseHistory]);
 
   const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
