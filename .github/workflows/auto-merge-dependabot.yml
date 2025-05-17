@@ -23,13 +23,10 @@ jobs:
       with:
         github-token: "${{ secrets.GITHUB_TOKEN }}"
         
-    - name: Auto-approve PR
-      run: gh pr review --approve "$PR_URL"
-      env:
-        PR_URL: ${{ github.event.pull_request.html_url }}
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    # Note: GitHub Actions cannot approve PRs, so we skip the approval step
+    # and go directly to auto-merge, which will merge when all checks pass
         
-    - name: Auto-merge PR
+    - name: Enable auto-merge for Dependabot PR
       run: gh pr merge --auto --merge "$PR_URL"
       env:
         PR_URL: ${{ github.event.pull_request.html_url }}
@@ -37,7 +34,7 @@ jobs:
         
     - name: Comment on PR
       run: |
-        gh pr comment "$PR_URL" --body "Auto-merging Dependabot PR after successful checks.
+        gh pr comment "$PR_URL" --body "Auto-merge enabled for this Dependabot PR. It will merge automatically once all checks pass.
         
         Update type: ${{ steps.metadata.outputs.update-type }}
         Dependency: ${{ steps.metadata.outputs.dependency-names }}
