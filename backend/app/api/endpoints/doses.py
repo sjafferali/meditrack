@@ -25,22 +25,22 @@ router = APIRouter(
     responses={
         201: {"description": "Dose recorded successfully"},
         400: {"description": "Maximum daily doses already taken"},
-        404: {"description": "Medication not found"}
-    }
+        404: {"description": "Medication not found"},
+    },
 )
 def record_dose(
     medication_id: int = Path(..., ge=1, description="The ID of the medication"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Record a dose for a medication.
-    
+
     This endpoint will:
     - Check if the medication exists
     - Verify the daily dose limit hasn't been reached
     - Record the dose with the current timestamp
     - Return the created dose record
-    
+
     Returns error if:
     - Medication doesn't exist (404)
     - Daily dose limit already reached (400)
@@ -81,21 +81,23 @@ def record_dose(
     response_model=List[DoseInDB],
     summary="Get dose history",
     description="Retrieve the dose history for a specific medication",
-    response_description="List of doses for the medication"
+    response_description="List of doses for the medication",
 )
 def get_doses(
     medication_id: int = Path(..., ge=1, description="The ID of the medication"),
     skip: int = Query(0, ge=0, description="Number of doses to skip"),
-    limit: int = Query(100, ge=1, le=1000, description="Maximum number of doses to return"),
-    db: Session = Depends(get_db)
+    limit: int = Query(
+        100, ge=1, le=1000, description="Maximum number of doses to return"
+    ),
+    db: Session = Depends(get_db),
 ):
     """
     Get dose history for a medication.
-    
+
     - **medication_id**: The ID of the medication
     - **skip**: Number of doses to skip (for pagination)
     - **limit**: Maximum number of doses to return
-    
+
     Doses are returned in descending order by timestamp (newest first).
     """
     # Check if medication exists
@@ -120,12 +122,12 @@ def get_doses(
     response_model=dict,
     summary="Get daily summary",
     description="Get a summary of all medications and doses taken today",
-    response_description="Summary of today's medication doses"
+    response_description="Summary of today's medication doses",
 )
 def get_daily_summary(db: Session = Depends(get_db)):
     """
     Get today's dose summary for all medications.
-    
+
     Returns a summary including:
     - Today's date
     - List of all medications with:

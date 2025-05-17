@@ -6,15 +6,15 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "MediTrack"
     VERSION: str = "1.0.0"
     DESCRIPTION: str = "Medication Tracker Application"
-    
+
     # Essential configuration
     DATABASE_URL: str = "sqlite:///./data/meditrack.db"
     SECRET_KEY: str = "your-secret-key-here"
-    
+
     # Environment settings (with defaults)
     ENVIRONMENT: str = "production"
     DEBUG: bool = False
-    
+
     # CORS settings (default to same-origin)
     CORS_ORIGINS: list[str] = ["*"]  # In production, served from same origin
 

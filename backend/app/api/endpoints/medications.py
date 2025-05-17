@@ -21,20 +21,24 @@ router = APIRouter(
 
 
 @router.get(
-    "/", 
+    "/",
     response_model=List[MedicationWithDoses],
     summary="Get all medications",
-    description="Retrieve a list of all medications with their current dose information",
-    response_description="List of medications with today's dose count and last taken time"
+    description="Retrieve a list of all medications with their current dose "
+    "information",
+    response_description="List of medications with today's dose count and "
+    "last taken time",
 )
 def get_medications(
     skip: int = Query(0, ge=0, description="Number of medications to skip"),
-    limit: int = Query(100, ge=1, le=1000, description="Maximum number of medications to return"),
-    db: Session = Depends(get_db)
+    limit: int = Query(
+        100, ge=1, le=1000, description="Maximum number of medications to return"
+    ),
+    db: Session = Depends(get_db),
 ):
     """
     Get all medications with today's dose information.
-    
+
     - **skip**: Number of medications to skip (for pagination)
     - **limit**: Maximum number of medications to return
     """
@@ -79,15 +83,12 @@ def get_medications(
     status_code=status.HTTP_201_CREATED,
     summary="Create a medication",
     description="Add a new medication to track",
-    response_description="The created medication"
+    response_description="The created medication",
 )
-def create_medication(
-    medication: MedicationCreate,
-    db: Session = Depends(get_db)
-):
+def create_medication(medication: MedicationCreate, db: Session = Depends(get_db)):
     """
     Create a new medication with the following information:
-    
+
     - **name**: Medication name (required)
     - **dosage**: Dosage amount and unit (required)
     - **frequency**: How often to take the medication (required)
@@ -106,11 +107,13 @@ def create_medication(
     response_model=MedicationWithDoses,
     summary="Get a medication",
     description="Get details of a specific medication by ID",
-    response_description="The requested medication with dose information"
+    response_description="The requested medication with dose information",
 )
 def get_medication(
-    medication_id: int = Path(..., ge=1, description="The ID of the medication to retrieve"),
-    db: Session = Depends(get_db)
+    medication_id: int = Path(
+        ..., ge=1, description="The ID of the medication to retrieve"
+    ),
+    db: Session = Depends(get_db),
 ):
     """Get a specific medication by ID with today's dose information."""
     medication = db.query(Medication).filter(Medication.id == medication_id).first()
@@ -147,16 +150,19 @@ def get_medication(
     response_model=MedicationInDB,
     summary="Update a medication",
     description="Update an existing medication's information",
-    response_description="The updated medication"
+    response_description="The updated medication",
 )
 def update_medication(
-    medication_id: int = Path(..., ge=1, description="The ID of the medication to update"),
-    medication_update: MedicationUpdate = ...,
+    *,
+    medication_id: int = Path(
+        ..., ge=1, description="The ID of the medication to update"
+    ),
+    medication_update: MedicationUpdate,
     db: Session = Depends(get_db),
 ):
     """
     Update a medication's information.
-    
+
     All fields are optional - only provide the fields you want to update.
     """
     medication = db.query(Medication).filter(Medication.id == medication_id).first()
@@ -179,16 +185,18 @@ def update_medication(
     description="Delete a medication and all its dose history",
     responses={
         204: {"description": "Medication deleted successfully"},
-        404: {"description": "Medication not found"}
-    }
+        404: {"description": "Medication not found"},
+    },
 )
 def delete_medication(
-    medication_id: int = Path(..., ge=1, description="The ID of the medication to delete"),
-    db: Session = Depends(get_db)
+    medication_id: int = Path(
+        ..., ge=1, description="The ID of the medication to delete"
+    ),
+    db: Session = Depends(get_db),
 ):
     """
     Delete a medication.
-    
+
     **Warning**: This will also delete all dose history for this medication.
     """
     medication = db.query(Medication).filter(Medication.id == medication_id).first()

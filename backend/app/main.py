@@ -1,7 +1,8 @@
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from pathlib import Path
 
 from app.api.api import api_router
 from app.core.config import settings
@@ -21,8 +22,9 @@ tags_metadata = [
         "description": "Operations with medications. Manage your medication list.",
     },
     {
-        "name": "doses", 
-        "description": "Operations with medication doses. Track when medications are taken.",
+        "name": "doses",
+        "description": "Operations with medication doses. Track when medications "
+        "are taken.",
     },
     {
         "name": "health",
@@ -31,7 +33,7 @@ tags_metadata = [
     {
         "name": "root",
         "description": "Root endpoints with general information.",
-    }
+    },
 ]
 
 app = FastAPI(
@@ -73,11 +75,16 @@ if static_path.exists():
 
 
 # Health check endpoint
-@app.get("/health", tags=["health"], summary="Health Check", description="Check if the API is healthy and responding")
+@app.get(
+    "/health",
+    tags=["health"],
+    summary="Health Check",
+    description="Check if the API is healthy and responding",
+)
 def health_check():
     """
     Performs a health check on the API.
-    
+
     Returns:
         dict: Status and version information
     """
