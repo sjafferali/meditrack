@@ -6,6 +6,9 @@ import * as api from '../../services/api';
 // Mock the API module
 jest.mock('../../services/api');
 
+// Mock date to have consistent test results
+const mockDate = new Date('2023-01-15');
+
 describe('MedicationTracker', () => {
   const mockMedications = [
     {
@@ -15,7 +18,8 @@ describe('MedicationTracker', () => {
       frequency: 'twice daily',
       max_doses_per_day: 2,
       instructions: 'Take with food',
-      doses_today: 1
+      doses_taken_today: 1,
+      last_taken_at: null
     }
   ];
 
@@ -29,6 +33,7 @@ describe('MedicationTracker', () => {
     (api.medicationApi.delete as jest.Mock).mockResolvedValue({});
     
     (api.doseApi.recordDose as jest.Mock).mockResolvedValue({});
+    (api.doseApi.recordDoseForDate as jest.Mock).mockResolvedValue({});
     (api.doseApi.getDoses as jest.Mock).mockResolvedValue([]);
     (api.doseApi.getDailySummary as jest.Mock).mockResolvedValue({ 
       date: '2023-01-01',
@@ -99,6 +104,119 @@ describe('MedicationTracker', () => {
     // The modal should open showing the dose history title
     await waitFor(() => {
       expect(screen.getByText('Dose History - Test Medication')).toBeInTheDocument();
+    });
+  });
+
+  test('displays date navigation controls', async () => {
+    render(<MedicationTracker />);
+    
+    // Wait for component to load medications first
+    await waitFor(() => {
+      expect(screen.getByText('Test Medication')).toBeInTheDocument();
+    });
+    
+    // Check for navigation buttons
+    expect(screen.getByLabelText('Previous day')).toBeInTheDocument();
+    expect(screen.getByLabelText('Next day')).toBeInTheDocument();
+    
+    // Check for date input
+    const dateInput = document.querySelector('input[type="date"]');
+    expect(dateInput).toBeInTheDocument();
+  });
+
+  test('navigates to previous day when prev button clicked', async () => {
+    render(<MedicationTracker />);
+    
+    await waitFor(() => {
+      const prevButton = screen.getByLabelText('Previous day');
+      fireEvent.click(prevButton);
+    });
+    
+    // Medications should be reloaded with the previous date
+    expect(api.medicationApi.getAll).toHaveBeenCalledWith(
+      expect.objectContaining({ date: expect.any(String) })
+    );
+  });
+
+  test('navigates to next day when next button clicked', async () => {
+    render(<MedicationTracker />);
+    
+    await waitFor(() => {
+      const nextButton = screen.getByLabelText('Next day');
+      fireEvent.click(nextButton);
+    });
+    
+    // Medications should be reloaded with the next date
+    expect(api.medicationApi.getAll).toHaveBeenCalledWith(
+      expect.objectContaining({ date: expect.any(String) })
+    );
+  });
+
+  test('updates date when date input changes', async () => {
+    render(<MedicationTracker />);
+    
+    await waitFor(() => {
+      const dateInput = document.querySelector('input[type="date"]');
+      fireEvent.change(dateInput, { target: { value: '2023-01-10' } });
+    });
+    
+    // Medications should be reloaded with the selected date
+    expect(api.medicationApi.getAll).toHaveBeenCalledWith(
+      expect.objectContaining({ date: '2023-01-10' })
+    );
+  });
+
+  test('displays Today indicator for current date', async () => {
+    const originalDate = global.Date;
+    global.Date = jest.fn(() => mockDate) as any;
+    global.Date.now = originalDate.now;
+    
+    render(<MedicationTracker />);
+    
+    await waitFor(() => {
+      expect(screen.getByText('Today')).toBeInTheDocument();
+    });
+    
+    global.Date = originalDate;
+  });
+
+  test('displays Past indicator for past dates', async () => {
+    render(<MedicationTracker />);
+    
+    await waitFor(() => {
+      const dateInput = document.querySelector('input[type="date"]');
+      fireEvent.change(dateInput, { target: { value: '2022-01-10' } });
+    });
+    
+    await waitFor(() => {
+      expect(screen.getByText('Past')).toBeInTheDocument();
+    });
+  });
+
+  test('disables Take Now button for future dates', async () => {
+    render(<MedicationTracker />);
+    
+    const dateInput = document.querySelector('input[type="date"]');
+    fireEvent.change(dateInput, { target: { value: '2025-01-10' } });
+    
+    // Wait for API call and re-render
+    await waitFor(() => {
+      expect(api.medicationApi.getAll).toHaveBeenCalledWith(
+        expect.objectContaining({ date: '2025-01-10' })
+      );
+    });
+  });
+
+  test('shows Record Dose for past dates', async () => {
+    render(<MedicationTracker />);
+    
+    await waitFor(() => {
+      const dateInput = document.querySelector('input[type="date"]');
+      fireEvent.change(dateInput, { target: { value: '2022-01-10' } });
+    });
+    
+    await waitFor(() => {
+      expect(screen.getByText('Record Dose')).toBeInTheDocument();
     });
   });
 });

@@ -28,10 +28,10 @@ api.interceptors.response.use(
 );
 
 const medicationApi = {
-  // Get all medications with today's dose information
-  getAll: async () => {
+  // Get all medications with dose information for today or specific date
+  getAll: async (params = {}) => {
     try {
-      const response = await api.get('/medications/');
+      const response = await api.get('/medications/', { params });
       return response.data;
     } catch (error) {
       throw error;
@@ -90,6 +90,16 @@ const doseApi = {
     }
   },
 
+  // Record a dose for a medication on a specific date and time
+  recordDoseForDate: async (medicationId, date, time) => {
+    try {
+      const response = await api.post(`/doses/medications/${medicationId}/dose/${date}?time=${encodeURIComponent(time)}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
   // Get dose history for a medication
   getDoses: async (medicationId) => {
     try {
@@ -100,10 +110,30 @@ const doseApi = {
     }
   },
 
+  // Get doses for a medication on a specific date
+  getDosesByDate: async (medicationId, date) => {
+    try {
+      const response = await api.get(`/doses/medications/${medicationId}/doses/${date}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
   // Get daily summary
   getDailySummary: async () => {
     try {
       const response = await api.get('/doses/daily-summary');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Get daily summary for a specific date
+  getDailySummaryByDate: async (date) => {
+    try {
+      const response = await api.get(`/doses/daily-summary/${date}`);
       return response.data;
     } catch (error) {
       throw error;

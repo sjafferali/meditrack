@@ -10,6 +10,7 @@ const MedicationTracker = () => {
   const [editingMedication, setEditingMedication] = useState<any>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const [selectedMedicationForHistory, setSelectedMedicationForHistory] = useState<any>(null);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   // Form state for adding/editing medications
   const [formData, setFormData] = useState({
@@ -20,16 +21,17 @@ const MedicationTracker = () => {
     instructions: ''
   });
 
-  // Load medications on component mount
+  // Load medications on component mount and when date changes
   useEffect(() => {
     loadMedications();
-  }, []);
+  }, [selectedDate]);
 
   const loadMedications = async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await medicationApi.getAll();
+      const dateStr = selectedDate.toISOString().split('T')[0];
+      const data = await medicationApi.getAll({ date: dateStr });
       setMedications(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -41,7 +43,22 @@ const MedicationTracker = () => {
   const handleTakeMedication = async (medicationId: number) => {
     try {
       setError(null);
-      await doseApi.recordDose(medicationId);
+      
+      if (isPastDate(selectedDate)) {
+        // For past dates, we need a time input modal
+        const time = prompt('Enter the time the dose was taken (HH:MM format):');
+        if (!time) return;
+        
+        const dateStr = selectedDate.toISOString().split('T')[0];
+        await doseApi.recordDoseForDate(medicationId, dateStr, time);
+      } else if (isToday(selectedDate)) {
+        // For today, record dose with current time
+        await doseApi.recordDose(medicationId);
+      } else {
+        setError('Cannot record doses for future dates');
+        return;
+      }
+      
       // Reload medications to update dose count
       await loadMedications();
     } catch (err) {
@@ -115,6 +132,38 @@ const MedicationTracker = () => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  const isToday = (date: Date) => {
+    const today = new Date();
+    return date.toDateString() === today.toDateString();
+  };
+
+  const isPastDate = (date: Date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return date < today;
+  };
+
+  const isFutureDate = (date: Date) => {
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+    return date > today;
+  };
+
+  const navigateDate = (direction: 'prev' | 'next') => {
+    const newDate = new Date(selectedDate);
+    if (direction === 'prev') {
+      newDate.setDate(newDate.getDate() - 1);
+    } else {
+      newDate.setDate(newDate.getDate() + 1);
+    }
+    setSelectedDate(newDate);
+  };
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newDate = new Date(e.target.value);
+    setSelectedDate(newDate);
+  };
+
   if (loading) {
     return (
       <div className="container mx-auto p-4 max-w-4xl">
@@ -130,7 +179,54 @@ const MedicationTracker = () => {
       <div className="text-center mb-6">
         <h1 className="text-3xl font-bold text-primary mb-2">Medication Tracker</h1>
         <p className="text-gray-600">Track your daily medications</p>
-        <p className="text-sm text-gray-500 mt-1">Today: {new Date().toLocaleDateString()}</p>
+      </div>
+
+      {/* Date Navigation */}
+      <div className="bg-white shadow rounded-lg p-4 mb-6">
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => navigateDate('prev')}
+            className="p-2 rounded-md hover:bg-gray-100 transition-colors"
+            aria-label="Previous day"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          
+          <div className="flex items-center space-x-4">
+            <input
+              type="date"
+              value={selectedDate.toISOString().split('T')[0]}
+              onChange={handleDateChange}
+              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            
+            {isToday(selectedDate) && (
+              <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">Today</span>
+            )}
+            {isPastDate(selectedDate) && !isToday(selectedDate) && (
+              <span className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">Past</span>
+            )}
+            {isFutureDate(selectedDate) && (
+              <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">Future</span>
+            )}
+          </div>
+          
+          <button
+            onClick={() => navigateDate('next')}
+            className="p-2 rounded-md hover:bg-gray-100 transition-colors"
+            aria-label="Next day"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+        
+        <div className="text-center mt-3">
+          <p className="text-lg font-medium">{selectedDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+        </div>
       </div>
 
       {/* Error Alert */}
@@ -261,15 +357,24 @@ const MedicationTracker = () => {
               <div className="md:ml-4 flex space-x-2">
                 <button
                   onClick={() => handleTakeMedication(medication.id)}
-                  disabled={medication.doses_taken_today >= medication.max_doses_per_day}
+                  disabled={
+                    medication.doses_taken_today >= medication.max_doses_per_day ||
+                    isFutureDate(selectedDate)
+                  }
                   className={`px-4 py-2 rounded-md text-white font-medium ${
                     medication.doses_taken_today >= medication.max_doses_per_day
+                      ? "bg-gray-300 cursor-not-allowed"
+                      : isFutureDate(selectedDate)
                       ? "bg-gray-300 cursor-not-allowed"
                       : "bg-blue-600 hover:bg-blue-700"
                   }`}
                 >
                   {medication.doses_taken_today >= medication.max_doses_per_day
                     ? "Max Taken"
+                    : isFutureDate(selectedDate)
+                    ? "Future Date"
+                    : isPastDate(selectedDate) && !isToday(selectedDate)
+                    ? "Record Dose"
                     : "Take Now"}
                 </button>
                 <button

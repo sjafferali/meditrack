@@ -1,5 +1,5 @@
-from datetime import datetime, timezone
-from typing import List
+from datetime import date, datetime, timezone
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from sqlalchemy import and_
@@ -24,52 +24,67 @@ router = APIRouter(
     "/",
     response_model=List[MedicationWithDoses],
     summary="Get all medications",
-    description="Retrieve a list of all medications with their current dose "
-    "information",
-    response_description="List of medications with today's dose count and "
-    "last taken time",
+    description="Retrieve a list of all medications with their dose information for today or a specific date",
+    response_description="List of medications with dose count and last taken time for the specified date",
 )
 def get_medications(
     skip: int = Query(0, ge=0, description="Number of medications to skip"),
     limit: int = Query(
         100, ge=1, le=1000, description="Maximum number of medications to return"
     ),
+    date: Optional[date] = Query(None, description="The date to get dose information for (YYYY-MM-DD)"),
     db: Session = Depends(get_db),
 ):
     """
-    Get all medications with today's dose information.
+    Get all medications with dose information for today or a specific date.
 
     - **skip**: Number of medications to skip (for pagination)
     - **limit**: Maximum number of medications to return
+    - **date**: Optional date to get dose information for (defaults to today)
     """
-    # Start of today
-    today_start = datetime.now(timezone.utc).replace(
-        hour=0, minute=0, second=0, microsecond=0
-    )
+    # Determine the date to query for
+    if date is None:
+        query_date = datetime.now(timezone.utc).date()
+    else:
+        query_date = date
+    
+    # Create date range for the query
+    start_of_day = datetime.combine(query_date, datetime.min.time()).replace(tzinfo=timezone.utc)
+    end_of_day = datetime.combine(query_date, datetime.max.time()).replace(tzinfo=timezone.utc)
 
     medications = db.query(Medication).offset(skip).limit(limit).all()
 
     result = []
     for medication in medications:
-        # Count doses taken today
-        doses_today = (
+        # Count doses taken on the specified date
+        doses_on_date = (
             db.query(Dose)
             .filter(
-                and_(Dose.medication_id == medication.id, Dose.taken_at >= today_start)
+                and_(
+                    Dose.medication_id == medication.id,
+                    Dose.taken_at >= start_of_day,
+                    Dose.taken_at <= end_of_day
+                )
             )
             .all()
         )
 
-        # Get last dose time
+        # Get last dose time for the specified date
         last_dose = (
             db.query(Dose)
-            .filter(Dose.medication_id == medication.id)
+            .filter(
+                and_(
+                    Dose.medication_id == medication.id,
+                    Dose.taken_at >= start_of_day,
+                    Dose.taken_at <= end_of_day
+                )
+            )
             .order_by(Dose.taken_at.desc())
             .first()
         )
 
         med_dict = medication.__dict__.copy()
-        med_dict["doses_taken_today"] = len(doses_today)
+        med_dict["doses_taken_today"] = len(doses_on_date)
         med_dict["last_taken_at"] = last_dose.taken_at if last_dose else None
 
         result.append(MedicationWithDoses(**med_dict))
@@ -106,40 +121,58 @@ def create_medication(medication: MedicationCreate, db: Session = Depends(get_db
     "/{medication_id}",
     response_model=MedicationWithDoses,
     summary="Get a medication",
-    description="Get details of a specific medication by ID",
+    description="Get details of a specific medication by ID with dose information for today or a specific date",
     response_description="The requested medication with dose information",
 )
 def get_medication(
     medication_id: int = Path(
         ..., ge=1, description="The ID of the medication to retrieve"
     ),
+    date: Optional[date] = Query(None, description="The date to get dose information for (YYYY-MM-DD)"),
     db: Session = Depends(get_db),
 ):
-    """Get a specific medication by ID with today's dose information."""
+    """Get a specific medication by ID with dose information for today or a specific date."""
     medication = db.query(Medication).filter(Medication.id == medication_id).first()
     if not medication:
         raise HTTPException(status_code=404, detail="Medication not found")
 
-    # Get today's dose information
-    today_start = datetime.now(timezone.utc).replace(
-        hour=0, minute=0, second=0, microsecond=0
-    )
+    # Determine the date to query for
+    if date is None:
+        query_date = datetime.now(timezone.utc).date()
+    else:
+        query_date = date
+    
+    # Create date range for the query
+    start_of_day = datetime.combine(query_date, datetime.min.time()).replace(tzinfo=timezone.utc)
+    end_of_day = datetime.combine(query_date, datetime.max.time()).replace(tzinfo=timezone.utc)
 
-    doses_today = (
+    doses_on_date = (
         db.query(Dose)
-        .filter(and_(Dose.medication_id == medication.id, Dose.taken_at >= today_start))
+        .filter(
+            and_(
+                Dose.medication_id == medication.id,
+                Dose.taken_at >= start_of_day,
+                Dose.taken_at <= end_of_day
+            )
+        )
         .all()
     )
 
     last_dose = (
         db.query(Dose)
-        .filter(Dose.medication_id == medication.id)
+        .filter(
+            and_(
+                Dose.medication_id == medication.id,
+                Dose.taken_at >= start_of_day,
+                Dose.taken_at <= end_of_day
+            )
+        )
         .order_by(Dose.taken_at.desc())
         .first()
     )
 
     med_dict = medication.__dict__.copy()
-    med_dict["doses_taken_today"] = len(doses_today)
+    med_dict["doses_taken_today"] = len(doses_on_date)
     med_dict["last_taken_at"] = last_dose.taken_at if last_dose else None
 
     return MedicationWithDoses(**med_dict)
