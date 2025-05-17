@@ -266,13 +266,6 @@ const MedicationTracker = () => {
         
         <div className="text-center mt-3">
           <p className="text-lg font-medium">{selectedDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-          <button
-            onClick={() => setShowDailyLog(true)}
-            className="mt-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-sm font-medium transition-colors"
-            type="button"
-          >
-            View Daily Log
-          </button>
         </div>
       </div>
 
@@ -503,13 +496,20 @@ const MedicationTracker = () => {
         ))}
       </div>
 
-      {/* Add Medication Button */}
+      {/* Add Medication and Daily Log Buttons */}
       <div className="mt-6 text-center">
         <button 
           onClick={() => setIsAddingMedication(true)}
           className="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-md"
         >
           + Add Medication
+        </button>
+        <button
+          onClick={() => setShowDailyLog(true)}
+          className="ml-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md font-medium transition-colors"
+          type="button"
+        >
+          View Daily Log
         </button>
       </div>
 
