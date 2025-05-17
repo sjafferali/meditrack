@@ -32,7 +32,9 @@ def get_medications(
     limit: int = Query(
         100, ge=1, le=1000, description="Maximum number of medications to return"
     ),
-    date: Optional[date] = Query(None, description="The date to get dose information for (YYYY-MM-DD)"),
+    date: Optional[date] = Query(
+        None, description="The date to get dose information for (YYYY-MM-DD)"
+    ),
     db: Session = Depends(get_db),
 ):
     """
@@ -47,10 +49,14 @@ def get_medications(
         query_date = datetime.now(timezone.utc).date()
     else:
         query_date = date
-    
+
     # Create date range for the query
-    start_of_day = datetime.combine(query_date, datetime.min.time()).replace(tzinfo=timezone.utc)
-    end_of_day = datetime.combine(query_date, datetime.max.time()).replace(tzinfo=timezone.utc)
+    start_of_day = datetime.combine(query_date, datetime.min.time()).replace(
+        tzinfo=timezone.utc
+    )
+    end_of_day = datetime.combine(query_date, datetime.max.time()).replace(
+        tzinfo=timezone.utc
+    )
 
     medications = db.query(Medication).offset(skip).limit(limit).all()
 
@@ -63,7 +69,7 @@ def get_medications(
                 and_(
                     Dose.medication_id == medication.id,
                     Dose.taken_at >= start_of_day,
-                    Dose.taken_at <= end_of_day
+                    Dose.taken_at <= end_of_day,
                 )
             )
             .all()
@@ -76,7 +82,7 @@ def get_medications(
                 and_(
                     Dose.medication_id == medication.id,
                     Dose.taken_at >= start_of_day,
-                    Dose.taken_at <= end_of_day
+                    Dose.taken_at <= end_of_day,
                 )
             )
             .order_by(Dose.taken_at.desc())
@@ -128,7 +134,9 @@ def get_medication(
     medication_id: int = Path(
         ..., ge=1, description="The ID of the medication to retrieve"
     ),
-    date: Optional[date] = Query(None, description="The date to get dose information for (YYYY-MM-DD)"),
+    date: Optional[date] = Query(
+        None, description="The date to get dose information for (YYYY-MM-DD)"
+    ),
     db: Session = Depends(get_db),
 ):
     """Get a specific medication by ID with dose information for today or a specific date."""
@@ -141,10 +149,14 @@ def get_medication(
         query_date = datetime.now(timezone.utc).date()
     else:
         query_date = date
-    
+
     # Create date range for the query
-    start_of_day = datetime.combine(query_date, datetime.min.time()).replace(tzinfo=timezone.utc)
-    end_of_day = datetime.combine(query_date, datetime.max.time()).replace(tzinfo=timezone.utc)
+    start_of_day = datetime.combine(query_date, datetime.min.time()).replace(
+        tzinfo=timezone.utc
+    )
+    end_of_day = datetime.combine(query_date, datetime.max.time()).replace(
+        tzinfo=timezone.utc
+    )
 
     doses_on_date = (
         db.query(Dose)
@@ -152,7 +164,7 @@ def get_medication(
             and_(
                 Dose.medication_id == medication.id,
                 Dose.taken_at >= start_of_day,
-                Dose.taken_at <= end_of_day
+                Dose.taken_at <= end_of_day,
             )
         )
         .all()
@@ -164,7 +176,7 @@ def get_medication(
             and_(
                 Dose.medication_id == medication.id,
                 Dose.taken_at >= start_of_day,
-                Dose.taken_at <= end_of_day
+                Dose.taken_at <= end_of_day,
             )
         )
         .order_by(Dose.taken_at.desc())

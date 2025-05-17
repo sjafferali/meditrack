@@ -199,14 +199,14 @@ class TestDoses:
         # Create a dose with a specific timestamp
         dose = Dose(
             medication_id=sample_medication.id,
-            taken_at=datetime(2023, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+            taken_at=datetime(2023, 1, 1, 12, 0, 0, tzinfo=timezone.utc),
         )
         db_session.add(dose)
         db_session.commit()
-        
+
         response = client.get(f"/api/v1/doses/medications/{sample_medication.id}/doses")
         assert response.status_code == 200
-        
+
         data = response.json()
         assert len(data) > 0
         assert "taken_at" in data[0]
@@ -225,32 +225,36 @@ class TestDoses:
         # Create doses on different dates
         dose1 = Dose(
             medication_id=sample_medication.id,
-            taken_at=datetime(2023, 1, 15, 9, 0, 0, tzinfo=timezone.utc)
+            taken_at=datetime(2023, 1, 15, 9, 0, 0, tzinfo=timezone.utc),
         )
         dose2 = Dose(
             medication_id=sample_medication.id,
-            taken_at=datetime(2023, 1, 15, 21, 0, 0, tzinfo=timezone.utc)
+            taken_at=datetime(2023, 1, 15, 21, 0, 0, tzinfo=timezone.utc),
         )
         dose3 = Dose(
             medication_id=sample_medication.id,
-            taken_at=datetime(2023, 1, 16, 9, 0, 0, tzinfo=timezone.utc)
+            taken_at=datetime(2023, 1, 16, 9, 0, 0, tzinfo=timezone.utc),
         )
         db_session.add_all([dose1, dose2, dose3])
         db_session.commit()
-        
-        response = client.get(f"/api/v1/doses/medications/{sample_medication.id}/doses/2023-01-15")
+
+        response = client.get(
+            f"/api/v1/doses/medications/{sample_medication.id}/doses/2023-01-15"
+        )
         assert response.status_code == 200
-        
+
         data = response.json()
         assert len(data) == 2  # Only doses from Jan 15
-        
+
         # Verify doses are ordered by time ascending
         assert data[0]["taken_at"] < data[1]["taken_at"]
 
     @pytest.mark.unit
     def test_get_doses_by_date_no_doses(self, client, sample_medication):
         """Test getting doses for a date with no doses"""
-        response = client.get(f"/api/v1/doses/medications/{sample_medication.id}/doses/2023-01-15")
+        response = client.get(
+            f"/api/v1/doses/medications/{sample_medication.id}/doses/2023-01-15"
+        )
         assert response.status_code == 200
         assert response.json() == []
 
@@ -267,7 +271,7 @@ class TestDoses:
             f"/api/v1/doses/medications/{sample_medication.id}/dose/2023-01-15?time=14:30"
         )
         assert response.status_code == 201
-        
+
         data = response.json()
         assert data["medication_id"] == sample_medication.id
         assert "2023-01-15" in data["taken_at"]
@@ -293,18 +297,20 @@ class TestDoses:
         assert "Invalid time format" in response.json()["detail"]
 
     @pytest.mark.unit
-    def test_record_dose_for_date_max_reached(self, client, sample_medication, db_session):
+    def test_record_dose_for_date_max_reached(
+        self, client, sample_medication, db_session
+    ):
         """Test recording dose when max doses reached for that date"""
         # Create doses up to the maximum for the specific date
         test_date = datetime(2023, 1, 15, 0, 0, 0, tzinfo=timezone.utc)
         for i in range(sample_medication.max_doses_per_day):
             dose = Dose(
                 medication_id=sample_medication.id,
-                taken_at=test_date.replace(hour=i+8)
+                taken_at=test_date.replace(hour=i + 8),
             )
             db_session.add(dose)
         db_session.commit()
-        
+
         # Try to record one more dose
         response = client.post(
             f"/api/v1/doses/medications/{sample_medication.id}/dose/2023-01-15?time=20:00"
@@ -318,22 +324,21 @@ class TestDoses:
         # Create doses on the specific date
         dose = Dose(
             medication_id=sample_medication.id,
-            taken_at=datetime(2023, 1, 15, 14, 30, 0, tzinfo=timezone.utc)
+            taken_at=datetime(2023, 1, 15, 14, 30, 0, tzinfo=timezone.utc),
         )
         db_session.add(dose)
         db_session.commit()
-        
+
         response = client.get("/api/v1/doses/daily-summary/2023-01-15")
         assert response.status_code == 200
-        
+
         data = response.json()
         assert data["date"] == "2023-01-15"
         assert len(data["medications"]) > 0
-        
+
         # Find our medication in the summary
         med_summary = next(
-            m for m in data["medications"] 
-            if m["medication_id"] == sample_medication.id
+            m for m in data["medications"] if m["medication_id"] == sample_medication.id
         )
         assert med_summary["doses_taken"] == 1
         assert len(med_summary["dose_times"]) == 1

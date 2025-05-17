@@ -178,21 +178,25 @@ def get_daily_summary_by_date(
 ):
     """
     Get dose summary for all medications on a specific date.
-    
+
     Returns a summary including:
     - The specified date
     - List of all medications with:
-      - Medication ID and name  
+      - Medication ID and name
       - Number of doses taken on that date
       - Maximum doses allowed
       - Timestamps of all doses taken on that date
     """
-    start_of_day = datetime.combine(date, datetime.min.time()).replace(tzinfo=timezone.utc)
-    end_of_day = datetime.combine(date, datetime.max.time()).replace(tzinfo=timezone.utc)
-    
+    start_of_day = datetime.combine(date, datetime.min.time()).replace(
+        tzinfo=timezone.utc
+    )
+    end_of_day = datetime.combine(date, datetime.max.time()).replace(
+        tzinfo=timezone.utc
+    )
+
     medications = db.query(Medication).all()
     summary: dict = {"date": date.isoformat(), "medications": []}
-    
+
     for medication in medications:
         doses_on_date = (
             db.query(Dose)
@@ -200,12 +204,12 @@ def get_daily_summary_by_date(
                 and_(
                     Dose.medication_id == medication.id,
                     Dose.taken_at >= start_of_day,
-                    Dose.taken_at <= end_of_day
+                    Dose.taken_at <= end_of_day,
                 )
             )
             .all()
         )
-        
+
         summary["medications"].append(
             {
                 "medication_id": medication.id,
@@ -215,7 +219,7 @@ def get_daily_summary_by_date(
                 "dose_times": [dose.taken_at.isoformat() for dose in doses_on_date],
             }
         )
-    
+
     return summary
 
 
@@ -233,7 +237,7 @@ def get_doses_by_date(
 ):
     """
     Get dose history for a medication on a specific date.
-    
+
     - **medication_id**: The ID of the medication
     - **date**: The date to get doses for (YYYY-MM-DD format)
     """
@@ -241,24 +245,28 @@ def get_doses_by_date(
     medication = db.query(Medication).filter(Medication.id == medication_id).first()
     if not medication:
         raise HTTPException(status_code=404, detail="Medication not found")
-    
+
     # Create date range for the specified date
-    start_of_day = datetime.combine(date, datetime.min.time()).replace(tzinfo=timezone.utc)
-    end_of_day = datetime.combine(date, datetime.max.time()).replace(tzinfo=timezone.utc)
-    
+    start_of_day = datetime.combine(date, datetime.min.time()).replace(
+        tzinfo=timezone.utc
+    )
+    end_of_day = datetime.combine(date, datetime.max.time()).replace(
+        tzinfo=timezone.utc
+    )
+
     doses = (
         db.query(Dose)
         .filter(
             and_(
                 Dose.medication_id == medication_id,
                 Dose.taken_at >= start_of_day,
-                Dose.taken_at <= end_of_day
+                Dose.taken_at <= end_of_day,
             )
         )
         .order_by(Dose.taken_at.asc())
         .all()
     )
-    
+
     return doses
 
 
@@ -283,59 +291,68 @@ def record_dose_for_date(
 ):
     """
     Record a dose for a medication on a specific date and time.
-    
+
     This endpoint will:
     - Check if the medication exists
     - Verify the date is not in the future
     - Verify the daily dose limit hasn't been reached for that date
     - Record the dose with the specified timestamp
-    
+
     - **medication_id**: The ID of the medication
-    - **date**: The date to record dose for (YYYY-MM-DD format)  
+    - **date**: The date to record dose for (YYYY-MM-DD format)
     - **time**: Time in HH:MM format
     """
     # Check if medication exists
     medication = db.query(Medication).filter(Medication.id == medication_id).first()
     if not medication:
         raise HTTPException(status_code=404, detail="Medication not found")
-    
+
     # Check if date is not in the future
     if date > datetime.now(timezone.utc).date():
-        raise HTTPException(status_code=400, detail="Cannot record doses for future dates")
-    
+        raise HTTPException(
+            status_code=400, detail="Cannot record doses for future dates"
+        )
+
     # Parse time and create timestamp
     try:
         hour, minute = map(int, time.split(":"))
-        dose_datetime = datetime.combine(date, datetime.min.time().replace(hour=hour, minute=minute, tzinfo=timezone.utc))
+        dose_datetime = datetime.combine(
+            date,
+            datetime.min.time().replace(hour=hour, minute=minute, tzinfo=timezone.utc),
+        )
     except (ValueError, AttributeError):
         raise HTTPException(status_code=400, detail="Invalid time format. Use HH:MM")
-    
+
     # Check if max doses for that date already reached
-    start_of_day = datetime.combine(date, datetime.min.time()).replace(tzinfo=timezone.utc)
-    end_of_day = datetime.combine(date, datetime.max.time()).replace(tzinfo=timezone.utc)
-    
+    start_of_day = datetime.combine(date, datetime.min.time()).replace(
+        tzinfo=timezone.utc
+    )
+    end_of_day = datetime.combine(date, datetime.max.time()).replace(
+        tzinfo=timezone.utc
+    )
+
     doses_on_date = (
         db.query(Dose)
         .filter(
             and_(
                 Dose.medication_id == medication_id,
                 Dose.taken_at >= start_of_day,
-                Dose.taken_at <= end_of_day
+                Dose.taken_at <= end_of_day,
             )
         )
         .count()
     )
-    
+
     if doses_on_date >= medication.max_doses_per_day:
         raise HTTPException(
             status_code=400,
-            detail=f"Maximum doses ({medication.max_doses_per_day}) taken for {date}"
+            detail=f"Maximum doses ({medication.max_doses_per_day}) taken for {date}",
         )
-    
+
     # Create new dose
     db_dose = Dose(medication_id=medication_id, taken_at=dose_datetime)
     db.add(db_dose)
     db.commit()
     db.refresh(db_dose)
-    
+
     return db_dose
