@@ -107,7 +107,7 @@ jobs:
         ignore-unfixed: true
   
   docker-build-test:
-    name: Test Docker Builds
+    name: Test Docker Build
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -115,20 +115,12 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
       
-    - name: Test backend Docker build
+    - name: Test Docker build
       uses: docker/build-push-action@v4
       with:
-        context: ./backend
+        context: .
+        file: ./Dockerfile
         push: false
-        tags: meditrack-backend:test
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-        
-    - name: Test frontend Docker build
-      uses: docker/build-push-action@v4
-      with:
-        context: ./frontend
-        push: false
-        tags: meditrack-frontend:test
+        tags: meditrack:test
         cache-from: type=gha
         cache-to: type=gha,mode=max
