@@ -24,8 +24,10 @@ router = APIRouter(
     "/",
     response_model=List[MedicationWithDoses],
     summary="Get all medications",
-    description="Retrieve a list of all medications with their dose information for today or a specific date",
-    response_description="List of medications with dose count and last taken time for the specified date",
+    description="Retrieve a list of all medications with their dose "
+    "information for today or a specific date",
+    response_description="List of medications with dose count and last "
+    "taken time for the specified date",
 )
 def get_medications(
     skip: int = Query(0, ge=0, description="Number of medications to skip"),
@@ -127,7 +129,8 @@ def create_medication(medication: MedicationCreate, db: Session = Depends(get_db
     "/{medication_id}",
     response_model=MedicationWithDoses,
     summary="Get a medication",
-    description="Get details of a specific medication by ID with dose information for today or a specific date",
+    description="Get details of a specific medication by ID with dose "
+    "information for today or a specific date",
     response_description="The requested medication with dose information",
 )
 def get_medication(
@@ -139,7 +142,8 @@ def get_medication(
     ),
     db: Session = Depends(get_db),
 ):
-    """Get a specific medication by ID with dose information for today or a specific date."""
+    """Get a specific medication by ID with dose information for today or
+    a specific date."""
     medication = db.query(Medication).filter(Medication.id == medication_id).first()
     if not medication:
         raise HTTPException(status_code=404, detail="Medication not found")

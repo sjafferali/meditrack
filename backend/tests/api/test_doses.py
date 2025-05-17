@@ -268,7 +268,8 @@ class TestDoses:
     def test_record_dose_for_date(self, client, sample_medication):
         """Test recording a dose for a specific date and time"""
         response = client.post(
-            f"/api/v1/doses/medications/{sample_medication.id}/dose/2023-01-15?time=14:30"
+            f"/api/v1/doses/medications/{sample_medication.id}/dose/"
+            "2023-01-15?time=14:30"
         )
         assert response.status_code == 201
 
@@ -282,7 +283,8 @@ class TestDoses:
         """Test that recording dose for future date is rejected"""
         future_date = (datetime.now(timezone.utc) + timedelta(days=1)).date()
         response = client.post(
-            f"/api/v1/doses/medications/{sample_medication.id}/dose/{future_date}?time=14:30"
+            f"/api/v1/doses/medications/{sample_medication.id}/dose/"
+            f"{future_date}?time=14:30"
         )
         assert response.status_code == 400
         assert "Cannot record doses for future dates" in response.json()["detail"]
@@ -291,7 +293,8 @@ class TestDoses:
     def test_record_dose_invalid_time_format(self, client, sample_medication):
         """Test recording dose with invalid time format"""
         response = client.post(
-            f"/api/v1/doses/medications/{sample_medication.id}/dose/2023-01-15?time=invalid"
+            f"/api/v1/doses/medications/{sample_medication.id}/dose/"
+            "2023-01-15?time=invalid"
         )
         assert response.status_code == 400
         assert "Invalid time format" in response.json()["detail"]
@@ -313,7 +316,8 @@ class TestDoses:
 
         # Try to record one more dose
         response = client.post(
-            f"/api/v1/doses/medications/{sample_medication.id}/dose/2023-01-15?time=20:00"
+            f"/api/v1/doses/medications/{sample_medication.id}/dose/"
+            "2023-01-15?time=20:00"
         )
         assert response.status_code == 400
         assert "Maximum doses" in response.json()["detail"]
