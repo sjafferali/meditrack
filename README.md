@@ -35,12 +35,16 @@ MediTrack is a modern medication tracking application that helps users manage th
 git clone https://github.com/sjafferali/meditrack.git
 cd meditrack
 
-# Start with Docker Compose
-docker compose up
+# Build the single-container image
+docker build -t meditrack:latest .
 
-# Access the application
-# Frontend: http://localhost:3000
-# API Docs: http://localhost:8000/docs
+# Option 1: Start with SQLite (simplest)
+docker compose -f docker-compose.simple.yml up -d
+
+# Option 2: Start with PostgreSQL
+docker compose -f docker-compose.postgres.yml up -d
+
+# Access the application at http://localhost:8080
 ```
 
 ### Manual Installation
@@ -188,14 +192,17 @@ alembic downgrade -1
 ### Production with Docker
 
 ```bash
-# Build production images
-docker compose -f docker-compose.prod.yml build
+# Option 1: Single container with SQLite
+docker compose -f docker-compose.simple.yml up -d
 
-# Run production containers
+# Option 2: With PostgreSQL database
+docker compose -f docker-compose.postgres.yml up -d
+
+# Option 3: Full production setup (nginx, PostgreSQL, etc.)
 docker compose -f docker-compose.prod.yml up -d
 
 # View logs
-docker compose -f docker-compose.prod.yml logs -f
+docker compose logs -f
 ```
 
 See [Deployment Guide](docs/DEPLOYMENT.md) for detailed instructions on deploying to various platforms.

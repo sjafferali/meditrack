@@ -1,0 +1,37 @@
+services:
+  meditrack:
+    image: meditrack:latest
+    ports:
+      - "8080:8000"
+    environment:
+      DATABASE_URL: postgresql://meditrack:meditrack@postgres:5432/meditrack
+      SECRET_KEY: your-secret-key-here-change-in-production
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - meditrack-network
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: meditrack
+      POSTGRES_PASSWORD: meditrack
+      POSTGRES_DB: meditrack
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U meditrack"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - meditrack-network
+
+volumes:
+  postgres-data:
+
+networks:
+  meditrack-network:
