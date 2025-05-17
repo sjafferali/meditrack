@@ -268,7 +268,8 @@ const MedicationTracker = () => {
           <p className="text-lg font-medium">{selectedDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
           <button
             onClick={() => setShowDailyLog(true)}
-            className="mt-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-sm"
+            className="mt-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-sm font-medium transition-colors"
+            type="button"
           >
             View Daily Log
           </button>
