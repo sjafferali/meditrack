@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import MedicationTracker from '../../components/MedicationTracker';
 import * as api from '../../services/api';
 
@@ -77,6 +77,28 @@ describe('MedicationTracker', () => {
     
     await waitFor(() => {
       expect(screen.getByText(errorMessage)).toBeInTheDocument();
+    });
+  });
+
+  test('displays History button for each medication', async () => {
+    render(<MedicationTracker />);
+    
+    await waitFor(() => {
+      expect(screen.getByText('History')).toBeInTheDocument();
+    });
+  });
+
+  test('opens dose history modal when History button is clicked', async () => {
+    render(<MedicationTracker />);
+    
+    await waitFor(() => {
+      const historyButton = screen.getByText('History');
+      fireEvent.click(historyButton);
+    });
+    
+    // The modal should open showing the dose history title
+    await waitFor(() => {
+      expect(screen.getByText('Dose History - Test Medication')).toBeInTheDocument();
     });
   });
 });

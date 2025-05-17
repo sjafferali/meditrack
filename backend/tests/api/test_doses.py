@@ -63,6 +63,12 @@ class TestDoses:
         assert len(data) == 2
         # Should be ordered by taken_at desc
         assert data[0]["taken_at"] >= data[1]["taken_at"]
+        # Verify all required fields are present
+        for dose in data:
+            assert "id" in dose
+            assert "medication_id" in dose
+            assert "taken_at" in dose
+            assert dose["medication_id"] == sample_medication.id
 
     @pytest.mark.unit
     def test_get_doses_medication_not_found(self, client):
@@ -186,3 +192,29 @@ class TestDoses:
         # Skip this test as TestClient doesn't handle concurrent requests well
         # This would be better tested with a real HTTP client in integration tests
         pass
+
+    @pytest.mark.unit
+    def test_dose_timestamp_format(self, client, sample_medication, db_session):
+        """Test that dose timestamps are properly formatted"""
+        # Create a dose with a specific timestamp
+        dose = Dose(
+            medication_id=sample_medication.id,
+            taken_at=datetime(2023, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+        )
+        db_session.add(dose)
+        db_session.commit()
+        
+        response = client.get(f"/api/v1/doses/medications/{sample_medication.id}/doses")
+        assert response.status_code == 200
+        
+        data = response.json()
+        assert len(data) > 0
+        assert "taken_at" in data[0]
+        # Verify the timestamp is properly formatted as ISO 8601
+        assert "T" in data[0]["taken_at"]
+        # The timestamp should be in ISO format (may or may not have timezone)
+        # Should be able to parse it - just catch any parsing error
+        try:
+            datetime.fromisoformat(data[0]["taken_at"].replace("Z", "+00:00"))
+        except ValueError:
+            pytest.fail(f"Timestamp {data[0]['taken_at']} is not in valid ISO format")

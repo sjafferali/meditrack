@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { medicationApi, doseApi } from '../services/api';
+import DoseHistoryModal from './DoseHistoryModal';
 
 const MedicationTracker = () => {
   const [medications, setMedications] = useState<any[]>([]);
@@ -8,6 +9,7 @@ const MedicationTracker = () => {
   const [isAddingMedication, setIsAddingMedication] = useState(false);
   const [editingMedication, setEditingMedication] = useState<any>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+  const [selectedMedicationForHistory, setSelectedMedicationForHistory] = useState<any>(null);
 
   // Form state for adding/editing medications
   const [formData, setFormData] = useState({
@@ -271,6 +273,12 @@ const MedicationTracker = () => {
                     : "Take Now"}
                 </button>
                 <button
+                  onClick={() => setSelectedMedicationForHistory(medication)}
+                  className="px-3 py-2 text-purple-600 hover:bg-purple-50 rounded-md"
+                >
+                  History
+                </button>
+                <button
                   onClick={() => startEdit(medication)}
                   className="px-3 py-2 text-blue-600 hover:bg-blue-50 rounded-md"
                 >
@@ -322,6 +330,15 @@ const MedicationTracker = () => {
           + Add Medication
         </button>
       </div>
+
+      {/* Dose History Modal */}
+      {selectedMedicationForHistory && (
+        <DoseHistoryModal
+          medication={selectedMedicationForHistory}
+          isOpen={true}
+          onClose={() => setSelectedMedicationForHistory(null)}
+        />
+      )}
     </div>
   );
 };
