@@ -229,4 +229,61 @@ describe('MedicationTracker', () => {
       expect(screen.getByText('Record Dose')).toBeInTheDocument();
     });
   });
+
+  test('uses browser current time when recording dose for past dates', async () => {
+    // Mock toTimeString to control the time format
+    const mockToTimeString = jest.fn(() => '14:30:00 GMT+0000');
+    const originalDate = global.Date;
+    
+    jest.spyOn(global, 'Date').mockImplementation((...args: any[]) => {
+      const date = new originalDate(...args);
+      if (args.length === 0) {
+        // For new Date() without arguments, return our mocked time
+        date.toTimeString = mockToTimeString;
+      }
+      return date;
+    });
+    
+    render(<MedicationTracker />);
+    
+    // Wait for initial load
+    await waitFor(() => {
+      expect(screen.getByText('Test Medication')).toBeInTheDocument();
+    });
+    
+    // Change to a past date
+    const dateInput = screen.getByDisplayValue(/\d{4}-\d{2}-\d{2}/);
+    fireEvent.change(dateInput, { target: { value: '2023-01-10' } });
+    
+    // Wait for medications to reload
+    await waitFor(() => {
+      expect(api.medicationApi.getAll).toHaveBeenCalledWith(
+        expect.objectContaining({ date: '2023-01-10' })
+      );
+    });
+    
+    // Wait for the "Record Dose" button to appear
+    await waitFor(() => {
+      expect(screen.getByText('Record Dose')).toBeInTheDocument();
+    });
+    
+    // Clear any previous calls to recordDoseForDate
+    (api.doseApi.recordDoseForDate as jest.Mock).mockClear();
+    
+    // Click the Record Dose button
+    const recordButton = screen.getByText('Record Dose');
+    fireEvent.click(recordButton);
+    
+    // Verify recordDoseForDate was called with current browser time
+    await waitFor(() => {
+      expect(api.doseApi.recordDoseForDate).toHaveBeenCalledWith(
+        1, // medication ID
+        '2023-01-10', // selected date
+        '14:30' // current browser time in HH:MM format (first 5 characters of toTimeString)
+      );
+    });
+    
+    // Restore the original Date
+    jest.restoreAllMocks();
+  });
 });

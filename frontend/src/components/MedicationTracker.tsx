@@ -45,9 +45,9 @@ const MedicationTracker = () => {
       setError(null);
       
       if (isPastDate(selectedDate)) {
-        // For past dates, we need a time input modal
-        const time = prompt('Enter the time the dose was taken (HH:MM format):');
-        if (!time) return;
+        // For past dates, use current browser time
+        const currentTime = new Date();
+        const time = currentTime.toTimeString().slice(0, 5); // Format as HH:MM
         
         const dateStr = selectedDate.toISOString().split('T')[0];
         await doseApi.recordDoseForDate(medicationId, dateStr, time);
