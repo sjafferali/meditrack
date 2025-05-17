@@ -1,0 +1,11 @@
+services:
+  meditrack:
+    image: meditrack:latest
+    ports:
+      - "8080:8000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      DATABASE_URL: sqlite:///./data/meditrack.db
+      SECRET_KEY: your-secret-key-here-change-in-production
+    restart: unless-stopped

@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 
 from app.api.api import api_router
 from app.core.config import settings
@@ -8,6 +10,9 @@ from app.db.session import engine
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
+
+# Serve React frontend first (before FastAPI app creation)
+static_path = Path(__file__).parent / "static"
 
 # API metadata
 tags_metadata = [
@@ -59,6 +64,13 @@ app.add_middleware(
 # Include API router
 app.include_router(api_router, prefix="/api/v1")
 
+# Serve React frontend - must be mounted after API routes
+if static_path.exists():
+    # Mount static assets
+    app.mount("/static", StaticFiles(directory=str(static_path)), name="static_files")
+    # Mount frontend app as a catch-all route (must be last)
+    app.mount("/", StaticFiles(directory=str(static_path), html=True), name="spa")
+
 
 # Health check endpoint
 @app.get("/health", tags=["health"], summary="Health Check", description="Check if the API is healthy and responding")
@@ -72,20 +84,7 @@ def health_check():
     return {"status": "healthy", "version": settings.VERSION}
 
 
-# Root endpoint
-@app.get("/", tags=["root"], summary="Welcome", description="Root endpoint with API information")
-def root():
-    """
-    Welcome endpoint that provides basic API information.
-    
-    Returns:
-        dict: Welcome message and API documentation links
-    """
-    return {
-        "message": f"Welcome to {settings.PROJECT_NAME}",
-        "version": settings.VERSION,
-        "docs": "/docs",
-    }
+# Root endpoint - removed as static files will be served at /
 
 
 if __name__ == "__main__":
