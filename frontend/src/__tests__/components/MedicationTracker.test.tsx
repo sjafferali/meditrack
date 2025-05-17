@@ -86,24 +86,27 @@ describe('MedicationTracker', () => {
     });
   });
 
-  test('displays History button for each medication', async () => {
+  test('displays Show History button for each medication', async () => {
     render(<MedicationTracker />);
     
     await waitFor(() => {
-      expect(screen.getByText('History')).toBeInTheDocument();
+      expect(screen.getByText('Show History')).toBeInTheDocument();
     });
   });
 
-  test('opens dose history modal when History button is clicked', async () => {
+  test('opens dose history when Show History button is clicked', async () => {
     render(<MedicationTracker />);
     
-    const historyButton = await screen.findByText('History');
+    const historyButton = await screen.findByText('Show History');
     fireEvent.click(historyButton);
     
-    // The modal should open showing the dose history title
+    // The history section should expand showing the dose history
     await waitFor(() => {
-      expect(screen.getByText('Dose History - Test Medication')).toBeInTheDocument();
+      expect(screen.getByText('Dose History')).toBeInTheDocument();
     });
+    
+    // The button should change to Hide History
+    expect(screen.getByText('Hide History')).toBeInTheDocument();
   });
 
   test('displays date navigation controls', async () => {

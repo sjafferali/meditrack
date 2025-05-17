@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { medicationApi, doseApi } from '../services/api';
-import DoseHistoryModal from './DoseHistoryModal';
 
 const MedicationTracker = () => {
   const [medications, setMedications] = useState<any[]>([]);
@@ -9,7 +8,9 @@ const MedicationTracker = () => {
   const [isAddingMedication, setIsAddingMedication] = useState(false);
   const [editingMedication, setEditingMedication] = useState<any>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
-  const [selectedMedicationForHistory, setSelectedMedicationForHistory] = useState<any>(null);
+  const [expandedHistoryId, setExpandedHistoryId] = useState<number | null>(null);
+  const [doseHistories, setDoseHistories] = useState<{ [key: number]: any[] }>({});
+  const [loadingHistory, setLoadingHistory] = useState<{ [key: number]: boolean }>({});
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   // Form state for adding/editing medications
@@ -40,6 +41,29 @@ const MedicationTracker = () => {
     loadMedications();
   }, [loadMedications]);
 
+  const loadDoseHistory = async (medicationId: number) => {
+    try {
+      setLoadingHistory({ ...loadingHistory, [medicationId]: true });
+      const data = await doseApi.getDoses(medicationId);
+      setDoseHistories({ ...doseHistories, [medicationId]: data });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load dose history');
+    } finally {
+      setLoadingHistory({ ...loadingHistory, [medicationId]: false });
+    }
+  };
+
+  const toggleHistory = async (medicationId: number) => {
+    if (expandedHistoryId === medicationId) {
+      setExpandedHistoryId(null);
+    } else {
+      setExpandedHistoryId(medicationId);
+      if (!doseHistories[medicationId]) {
+        await loadDoseHistory(medicationId);
+      }
+    }
+  };
+
   const handleTakeMedication = async (medicationId: number) => {
     try {
       setError(null);
@@ -56,6 +80,10 @@ const MedicationTracker = () => {
       }
       
       await loadMedications();
+      // Refresh history if it's open
+      if (expandedHistoryId === medicationId) {
+        await loadDoseHistory(medicationId);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to record dose');
     }
@@ -150,6 +178,26 @@ const MedicationTracker = () => {
     const compareDate = new Date(date);
     compareDate.setHours(0, 0, 0, 0);
     return compareDate > today;
+  };
+
+  const formatDateTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return {
+      date: date.toLocaleDateString(),
+      time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+  };
+
+  const groupDosesByDate = (doses: any[]) => {
+    const grouped: { [key: string]: any[] } = {};
+    doses.forEach(dose => {
+      const { date } = formatDateTime(dose.taken_at);
+      if (!grouped[date]) {
+        grouped[date] = [];
+      }
+      grouped[date].push(dose);
+    });
+    return grouped;
   };
 
   interface Medication {
@@ -315,7 +363,7 @@ const MedicationTracker = () => {
       )}
 
       {/* Medications List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-4">
         {medications.map((medication: Medication) => (
           <div key={medication.id} className="bg-white shadow rounded-lg p-4">
             <div className="mb-4">
@@ -361,10 +409,14 @@ const MedicationTracker = () => {
                   : "Take Now"}
               </button>
               <button
-                onClick={() => setSelectedMedicationForHistory(medication)}
-                className="px-3 py-2 text-purple-600 hover:bg-purple-50 rounded-md"
+                onClick={() => toggleHistory(medication.id)}
+                className={`px-3 py-2 rounded-md transition-colors ${
+                  expandedHistoryId === medication.id 
+                    ? "bg-purple-600 text-white" 
+                    : "text-purple-600 hover:bg-purple-50"
+                }`}
               >
-                History
+                {expandedHistoryId === medication.id ? 'Hide History' : 'Show History'}
               </button>
               <button
                 onClick={() => startEdit(medication)}
@@ -404,6 +456,40 @@ const MedicationTracker = () => {
                 style={{ width: `${(medication.doses_taken_today / medication.max_doses_per_day) * 100}%` }}
               ></div>
             </div>
+
+            {/* Dose History Section - Inline Display */}
+            {expandedHistoryId === medication.id && (
+              <div className="mt-4 pt-4 border-t">
+                <h4 className="font-semibold text-lg mb-3">Dose History</h4>
+                
+                {loadingHistory[medication.id] ? (
+                  <div className="text-center py-4">
+                    <div className="text-gray-500">Loading dose history...</div>
+                  </div>
+                ) : doseHistories[medication.id] && doseHistories[medication.id].length > 0 ? (
+                  <div className="space-y-3 max-h-64 overflow-y-auto">
+                    {Object.entries(groupDosesByDate(doseHistories[medication.id])).map(([date, dayDoses]) => (
+                      <div key={date} className="border-b pb-2">
+                        <h5 className="font-medium text-gray-800">{date}</h5>
+                        <div className="space-y-1 ml-4">
+                          {(dayDoses as any[]).map((dose, index) => {
+                            const { time } = formatDateTime(dose.taken_at);
+                            return (
+                              <div key={dose.id} className="flex items-center text-sm text-gray-600">
+                                <span className="text-blue-600 font-medium">Dose {index + 1}:</span>
+                                <span className="ml-2">{time}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-center py-4">No doses recorded yet</p>
+                )}
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -417,15 +503,6 @@ const MedicationTracker = () => {
           + Add Medication
         </button>
       </div>
-
-      {/* Dose History Modal */}
-      {selectedMedicationForHistory && (
-        <DoseHistoryModal
-          medication={selectedMedicationForHistory}
-          isOpen={true}
-          onClose={() => setSelectedMedicationForHistory(null)}
-        />
-      )}
     </div>
   );
 };
