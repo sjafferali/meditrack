@@ -1,10 +1,9 @@
-name: CI Pipeline
+name: Main Branch CI/CD
 
 on:
   push:
-    branches: [ main, develop ]
-  pull_request:
     branches: [ main ]
+    tags: [ 'v*' ]
 
 jobs:
   # Backend Tests
