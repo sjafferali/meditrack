@@ -92,6 +92,38 @@ def record_dose(
     return db_dose
 
 
+@router.delete(
+    "/doses/{dose_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete a dose",
+    description="Delete a specific dose by ID",
+    responses={
+        204: {"description": "Dose deleted successfully"},
+        404: {"description": "Dose not found"},
+    },
+)
+def delete_dose(
+    dose_id: int = Path(..., ge=1, description="The ID of the dose to delete"),
+    db: Session = Depends(get_db),
+):
+    """
+    Delete a specific dose.
+
+    This endpoint will:
+    - Check if the dose exists
+    - Delete the dose
+    - Return success (204) or not found (404)
+    """
+    # Check if dose exists
+    dose = db.query(Dose).filter(Dose.id == dose_id).first()
+    if not dose:
+        raise HTTPException(status_code=404, detail="Dose not found")
+
+    # Delete the dose
+    db.delete(dose)
+    db.commit()
+
+
 @router.get(
     "/medications/{medication_id}/doses",
     response_model=List[DoseInDB],
@@ -319,6 +351,9 @@ def record_dose_for_date(
     medication_id: int = Path(..., ge=1, description="The ID of the medication"),
     date: date = Path(..., description="The date to record dose for (YYYY-MM-DD)"),
     time: str = Query(..., description="Time in HH:MM format"),
+    timezone_offset: Optional[int] = Query(
+        None, description="Timezone offset in minutes"
+    ),
     db: Session = Depends(get_db),
 ):
     """
@@ -348,10 +383,21 @@ def record_dose_for_date(
     # Parse time and create timestamp
     try:
         hour, minute = map(int, time.split(":"))
-        dose_datetime = datetime.combine(
-            date,
-            datetime.min.time().replace(hour=hour, minute=minute, tzinfo=timezone.utc),
-        )
+        # Handle timezone properly
+        if timezone_offset is not None:
+            # Convert timezone offset from minutes to timedelta
+            tz_offset = timedelta(minutes=-timezone_offset)
+            current_tz = timezone(tz_offset)
+            dose_datetime = datetime.combine(
+                date, datetime.min.time().replace(hour=hour, minute=minute)
+            ).replace(tzinfo=current_tz)
+        else:
+            dose_datetime = datetime.combine(
+                date,
+                datetime.min.time().replace(
+                    hour=hour, minute=minute, tzinfo=timezone.utc
+                ),
+            )
     except (ValueError, AttributeError):
         raise HTTPException(status_code=400, detail="Invalid time format. Use HH:MM")
 

@@ -14,6 +14,9 @@ const MedicationTracker = () => {
   const [loadingHistory, setLoadingHistory] = useState<{ [key: number]: boolean }>({});
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [showDailyLog, setShowDailyLog] = useState(false);
+  const [deleteDoseConfirmId, setDeleteDoseConfirmId] = useState<number | null>(null);
+  const [showTimeModal, setShowTimeModal] = useState<{ medicationId: number | null, show: boolean }>({ medicationId: null, show: false });
+  const [customTime, setCustomTime] = useState<string>('');
 
   // Form state for adding/editing medications
   const [formData, setFormData] = useState({
@@ -66,14 +69,17 @@ const MedicationTracker = () => {
     }
   };
 
-  const handleTakeMedication = async (medicationId: number) => {
+  const handleTakeMedication = async (medicationId: number, time?: string) => {
     try {
       setError(null);
       
-      if (isPastDate(selectedDate)) {
-        // For past dates, use current browser time
-        const currentTime = new Date();
-        const time = currentTime.toTimeString().slice(0, 5); // Format as HH:MM
+      if (isPastDate(selectedDate) && !isToday(selectedDate)) {
+        // For past dates, show time picker if no time is provided
+        if (!time) {
+          setShowTimeModal({ medicationId, show: true });
+          setCustomTime(new Date().toTimeString().slice(0, 5));
+          return;
+        }
         const dateStr = selectedDate.toISOString().split('T')[0];
         await doseApi.recordDoseForDate(medicationId, dateStr, time);
       } else {
@@ -89,6 +95,27 @@ const MedicationTracker = () => {
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to record dose');
+    }
+  };
+
+  const handleRecordDoseWithTime = async () => {
+    if (showTimeModal.medicationId && customTime) {
+      await handleTakeMedication(showTimeModal.medicationId, customTime);
+      setShowTimeModal({ medicationId: null, show: false });
+      setCustomTime('');
+    }
+  };
+
+  const handleDeleteDose = async (medicationId: number, doseId: number) => {
+    try {
+      setError(null);
+      await doseApi.deleteDose(doseId);
+      setDeleteDoseConfirmId(null);
+      // Refresh history and medications
+      await loadDoseHistory(medicationId);
+      await loadMedications();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete dose');
     }
   };
 
@@ -479,9 +506,36 @@ const MedicationTracker = () => {
                           {(dayDoses as any[]).map((dose, index) => {
                             const { time } = formatDateTime(dose.taken_at);
                             return (
-                              <div key={dose.id} className="flex items-center text-sm text-gray-600">
-                                <span className="text-blue-600 font-medium">Dose {index + 1}:</span>
-                                <span className="ml-2">{time}</span>
+                              <div key={dose.id} className="flex items-center justify-between text-sm text-gray-600">
+                                <div>
+                                  <span className="text-blue-600 font-medium">Dose {index + 1}:</span>
+                                  <span className="ml-2">{time}</span>
+                                </div>
+                                <div>
+                                  {deleteDoseConfirmId === dose.id ? (
+                                    <div className="flex gap-1">
+                                      <button
+                                        onClick={() => handleDeleteDose(medication.id, dose.id)}
+                                        className="px-2 py-1 text-xs text-white bg-red-600 hover:bg-red-700 rounded"
+                                      >
+                                        Confirm
+                                      </button>
+                                      <button
+                                        onClick={() => setDeleteDoseConfirmId(null)}
+                                        className="px-2 py-1 text-xs text-gray-600 hover:bg-gray-100 rounded"
+                                      >
+                                        Cancel
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <button
+                                      onClick={() => setDeleteDoseConfirmId(dose.id)}
+                                      className="px-2 py-1 text-xs text-red-600 hover:bg-red-50 rounded"
+                                    >
+                                      Delete
+                                    </button>
+                                  )}
+                                </div>
                               </div>
                             );
                           })}
@@ -521,6 +575,45 @@ const MedicationTracker = () => {
         isOpen={showDailyLog}
         onClose={() => setShowDailyLog(false)}
       />
+
+      {/* Time Picker Modal */}
+      {showTimeModal.show && (
+        <>
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50" onClick={() => setShowTimeModal({ medicationId: null, show: false })} />
+          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-6 max-w-sm w-[90%] z-50 shadow-2xl">
+            <h3 className="text-lg font-semibold mb-4">Select Time for Dose</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Recording dose for: {selectedDate.toLocaleDateString()}
+            </p>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">Time:</label>
+              <input
+                type="time"
+                value={customTime}
+                onChange={(e) => setCustomTime(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={handleRecordDoseWithTime}
+                className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
+              >
+                Record Dose
+              </button>
+              <button
+                onClick={() => {
+                  setShowTimeModal({ medicationId: null, show: false });
+                  setCustomTime('');
+                }}
+                className="flex-1 px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-md"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };

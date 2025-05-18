@@ -346,3 +346,91 @@ class TestDoses:
         )
         assert med_summary["doses_taken"] == 1
         assert len(med_summary["dose_times"]) == 1
+
+    @pytest.mark.unit
+    def test_delete_dose_success(self, client, sample_medication, db_session):
+        """Test successfully deleting a dose"""
+        # Create a dose
+        dose = Dose(
+            medication_id=sample_medication.id, taken_at=datetime.now(timezone.utc)
+        )
+        db_session.add(dose)
+        db_session.commit()
+        db_session.refresh(dose)
+
+        # Delete the dose
+        response = client.delete(f"/api/v1/doses/doses/{dose.id}")
+        assert response.status_code == 204
+
+        # Verify dose is deleted
+        assert db_session.query(Dose).filter(Dose.id == dose.id).first() is None
+
+    @pytest.mark.unit
+    def test_delete_dose_not_found(self, client):
+        """Test deleting a non-existent dose"""
+        response = client.delete("/api/v1/doses/doses/999")
+        assert response.status_code == 404
+        assert response.json()["detail"] == "Dose not found"
+
+    @pytest.mark.integration
+    def test_delete_dose_updates_daily_count(
+        self, client, sample_medication, db_session
+    ):
+        """Test that deleting a dose updates the daily count correctly"""
+        # Record two doses
+        response1 = client.post(
+            f"/api/v1/doses/medications/{sample_medication.id}/dose"
+        )
+        assert response1.status_code == 201
+        dose1_id = response1.json()["id"]
+
+        response2 = client.post(
+            f"/api/v1/doses/medications/{sample_medication.id}/dose"
+        )
+        assert response2.status_code == 201
+
+        # Check current count
+        med_response = client.get(f"/api/v1/medications/{sample_medication.id}")
+        assert med_response.json()["doses_taken_today"] == 2
+
+        # Delete one dose
+        delete_response = client.delete(f"/api/v1/doses/doses/{dose1_id}")
+        assert delete_response.status_code == 204
+
+        # Check count is updated
+        med_response = client.get(f"/api/v1/medications/{sample_medication.id}")
+        assert med_response.json()["doses_taken_today"] == 1
+
+    @pytest.mark.unit
+    def test_record_dose_for_date_with_timezone(self, client, sample_medication):
+        """Test recording a dose with timezone offset"""
+        test_date = "2023-01-15"
+        test_time = "14:30"
+        timezone_offset = 300  # UTC-5 (Eastern Time)
+
+        response = client.post(
+            f"/api/v1/doses/medications/{sample_medication.id}/dose/{test_date}"
+            f"?time={test_time}&timezone_offset={timezone_offset}"
+        )
+        assert response.status_code == 201
+
+        data = response.json()
+        assert data["medication_id"] == sample_medication.id
+        assert "2023-01-15" in data["taken_at"]
+        # Time should be adjusted based on offset
+
+    @pytest.mark.unit
+    def test_record_dose_with_custom_time_past_date(self, client, sample_medication):
+        """Test recording a dose with custom time for a past date"""
+        past_date = (datetime.now(timezone.utc) - timedelta(days=1)).date()
+        test_time = "09:30"
+
+        response = client.post(
+            f"/api/v1/doses/medications/{sample_medication.id}/dose/"
+            f"{past_date}?time={test_time}"
+        )
+        assert response.status_code == 201
+
+        data = response.json()
+        assert test_time in data["taken_at"]
+        assert str(past_date) in data["taken_at"]

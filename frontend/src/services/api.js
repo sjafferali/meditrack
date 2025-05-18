@@ -151,6 +151,16 @@ const doseApi = {
       throw error;
     }
   },
+
+  // Delete a specific dose
+  deleteDose: async (doseId) => {
+    try {
+      await api.delete(`/doses/${doseId}`);
+      return true;
+    } catch (error) {
+      throw error;
+    }
+  },
 };
 
 export { medicationApi, doseApi };
