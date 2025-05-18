@@ -96,11 +96,27 @@ const DailyDoseLog: React.FC<DailyDoseLogProps> = ({ selectedDate, isOpen, onClo
   const handleCopyToClipboard = async () => {
     try {
       const text = formatExportText();
-      await navigator.clipboard.writeText(text);
+      
+      // Fallback for environments where clipboard API might not be available
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        // Fallback method using a temporary textarea
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+      }
+      
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      setError('Failed to copy to clipboard');
+      console.error('Failed to copy to clipboard:', err);
+      setError('Failed to copy to clipboard. Please try again.');
     }
   };
 
