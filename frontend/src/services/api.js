@@ -103,9 +103,13 @@ const doseApi = {
   },
 
   // Record a dose for a medication on a specific date and time
-  recordDoseForDate: async (medicationId, date, time) => {
+  recordDoseForDate: async (medicationId, date, time, timezoneOffset) => {
     try {
-      const response = await api.post(`/doses/medications/${medicationId}/dose/${date}?time=${encodeURIComponent(time)}`);
+      let url = `/doses/medications/${medicationId}/dose/${date}?time=${encodeURIComponent(time)}`;
+      if (timezoneOffset !== undefined) {
+        url += `&timezone_offset=${timezoneOffset}`;
+      }
+      const response = await api.post(url);
       return response.data;
     } catch (error) {
       throw error;

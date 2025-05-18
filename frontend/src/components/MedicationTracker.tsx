@@ -73,17 +73,18 @@ const MedicationTracker = () => {
     try {
       setError(null);
       
-      if (isPastDate(selectedDate) && !isToday(selectedDate)) {
-        // For past dates, show time picker if no time is provided
-        if (!time) {
-          setShowTimeModal({ medicationId, show: true });
-          setCustomTime(new Date().toTimeString().slice(0, 5));
-          return;
-        }
+      if (time) {
+        // If time is provided, use the date-specific API
         const dateStr = selectedDate.toISOString().split('T')[0];
-        await doseApi.recordDoseForDate(medicationId, dateStr, time);
+        const timezoneOffset = isToday(selectedDate) ? new Date().getTimezoneOffset() : undefined;
+        await doseApi.recordDoseForDate(medicationId, dateStr, time, timezoneOffset);
+      } else if (isPastDate(selectedDate) && !isToday(selectedDate)) {
+        // For past dates, show time picker
+        setShowTimeModal({ medicationId, show: true });
+        setCustomTime(new Date().toTimeString().slice(0, 5));
+        return;
       } else {
-        // For today, include timezone offset
+        // For today without custom time, include timezone offset
         const timezoneOffset = new Date().getTimezoneOffset();
         await doseApi.recordDoseWithTimezone(medicationId, timezoneOffset);
       }
@@ -439,6 +440,17 @@ const MedicationTracker = () => {
                   ? "Record Dose"
                   : "Take Now"}
               </button>
+              {!isFutureDate(selectedDate) && medication.doses_taken_today < medication.max_doses_per_day && (
+                <button
+                  onClick={() => {
+                    setShowTimeModal({ medicationId: medication.id, show: true });
+                    setCustomTime(new Date().toTimeString().slice(0, 5));
+                  }}
+                  className="px-3 py-2 text-purple-600 hover:bg-purple-50 rounded-md"
+                >
+                  Take at Time
+                </button>
+              )}
               <button
                 onClick={() => toggleHistory(medication.id)}
                 className={`px-3 py-2 rounded-md transition-colors ${

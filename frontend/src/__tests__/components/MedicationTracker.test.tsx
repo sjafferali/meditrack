@@ -405,7 +405,58 @@ describe('MedicationTracker', () => {
       expect(doseApi.recordDoseForDate).toHaveBeenCalledWith(
         1,
         '2023-01-10',
-        '09:30'
+        '09:30',
+        undefined // timezone is undefined for past dates
+      );
+    });
+  });
+
+  test('shows Take at Time button for today', async () => {
+    render(<MedicationTracker />);
+    
+    // Wait for initial load
+    await waitFor(() => {
+      expect(screen.getByText('Test Medication')).toBeInTheDocument();
+    });
+    
+    // Should have Take at Time button for today
+    await waitFor(() => {
+      expect(screen.getByText('Take at Time')).toBeInTheDocument();
+    });
+  });
+
+  test('records dose with custom time for today', async () => {
+    render(<MedicationTracker />);
+    
+    // Wait for initial load
+    await waitFor(() => {
+      expect(screen.getByText('Test Medication')).toBeInTheDocument();
+    });
+    
+    // Click Take at Time button
+    const takeAtTimeButton = screen.getByText('Take at Time');
+    fireEvent.click(takeAtTimeButton);
+    
+    // Should show time picker modal
+    await waitFor(() => {
+      expect(screen.getByText('Select Time for Dose')).toBeInTheDocument();
+    });
+    
+    // Set custom time
+    const timeInput = screen.getByDisplayValue(/\d{2}:\d{2}/);
+    fireEvent.change(timeInput, { target: { value: '14:00' } });
+    
+    // Click Record Dose in modal
+    const modalRecordButton = screen.getByText('Record Dose');
+    fireEvent.click(modalRecordButton);
+    
+    // Verify recordDoseForDate was called with custom time and timezone
+    await waitFor(() => {
+      expect(doseApi.recordDoseForDate).toHaveBeenCalledWith(
+        1,
+        mockDate.toISOString().split('T')[0],
+        '14:00',
+        expect.any(Number) // timezone offset for today
       );
     });
   });
