@@ -93,9 +93,10 @@ def downgrade() -> None:
     for name in medication_names:
         conn.execute(
             text(
-                "DELETE FROM medications WHERE name = :name AND id NOT IN (SELECT medication_id FROM doses)"
+                "DELETE FROM medications WHERE name = :name AND "
+                "id NOT IN (SELECT medication_id FROM doses)"
             ),
             {"name": name},
         )
 
-    print(f"Removed seed medications (if they had no associated doses)")
+    print("Removed seed medications (if they had no associated doses)")
