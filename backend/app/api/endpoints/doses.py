@@ -93,7 +93,7 @@ def record_dose(
 
 
 @router.delete(
-    "/doses/{dose_id}",
+    "/{dose_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete a dose",
     description="Delete a specific dose by ID",

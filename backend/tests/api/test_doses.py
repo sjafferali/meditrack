@@ -359,7 +359,7 @@ class TestDoses:
         db_session.refresh(dose)
 
         # Delete the dose
-        response = client.delete(f"/api/v1/doses/doses/{dose.id}")
+        response = client.delete(f"/api/v1/doses/{dose.id}")
         assert response.status_code == 204
 
         # Verify dose is deleted
@@ -368,7 +368,7 @@ class TestDoses:
     @pytest.mark.unit
     def test_delete_dose_not_found(self, client):
         """Test deleting a non-existent dose"""
-        response = client.delete("/api/v1/doses/doses/999")
+        response = client.delete("/api/v1/doses/999")
         assert response.status_code == 404
         assert response.json()["detail"] == "Dose not found"
 
@@ -394,7 +394,7 @@ class TestDoses:
         assert med_response.json()["doses_taken_today"] == 2
 
         # Delete one dose
-        delete_response = client.delete(f"/api/v1/doses/doses/{dose1_id}")
+        delete_response = client.delete(f"/api/v1/doses/{dose1_id}")
         assert delete_response.status_code == 204
 
         # Check count is updated
