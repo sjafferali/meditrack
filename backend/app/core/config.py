@@ -18,6 +18,10 @@ class Settings(BaseSettings):
     # CORS settings (default to same-origin)
     CORS_ORIGINS: list[str] = ["*"]  # In production, served from same origin
 
+    # Timezone settings (optional)
+    # Default to UTC (0 offset); set to timezone offset in minutes
+    TIMEZONE_OFFSET: int = 0
+
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", case_sensitive=True, extra="ignore"
     )

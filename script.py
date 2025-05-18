@@ -17,14 +17,14 @@ MEDICATIONS = [
         "dosage": "10 mL Drops",
         "frequency": "4x daily",
         "max_doses_per_day": 4,
-        "instructions": "Apply one drop to BOTH eyes 4x daily until recheck. This medication is a topical steroid used to decrease inflammation. Stop if use causes pain or squinting and call VEC for instructions."
+        "instructions": "Apply one drop to the RIGHT eyes 4x daily until recheck. This medication is a topical steroid used to decrease inflammation. Stop if use causes pain or squinting and call VEC for instructions."
     },
     {
         "name": "Ofloxacin 0.3%",
         "dosage": "10mL Drops",
         "frequency": "4x daily",
         "max_doses_per_day": 4,
-        "instructions": "Apply one drop to BOTH eyes 4x daily until recheck. This med is an antibiotic."
+        "instructions": "Apply one drop to the BOTH eyes 4x daily until recheck. This med is an antibiotic."
     },
     {
         "name": "Artificial Tears",
@@ -55,32 +55,32 @@ MEDICATIONS = [
         "instructions": "Apply one drop to BOTH eyes 2x daily until recheck to decrease inflammation. This med is a topical non-steroidal anti-inflammatory. Discontinue use if squinting occurs. Call VEC if this occurs."
     },
     {
-        "name": "Dorzolamide 2%",
-        "dosage": "Ophthalmic 10 mL",
-        "frequency": "3x daily",
-        "max_doses_per_day": 3,
-        "instructions": "Apply one drop to the BOTH eyes 3 times a day until recheck. This medication lowers eye pressure."
+        "name": "Dorzolamide/Timolol",
+        "dosage": "Ophthalmic Sol. 10mL",
+        "frequency": "4x daily left eye, 2x daily right eye",
+        "max_doses_per_day": 6,
+        "instructions": "Apply one drop to the left eye 4 times a day and right eye 2x daily until recheck. This medication lowers eye pressure."
     },
     {
         "name": "Gabapentin 20 mg",
         "dosage": "tablets (Epicur)",
         "frequency": "Every 8-24 hours",
         "max_doses_per_day": 3,
-        "instructions": "GIVE TONIGHT IF NOT TOO SEDATE: Give 1-2 tablet orally every 8-24 hours for pain and sedation. May stop early."
+        "instructions": "Give 1-2 tablet orally every 8-24 hours for pain and sedation. May stop early."
     },
     {
         "name": "Clavacillin (Clavamox)",
         "dosage": "62.5mg Tabs",
-        "frequency": "Every 12 hours",
-        "max_doses_per_day": 2,
-        "instructions": "GIVE TONIGHT WITH DINNER: Give 1 tablet orally every 12 hours with food until gone. This medication is an antibiotic."
+        "frequency": "Do not use",
+        "max_doses_per_day": 0,
+        "instructions": "STOP do not discard."
     },
     {
         "name": "Prednisone",
         "dosage": "1 mg Tablets",
         "frequency": "Every 12 hours",
         "max_doses_per_day": 2,
-        "instructions": "GIVE TOMORROW WITH DINNER: Give 1 tablet orally every 12 hours with food until recheck to decrease pain and inflammation. Call and stop if vomiting or diarrhea or bloody stool. This med increases thirst, urination, appetite and panting. Do not combine with an oral NSAID."
+        "instructions": "Give 1 tablet orally every 12 hours with food until recheck to decrease pain and inflammation. Call and stop if vomiting or diarrhea or bloody stool. This med increases thirst, urination, appetite and panting. Do not combine with an oral NSAID med."
     },
     {
         "name": "I-Drop Vet Plus",
@@ -102,6 +102,34 @@ MEDICATIONS = [
         "frequency": "Twice a day",
         "max_doses_per_day": 2,
         "instructions": "Give 1/2 tab twice a day with food to relieve anxiety."
+    },
+    {
+        "name": "Latanoprost 0.005%",
+        "dosage": "2.5mL Drops",
+        "frequency": "3 times a day",
+        "max_doses_per_day": 3,
+        "instructions": "Apply one drop to the left eye 3 times a day until recheck. This medication lowers eye pressure and constricts the pupil."
+    },
+    {
+        "name": "Pro Plan Vet Supplement K9",
+        "dosage": "Packet",
+        "frequency": "Every 24 hours as needed",
+        "max_doses_per_day": 1,
+        "instructions": "Mix 1 packet with food every 24 hours as needed as probiotic."
+    },
+    {
+        "name": "Entyce",
+        "dosage": "30mg/mL - 10mL bottle",
+        "frequency": "Every 24 hours",
+        "max_doses_per_day": 1,
+        "instructions": "START TOMORROW WITH BREAKFAST: Give 0.45ml by mouth every 24 hours as needed for appetite stimulant."
+    },
+    {
+        "name": "Ondansetron",
+        "dosage": "4mg Tablet",
+        "frequency": "Every 8-24 hours as needed",
+        "max_doses_per_day": 3,
+        "instructions": "Give 1/2 to 1 tab by mouth every 8-24 hours as needed for nausea."
     }
 ]
 
@@ -121,29 +149,29 @@ def import_medications(base_url, medications, dry_run=False):
     # Ensure the base URL has the correct format
     if not base_url.endswith('/'):
         base_url += '/'
-    
+
     # Create the full medications endpoint URL
     api_url = f"{base_url}api/v1/medications/"
-    
+
     print(f"Importing {len(medications)} medications to {api_url}...")
-    
+
     if dry_run:
         print("DRY RUN: Would import these medications:")
         for i, med in enumerate(medications, 1):
             print(f"{i}. {med['name']} - {med['dosage']} ({med['frequency']})")
         print(f"\nTotal: {len(medications)} medications")
         return
-    
+
     successful = 0
     failed = 0
-    
+
     for med in medications:
         result = add_medication(api_url, med)
         if result:
             successful += 1
         else:
             failed += 1
-    
+
     print("\nImport summary:")
     print(f"Total medications: {len(medications)}")
     print(f"Successfully imported: {successful}")
@@ -156,9 +184,9 @@ def main():
                         help="Base URL for the MediTrack server (default: http://localhost:8000)")
     parser.add_argument("--dry-run", action="store_true",
                         help="Dry run mode (print medications but don't send to API)")
-    
+
     args = parser.parse_args()
-    
+
     try:
         import_medications(args.api_url, MEDICATIONS, args.dry_run)
     except KeyboardInterrupt:

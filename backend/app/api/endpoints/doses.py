@@ -1,13 +1,14 @@
-from datetime import date, datetime, timezone
-from typing import List
+from datetime import date, datetime, timedelta, timezone
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.database import get_db
+from app.core.config import settings
 from app.models import Dose, Medication
-from app.schemas import DoseInDB
+from app.schemas import DoseCreateWithTimezone, DoseInDB
 
 router = APIRouter(
     tags=["doses"],
@@ -30,6 +31,7 @@ router = APIRouter(
 )
 def record_dose(
     medication_id: int = Path(..., ge=1, description="The ID of the medication"),
+    body: Optional[DoseCreateWithTimezone] = None,
     db: Session = Depends(get_db),
 ):
     """
@@ -39,6 +41,7 @@ def record_dose(
     - Check if the medication exists
     - Verify the daily dose limit hasn't been reached
     - Record the dose with the current timestamp
+    - If timezone_offset is provided, adjust the timestamp to reflect user's local time
     - Return the created dose record
 
     Returns error if:
@@ -50,10 +53,23 @@ def record_dose(
     if not medication:
         raise HTTPException(status_code=404, detail="Medication not found")
 
-    # Check if max doses for today already reached
-    today_start = datetime.now(timezone.utc).replace(
-        hour=0, minute=0, second=0, microsecond=0
-    )
+    # Determine the current timestamp based on timezone offset
+    if body and hasattr(body, "timezone_offset"):
+        # Convert timezone offset from minutes to timedelta
+        # Negative because JS returns offset in opposite direction
+        tz_offset = timedelta(minutes=-body.timezone_offset)
+        current_tz = timezone(tz_offset)
+        now = datetime.now(current_tz)
+    elif settings.TIMEZONE_OFFSET != 0:
+        # Use environment variable timezone if set
+        tz_offset = timedelta(minutes=-settings.TIMEZONE_OFFSET)
+        current_tz = timezone(tz_offset)
+        now = datetime.now(current_tz)
+    else:
+        now = datetime.now(timezone.utc)
+
+    # Check if max doses for today already reached (in the user's timezone)
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
     doses_today = (
         db.query(Dose)
@@ -67,8 +83,8 @@ def record_dose(
             detail=f"Maximum doses ({medication.max_doses_per_day}) taken today",
         )
 
-    # Create new dose
-    db_dose = Dose(medication_id=medication_id)
+    # Create new dose with timezone-aware timestamp
+    db_dose = Dose(medication_id=medication_id, taken_at=now)
     db.add(db_dose)
     db.commit()
     db.refresh(db_dose)
@@ -124,7 +140,12 @@ def get_doses(
     description="Get a summary of all medications and doses taken today",
     response_description="Summary of today's medication doses",
 )
-def get_daily_summary(db: Session = Depends(get_db)):
+def get_daily_summary(
+    timezone_offset: Optional[int] = Query(
+        None, description="Timezone offset in minutes"
+    ),
+    db: Session = Depends(get_db),
+):
     """
     Get today's dose summary for all medications.
 
@@ -136,9 +157,20 @@ def get_daily_summary(db: Session = Depends(get_db)):
       - Maximum doses allowed
       - Timestamps of all doses taken today
     """
-    today_start = datetime.now(timezone.utc).replace(
-        hour=0, minute=0, second=0, microsecond=0
-    )
+    # Use timezone offset if provided
+    if timezone_offset is not None:
+        tz_offset = timedelta(minutes=-timezone_offset)
+        current_tz = timezone(tz_offset)
+        now = datetime.now(current_tz)
+    elif settings.TIMEZONE_OFFSET != 0:
+        # Use environment variable timezone if set
+        tz_offset = timedelta(minutes=-settings.TIMEZONE_OFFSET)
+        current_tz = timezone(tz_offset)
+        now = datetime.now(current_tz)
+    else:
+        now = datetime.now(timezone.utc)
+
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
     medications = db.query(Medication).all()
     summary: dict = {"date": today_start.date().isoformat(), "medications": []}

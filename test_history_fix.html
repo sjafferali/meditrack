@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>History Button Debug</title>
+    <style>
+        .debug-modal {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+        
+        .debug-content {
+            background-color: white;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            max-width: 28rem;
+            width: 100%;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <button id="test-button" onclick="toggleModal()">Test History Button</button>
+    
+    <div id="test-modal" class="debug-modal hidden">
+        <div class="debug-content">
+            <h2>Modal Content</h2>
+            <p>This is a test modal to verify visibility</p>
+            <button onclick="closeModal()">Close</button>
+        </div>
+    </div>
+    
+    <script>
+        function toggleModal() {
+            const modal = document.getElementById('test-modal');
+            modal.classList.toggle('hidden');
+            console.log('Modal toggled, hidden status:', modal.classList.contains('hidden'));
+        }
+        
+        function closeModal() {
+            const modal = document.getElementById('test-modal');
+            modal.classList.add('hidden');
+            console.log('Modal closed');
+        }
+    </script>
+</body>
+</html>

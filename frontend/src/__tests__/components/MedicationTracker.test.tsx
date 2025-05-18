@@ -33,6 +33,7 @@ describe('MedicationTracker', () => {
     (api.medicationApi.delete as jest.Mock).mockResolvedValue({});
     
     (api.doseApi.recordDose as jest.Mock).mockResolvedValue({});
+    (api.doseApi.recordDoseWithTimezone as jest.Mock).mockResolvedValue({});
     (api.doseApi.recordDoseForDate as jest.Mock).mockResolvedValue({});
     (api.doseApi.getDoses as jest.Mock).mockResolvedValue([]);
     (api.doseApi.getDailySummary as jest.Mock).mockResolvedValue({ 

@@ -77,8 +77,9 @@ const MedicationTracker = () => {
         const dateStr = selectedDate.toISOString().split('T')[0];
         await doseApi.recordDoseForDate(medicationId, dateStr, time);
       } else {
-        // For today, use the regular endpoint
-        await doseApi.recordDose(medicationId);
+        // For today, include timezone offset
+        const timezoneOffset = new Date().getTimezoneOffset();
+        await doseApi.recordDoseWithTimezone(medicationId, timezoneOffset);
       }
       
       await loadMedications();
@@ -163,23 +164,24 @@ const MedicationTracker = () => {
 
   const isToday = (date: Date) => {
     const today = new Date();
-    return date.toDateString() === today.toDateString();
+    // Compare dates using local timezone
+    return date.toLocaleDateString() === today.toLocaleDateString();
   };
 
   const isPastDate = (date: Date) => {
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const compareDate = new Date(date);
-    compareDate.setHours(0, 0, 0, 0);
-    return compareDate < today;
+    // Use local date comparison
+    const todayStr = today.toLocaleDateString();
+    const compareDateStr = date.toLocaleDateString();
+    return new Date(compareDateStr) < new Date(todayStr);
   };
 
   const isFutureDate = (date: Date) => {
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const compareDate = new Date(date);
-    compareDate.setHours(0, 0, 0, 0);
-    return compareDate > today;
+    // Use local date comparison
+    const todayStr = today.toLocaleDateString();
+    const compareDateStr = date.toLocaleDateString();
+    return new Date(compareDateStr) > new Date(todayStr);
   };
 
   const formatDateTime = (dateString: string) => {

@@ -11,6 +11,10 @@ class DoseCreate(DoseBase):
     pass
 
 
+class DoseCreateWithTimezone(BaseModel):
+    timezone_offset: int  # Timezone offset in minutes
+
+
 class DoseInDB(DoseBase):
     id: int
     taken_at: datetime

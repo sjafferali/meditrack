@@ -90,6 +90,18 @@ const doseApi = {
     }
   },
 
+  // Record a dose for a medication with timezone information
+  recordDoseWithTimezone: async (medicationId, timezoneOffset) => {
+    try {
+      const response = await api.post(`/doses/medications/${medicationId}/dose`, {
+        timezone_offset: timezoneOffset
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
   // Record a dose for a medication on a specific date and time
   recordDoseForDate: async (medicationId, date, time) => {
     try {

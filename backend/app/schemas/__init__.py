@@ -1,4 +1,4 @@
-from .dose import DoseCreate, DoseInDB
+from .dose import DoseCreate, DoseCreateWithTimezone, DoseInDB
 from .medication import (
     MedicationCreate,
     MedicationInDB,
@@ -12,5 +12,6 @@ __all__ = [
     "MedicationInDB",
     "MedicationWithDoses",
     "DoseCreate",
+    "DoseCreateWithTimezone",
     "DoseInDB",
 ]
