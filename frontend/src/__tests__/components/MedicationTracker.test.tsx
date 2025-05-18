@@ -36,6 +36,7 @@ describe('MedicationTracker', () => {
     (api.doseApi.recordDoseWithTimezone as jest.Mock).mockResolvedValue({});
     (api.doseApi.recordDoseForDate as jest.Mock).mockResolvedValue({});
     (api.doseApi.getDoses as jest.Mock).mockResolvedValue([]);
+    (api.doseApi.deleteDose as jest.Mock).mockResolvedValue(true);
     (api.doseApi.getDailySummary as jest.Mock).mockResolvedValue({ 
       date: '2023-01-01',
       medications: [] 
@@ -220,7 +221,7 @@ describe('MedicationTracker', () => {
     });
   });
 
-  test('uses browser current time when recording dose for past dates', async () => {
+  test('shows time picker modal when recording dose for past dates', async () => {
     // Mock toTimeString to control the time format
     const mockToTimeString = jest.fn(() => '14:30:00 GMT+0000');
     const originalDate = global.Date;
@@ -264,16 +265,129 @@ describe('MedicationTracker', () => {
     const recordButton = screen.getByText('Record Dose');
     fireEvent.click(recordButton);
     
-    // Verify recordDoseForDate was called with current browser time
+    // Should show time picker modal for past dates
     await waitFor(() => {
-      expect(api.doseApi.recordDoseForDate).toHaveBeenCalledWith(
-        1, // medication ID
-        '2023-01-10', // selected date
-        '14:30' // current browser time in HH:MM format (first 5 characters of toTimeString)
-      );
+      expect(screen.getByText('Select Time for Dose')).toBeInTheDocument();
     });
     
     // Restore the original Date
     jest.restoreAllMocks();
+  });
+
+  test('deletes dose when delete button is clicked', async () => {
+    const mockDoseHistory = [
+      {
+        id: 123,
+        medication_id: 1,
+        taken_at: '2023-01-15T10:00:00Z'
+      }
+    ];
+    (api.doseApi.getDoses as jest.Mock).mockResolvedValue(mockDoseHistory);
+    
+    render(<MedicationTracker />);
+    
+    // Wait for medications to load
+    await waitFor(() => {
+      expect(screen.getByText('Test Medication')).toBeInTheDocument();
+    });
+    
+    // Click Show History button
+    const historyButton = screen.getByText('Show History');
+    fireEvent.click(historyButton);
+    
+    // Wait for dose history to load
+    await waitFor(() => {
+      expect(screen.getByText('Dose History')).toBeInTheDocument();
+      expect(screen.getByText('Delete')).toBeInTheDocument();
+    });
+    
+    // Click Delete button
+    const deleteButton = screen.getByText('Delete');
+    fireEvent.click(deleteButton);
+    
+    // Confirm deletion
+    await waitFor(() => {
+      expect(screen.getByText('Confirm')).toBeInTheDocument();
+    });
+    
+    const confirmButton = screen.getByText('Confirm');
+    fireEvent.click(confirmButton);
+    
+    // Verify deleteDose was called
+    await waitFor(() => {
+      expect(api.doseApi.deleteDose).toHaveBeenCalledWith(123);
+    });
+  });
+
+  test('shows time picker modal for past dates', async () => {
+    render(<MedicationTracker />);
+    
+    // Wait for initial load
+    await waitFor(() => {
+      expect(screen.getByText('Test Medication')).toBeInTheDocument();
+    });
+    
+    // Change to a past date (not today)
+    const dateInput = screen.getByDisplayValue(/\d{4}-\d{2}-\d{2}/);
+    fireEvent.change(dateInput, { target: { value: '2023-01-10' } });
+    
+    // Wait for medications to reload
+    await waitFor(() => {
+      expect(screen.getByText('Record Dose')).toBeInTheDocument();
+    });
+    
+    // Click Record Dose button
+    const recordButton = screen.getByText('Record Dose');
+    fireEvent.click(recordButton);
+    
+    // Time picker modal should appear
+    await waitFor(() => {
+      expect(screen.getByText('Select Time for Dose')).toBeInTheDocument();
+      expect(screen.getByLabelText('Time:')).toBeInTheDocument();
+    });
+  });
+
+  test('records dose with custom time', async () => {
+    render(<MedicationTracker />);
+    
+    // Wait for initial load
+    await waitFor(() => {
+      expect(screen.getByText('Test Medication')).toBeInTheDocument();
+    });
+    
+    // Change to a past date
+    const dateInput = screen.getByDisplayValue(/\d{4}-\d{2}-\d{2}/);
+    fireEvent.change(dateInput, { target: { value: '2023-01-10' } });
+    
+    // Wait for Record Dose button
+    await waitFor(() => {
+      expect(screen.getByText('Record Dose')).toBeInTheDocument();
+    });
+    
+    // Click Record Dose
+    const recordButton = screen.getByText('Record Dose');
+    fireEvent.click(recordButton);
+    
+    // Wait for time picker modal
+    await waitFor(() => {
+      expect(screen.getByText('Select Time for Dose')).toBeInTheDocument();
+    });
+    
+    // Set custom time - time inputs in React have display value in the format HH:MM
+    const timeInput = screen.getByDisplayValue(/\d{2}:\d{2}/);
+    fireEvent.change(timeInput, { target: { value: '09:30' } });
+    
+    // Click Record Dose in modal
+    const modalRecordButton = screen.getByRole('button', { name: 'Record Dose' });
+    fireEvent.click(modalRecordButton);
+    
+    // Verify recordDoseForDate was called with custom time
+    await waitFor(() => {
+      expect(api.doseApi.recordDoseForDate).toHaveBeenCalledWith(
+        1,
+        '2023-01-10',
+        '09:30'
+      );
+    });
   });
 });

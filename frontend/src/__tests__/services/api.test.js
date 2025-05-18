@@ -12,6 +12,9 @@ jest.mock('../../services/api', () => ({
     recordDose: jest.fn(),
     getDoses: jest.fn(),
     getDailySummary: jest.fn(),
+    deleteDose: jest.fn(),
+    recordDoseForDate: jest.fn(),
+    recordDoseWithTimezone: jest.fn(),
   },
 }));
 
@@ -31,5 +34,8 @@ describe('API Service', () => {
     expect(typeof doseApi.recordDose).toBe('function');
     expect(typeof doseApi.getDoses).toBe('function');
     expect(typeof doseApi.getDailySummary).toBe('function');
+    expect(typeof doseApi.deleteDose).toBe('function');
+    expect(typeof doseApi.recordDoseForDate).toBe('function');
+    expect(typeof doseApi.recordDoseWithTimezone).toBe('function');
   });
 });
