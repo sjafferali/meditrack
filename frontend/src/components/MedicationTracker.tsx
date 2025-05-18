@@ -506,9 +506,8 @@ const MedicationTracker = () => {
         </button>
         <button
           onClick={() => setShowDailyLog(true)}
-          className="ml-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md font-medium transition-colors disabled:opacity-100"
+          className="ml-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium transition-colors"
           type="button"
-          disabled={false}
         >
           View Daily Log
         </button>
