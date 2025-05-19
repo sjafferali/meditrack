@@ -21,7 +21,7 @@ describe('PersonSelector', () => {
     (personApi.getAll as jest.Mock).mockResolvedValue(mockPersons);
   });
 
-  test('renders loading state initially', () => {
+  test('renders loading state initially', async () => {
     render(
       <PersonSelector
         currentPersonId={null}
@@ -31,6 +31,11 @@ describe('PersonSelector', () => {
     );
 
     expect(screen.getByText('Loading...')).toBeInTheDocument();
+    
+    // Wait for API call to complete to avoid act() warning
+    await waitFor(() => {
+      expect(personApi.getAll).toHaveBeenCalled();
+    });
   });
 
   test('renders person selector after loading', async () => {

@@ -73,6 +73,10 @@ describe('PersonManager', () => {
     );
 
     expect(screen.getByText('Manage People')).toBeInTheDocument();
+    // Wait for async loading to complete to avoid act() warnings
+    await waitFor(() => {
+      expect(personApi.getAll).toHaveBeenCalled();
+    });
   });
 
   test('displays loading state initially', () => {
@@ -115,10 +119,11 @@ describe('PersonManager', () => {
     );
 
     await waitFor(() => {
-      // Check for the born text but be flexible about date format
-      expect(screen.getByText((content, element) => {
+      // Check for the born text but be flexible about date format - use getAllByText since there are multiple persons
+      const bornElements = screen.getAllByText((content, element) => {
         return element?.tagName.toLowerCase() === 'p' && content.startsWith('Born:');
-      })).toBeInTheDocument();
+      });
+      expect(bornElements.length).toBeGreaterThan(0);
       expect(screen.getByText('Primary person')).toBeInTheDocument();
       expect(screen.getByText('3 medications')).toBeInTheDocument();
     });

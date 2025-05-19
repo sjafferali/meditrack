@@ -39,7 +39,7 @@ describe('DoseHistoryModal', () => {
     expect(screen.getByText('Dose History - Aspirin')).toBeInTheDocument();
   });
 
-  test('displays loading state initially', () => {
+  test('displays loading state initially', async () => {
     (doseApi.getDoses as jest.Mock).mockReturnValue(new Promise(() => {}));
     
     render(
