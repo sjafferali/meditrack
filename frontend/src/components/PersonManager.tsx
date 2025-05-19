@@ -186,8 +186,9 @@ const PersonManager: React.FC<PersonManagerProps> = ({
                 <form onSubmit={editingPerson ? handleUpdatePerson : handleAddPerson}>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-1">Name</label>
+                      <label htmlFor="person-name" className="block text-sm font-medium mb-1">Name</label>
                       <input
+                        id="person-name"
                         type="text"
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -196,8 +197,9 @@ const PersonManager: React.FC<PersonManagerProps> = ({
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1">Date of Birth</label>
+                      <label htmlFor="person-dob" className="block text-sm font-medium mb-1">Date of Birth</label>
                       <input
+                        id="person-dob"
                         type="date"
                         value={formData.date_of_birth}
                         onChange={(e) => setFormData({ ...formData, date_of_birth: e.target.value })}
@@ -206,8 +208,9 @@ const PersonManager: React.FC<PersonManagerProps> = ({
                     </div>
                   </div>
                   <div className="mt-4">
-                    <label className="block text-sm font-medium mb-1">Notes</label>
+                    <label htmlFor="person-notes" className="block text-sm font-medium mb-1">Notes</label>
                     <textarea
+                      id="person-notes"
                       value={formData.notes}
                       onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                       className="w-full px-3 py-2 border rounded-md"

@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import MedicationTracker from '../../components/MedicationTracker';
-import { medicationApi, doseApi } from '../../services/api';
+import { medicationApi, doseApi, personApi } from '../../services/api';
 
 // Mock the API modules
 jest.mock('../../services/api');
@@ -15,10 +15,16 @@ jest.mock('../../components/DailyDoseLog', () => {
 
 const mockedMedicationApi = medicationApi as jest.Mocked<typeof medicationApi>;
 const mockedDoseApi = doseApi as jest.Mocked<typeof doseApi>;
+const mockedPersonApi = personApi as jest.Mocked<typeof personApi>;
 
 describe('MedicationTracker - Race Condition Fix', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    
+    // Mock person API to return a default person
+    mockedPersonApi.getAll.mockResolvedValue([
+      { id: 1, name: 'Test Person', is_default: true, medication_count: 1 }
+    ]);
   });
 
   test('should prevent multiple simultaneous recordings for the same medication', async () => {

@@ -149,7 +149,9 @@ describe('PersonManager', () => {
       />
     );
 
-    const closeButton = screen.getByRole('button', { name: /close/i });
+    // Find the close button by its position in the header
+    const headerButtons = screen.getAllByRole('button');
+    const closeButton = headerButtons[0]; // The first button in the modal is the close button
     fireEvent.click(closeButton);
 
     expect(mockOnClose).toHaveBeenCalled();
