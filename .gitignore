@@ -188,8 +188,7 @@ cython_debug/
 node_modules/
 frontend/node_modules/
 
-# Generated static files
-frontend/public/static/js/person-initializer.js
+# No longer ignoring person-initializer.js as it's needed in production
 
 # Fix scripts that are not part of the core application
 server_health_fix.sh
