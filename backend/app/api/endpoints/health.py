@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
 from sqlalchemy import text
+from sqlalchemy.orm import Session
 
 from app.api.dependencies.database import get_db
 from app.core.config import settings
@@ -10,6 +10,7 @@ router = APIRouter(
     responses={500: {"description": "Internal server error"}},
 )
 
+
 @router.get(
     "/health",
     summary="Health Check",
@@ -18,35 +19,28 @@ router = APIRouter(
 def health_check(db: Session = Depends(get_db)):
     """
     Performs a health check on the API and database.
-    
+
     Returns:
         dict: Status and health information
     """
     try:
         # Check database connectivity with basic query
         db.execute(text("SELECT 1")).first()
-        
+
         return {
             "status": "healthy",
             "version": settings.VERSION,
             "components": [
+                {"component": "database", "status": "healthy", "details": {}},
                 {
-                    "component": "database",
-                    "status": "healthy",
-                    "details": {}
-                },
-                {
-                    "component": "api", 
+                    "component": "api",
                     "status": "healthy",
                     "details": {
                         "timestamp": db.execute(text("SELECT NOW()")).scalar(),
-                        "environment": settings.ENVIRONMENT
-                    }
-                }
-            ]
+                        "environment": settings.ENVIRONMENT,
+                    },
+                },
+            ],
         }
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Health check failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Health check failed: {str(e)}")
