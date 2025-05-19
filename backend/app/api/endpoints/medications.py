@@ -1,4 +1,4 @@
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
@@ -6,6 +6,7 @@ from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.database import get_db
+from app.core.config import settings
 from app.models import Dose, Medication
 from app.schemas import (
     MedicationCreate,
@@ -37,6 +38,9 @@ def get_medications(
     date: Optional[date] = Query(
         None, description="The date to get dose information for (YYYY-MM-DD)"
     ),
+    timezone_offset: Optional[int] = Query(
+        None, description="Timezone offset in minutes"
+    ),
     db: Session = Depends(get_db),
 ):
     """
@@ -45,20 +49,44 @@ def get_medications(
     - **skip**: Number of medications to skip (for pagination)
     - **limit**: Maximum number of medications to return
     - **date**: Optional date to get dose information for (defaults to today)
+    - **timezone_offset**: Optional timezone offset in minutes
     """
+    # Use timezone offset if provided
+    if timezone_offset is not None:
+        tz_offset = timedelta(minutes=-timezone_offset)
+        current_tz = timezone(tz_offset)
+        now = datetime.now(current_tz)
+    elif settings.TIMEZONE_OFFSET != 0:
+        # Use environment variable timezone if set
+        tz_offset = timedelta(minutes=-settings.TIMEZONE_OFFSET)
+        current_tz = timezone(tz_offset)
+        now = datetime.now(current_tz)
+    else:
+        now = datetime.now(timezone.utc)
+    
     # Determine the date to query for
     if date is None:
-        query_date = datetime.now(timezone.utc).date()
+        query_date = now.date()
     else:
         query_date = date
 
-    # Create date range for the query
-    start_of_day = datetime.combine(query_date, datetime.min.time()).replace(
-        tzinfo=timezone.utc
-    )
-    end_of_day = datetime.combine(query_date, datetime.max.time()).replace(
-        tzinfo=timezone.utc
-    )
+    # Create date range for the query with proper timezone
+    if timezone_offset is not None:
+        # Create date range in user's timezone
+        start_of_day = datetime.combine(query_date, datetime.min.time()).replace(
+            tzinfo=timezone(tz_offset)
+        )
+        end_of_day = datetime.combine(query_date, datetime.max.time()).replace(
+            tzinfo=timezone(tz_offset)
+        )
+    else:
+        # Fallback to UTC
+        start_of_day = datetime.combine(query_date, datetime.min.time()).replace(
+            tzinfo=timezone.utc
+        )
+        end_of_day = datetime.combine(query_date, datetime.max.time()).replace(
+            tzinfo=timezone.utc
+        )
 
     medications = db.query(Medication).offset(skip).limit(limit).all()
 
@@ -140,6 +168,9 @@ def get_medication(
     date: Optional[date] = Query(
         None, description="The date to get dose information for (YYYY-MM-DD)"
     ),
+    timezone_offset: Optional[int] = Query(
+        None, description="Timezone offset in minutes"
+    ),
     db: Session = Depends(get_db),
 ):
     """Get a specific medication by ID with dose information for today or
@@ -148,19 +179,42 @@ def get_medication(
     if not medication:
         raise HTTPException(status_code=404, detail="Medication not found")
 
+    # Use timezone offset if provided
+    if timezone_offset is not None:
+        tz_offset = timedelta(minutes=-timezone_offset)
+        current_tz = timezone(tz_offset)
+        now = datetime.now(current_tz)
+    elif settings.TIMEZONE_OFFSET != 0:
+        # Use environment variable timezone if set
+        tz_offset = timedelta(minutes=-settings.TIMEZONE_OFFSET)
+        current_tz = timezone(tz_offset)
+        now = datetime.now(current_tz)
+    else:
+        now = datetime.now(timezone.utc)
+    
     # Determine the date to query for
     if date is None:
-        query_date = datetime.now(timezone.utc).date()
+        query_date = now.date()
     else:
         query_date = date
 
-    # Create date range for the query
-    start_of_day = datetime.combine(query_date, datetime.min.time()).replace(
-        tzinfo=timezone.utc
-    )
-    end_of_day = datetime.combine(query_date, datetime.max.time()).replace(
-        tzinfo=timezone.utc
-    )
+    # Create date range for the query with proper timezone
+    if timezone_offset is not None:
+        # Create date range in user's timezone
+        start_of_day = datetime.combine(query_date, datetime.min.time()).replace(
+            tzinfo=timezone(tz_offset)
+        )
+        end_of_day = datetime.combine(query_date, datetime.max.time()).replace(
+            tzinfo=timezone(tz_offset)
+        )
+    else:
+        # Fallback to UTC
+        start_of_day = datetime.combine(query_date, datetime.min.time()).replace(
+            tzinfo=timezone.utc
+        )
+        end_of_day = datetime.combine(query_date, datetime.max.time()).replace(
+            tzinfo=timezone.utc
+        )
 
     doses_on_date = (
         db.query(Dose)

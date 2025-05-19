@@ -33,7 +33,11 @@ const MedicationTracker = () => {
       setLoading(true);
       setError(null);
       const dateStr = selectedDate.toISOString().split('T')[0];
-      const data = await medicationApi.getAll({ date: dateStr });
+      const timezoneOffset = new Date().getTimezoneOffset();
+      const data = await medicationApi.getAll({ 
+        date: dateStr,
+        timezone_offset: timezoneOffset 
+      });
       setMedications(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
