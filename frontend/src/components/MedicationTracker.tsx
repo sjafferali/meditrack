@@ -58,7 +58,34 @@ const MedicationTracker = () => {
     }
   }, [selectedDate, currentPersonId]);
 
-  // Load medications on component mount and when date changes
+  // Load and select default person on component mount
+  useEffect(() => {
+    const loadDefaultPerson = async () => {
+      try {
+        // Only load default person if no person is currently selected
+        if (!currentPersonId) {
+          setLoading(true);
+          const persons = await personApi.getAll();
+          if (persons && persons.length > 0) {
+            // Find default person or use the first one
+            const defaultPerson = persons.find((p: any) => p.is_default) || persons[0];
+            console.log('Auto-selecting default person:', defaultPerson.name);
+            setCurrentPersonId(defaultPerson.id);
+          }
+        }
+      } catch (err) {
+        console.error('Error loading default person:', err);
+        setError('Failed to load default person. Please select a person manually.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadDefaultPerson();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  
+  // Load medications when currentPersonId or selectedDate changes
   useEffect(() => {
     loadMedications();
   }, [loadMedications]);
@@ -291,6 +318,10 @@ const MedicationTracker = () => {
     last_taken_at?: string | null;
   }
 
+  if (loading) {
+    return <div className="text-center p-4">Loading medications...</div>;
+  }
+  
   if (!currentPersonId) {
     return (
       <div className="container mx-auto p-4">
@@ -312,10 +343,6 @@ const MedicationTracker = () => {
         />
       </div>
     );
-  }
-
-  if (loading) {
-    return <div className="text-center p-4">Loading medications...</div>;
   }
 
   return (
