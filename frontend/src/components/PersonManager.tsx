@@ -165,6 +165,7 @@ const PersonManager: React.FC<PersonManagerProps> = ({
           </div>
 
           <div className="p-6">
+            <p className="text-gray-600 mb-4">Select a person to manage their medications or add a new person.</p>
             {error && (
               <div className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
                 <span className="block sm:inline">{error}</span>
@@ -264,7 +265,16 @@ const PersonManager: React.FC<PersonManagerProps> = ({
                           </p>
                         )}
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <button
+                          onClick={() => {
+                            onPersonChange(person.id);
+                            onClose();
+                          }}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded"
+                        >
+                          Select
+                        </button>
                         {person.is_default && (
                           <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Default</span>
                         )}

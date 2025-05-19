@@ -296,12 +296,12 @@ const MedicationTracker = () => {
       <div className="container mx-auto p-4">
         <h1 className="text-3xl font-bold mb-6">Medication Tracker</h1>
         <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded mb-4 text-center">
-          <p className="mb-2">Please select a person to manage their medications.</p>
+          <p className="mb-2">Welcome to MediTrack! Click the button below to select a person and manage their medications.</p>
           <button
             onClick={() => setShowPersonManager(true)}
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
           >
-            Manage People
+            Select Person
           </button>
         </div>
         <PersonManager
