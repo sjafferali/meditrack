@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.endpoints import doses, medications, persons
+from app.api.endpoints import doses, medications, persons, health
 
 api_router = APIRouter()
 
@@ -13,3 +13,6 @@ api_router.include_router(doses.router, prefix="/doses", tags=["doses"])
 
 # Include persons endpoints
 api_router.include_router(persons.router, prefix="/persons", tags=["persons"])
+
+# Include health endpoints
+api_router.include_router(health.router, prefix="", tags=["health"])

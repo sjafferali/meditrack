@@ -188,3 +188,16 @@ cython_debug/
 node_modules/
 frontend/node_modules/
 
+# Generated static files
+frontend/public/static/js/person-initializer.js
+
+# Fix scripts
+*_fix.sh
+*_fix.py
+fix_*.py
+create_*.py
+server_health_fix.sh
+frontend_fix.sh
+verify_fix.py
+person-selector-fix.txt
+
