@@ -146,10 +146,10 @@ const PersonManager: React.FC<PersonManagerProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex items-center justify-center min-h-screen px-4">
+      <div className="flex items-start justify-center px-4 pt-20">
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75" onClick={onClose} data-testid="modal-overlay" />
         
-        <div className="relative bg-white rounded-lg w-full max-w-2xl">
+        <div className="relative bg-white rounded-lg w-full max-w-2xl shadow-xl">
           <div className="px-6 py-4 border-b border-gray-200 bg-blue-50">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-blue-800">Select a Person</h2>
@@ -269,7 +269,7 @@ const PersonManager: React.FC<PersonManagerProps> = ({
                         <div className="flex items-center gap-2">
                           <h4 className="text-lg font-medium">{person.name}</h4>
                           {person.is_default && (
-                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full border border-green-200">Default</span>
+                            <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full border border-green-200">Default</span>
                           )}
                         </div>
                         {person.date_of_birth && (
@@ -294,9 +294,9 @@ const PersonManager: React.FC<PersonManagerProps> = ({
                             onPersonChange(person.id);
                             onClose();
                           }}
-                          className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-medium flex items-center justify-center gap-1"
+                          className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-sm font-medium flex items-center justify-center gap-1"
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M5 12h14"></path>
                             <path d="M12 5l7 7-7 7"></path>
                           </svg>

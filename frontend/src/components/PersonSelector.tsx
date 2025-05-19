@@ -95,7 +95,7 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
     <div className="relative inline-block" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="min-w-[200px] flex items-center justify-between px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
       >
         <span className="font-medium">{currentPerson?.name || 'Select Person'}</span>
         <svg 
@@ -109,7 +109,7 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200">
+        <div className="absolute z-50 mt-2 min-w-[200px] w-auto right-0 bg-white rounded-lg shadow-lg border border-gray-200">
           <div className="py-2">
             {persons.map((person) => (
               <button
@@ -128,7 +128,7 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
                   )}
                 </div>
                 {person.is_default && (
-                  <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">Default</span>
+                  <span className="ml-2 text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">Default</span>
                 )}
               </button>
             ))}
