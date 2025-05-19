@@ -19,6 +19,7 @@ const MedicationTracker = () => {
   const [customTime, setCustomTime] = useState<string>('');
   const [recordingDose, setRecordingDose] = useState<number | null>(null);
   const [timePickerPosition, setTimePickerPosition] = useState<{ top: number, left: number }>({ top: 0, left: 0 });
+  const [isMobile, setIsMobile] = useState<boolean>(false);
 
   // Form state for adding/editing medications
   const [formData, setFormData] = useState({
@@ -51,6 +52,18 @@ const MedicationTracker = () => {
   useEffect(() => {
     loadMedications();
   }, [loadMedications]);
+
+  // Detect mobile viewport
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const loadDoseHistory = async (medicationId: number) => {
     try {
@@ -463,17 +476,51 @@ const MedicationTracker = () => {
                   onClick={(e) => {
                     const rect = e.currentTarget.getBoundingClientRect();
                     const dropdownWidth = 256; // 64 * 4 = 256px (w-64 in tailwind)
-                    let left = rect.left + window.scrollX;
+                    const dropdownHeight = 200; // Approximate height of the dropdown
+                    const padding = 10;
                     
-                    // Adjust if dropdown would go off-screen on the right
-                    if (left + dropdownWidth > window.innerWidth) {
-                      left = window.innerWidth - dropdownWidth - 10;
+                    let position = { top: 0, left: 0 };
+                    
+                    if (isMobile) {
+                      // Center modal on mobile
+                      position = {
+                        top: window.scrollY + (window.innerHeight / 2) - (dropdownHeight / 2),
+                        left: (window.innerWidth / 2) - (dropdownWidth / 2)
+                      };
+                    } else {
+                      // Calculate horizontal position for desktop
+                      let left = rect.left + window.scrollX;
+                      
+                      // Center the dropdown horizontally relative to the button
+                      const buttonCenter = rect.left + (rect.width / 2);
+                      left = buttonCenter - (dropdownWidth / 2) + window.scrollX;
+                      
+                      // Adjust if dropdown would go off-screen horizontally
+                      if (left < padding) {
+                        left = padding;
+                      } else if (left + dropdownWidth > window.innerWidth - padding) {
+                        left = window.innerWidth - dropdownWidth - padding;
+                      }
+                      
+                      // Calculate vertical position
+                      let top = rect.bottom + window.scrollY + 5;
+                      const viewportBottom = window.innerHeight + window.scrollY;
+                      
+                      // Check if dropdown would go off-screen vertically
+                      if (top + dropdownHeight > viewportBottom - padding) {
+                        // Position above the button instead
+                        top = rect.top + window.scrollY - dropdownHeight - 5;
+                        
+                        // If still off-screen at top, just position at the bottom of viewport
+                        if (top < window.scrollY + padding) {
+                          top = viewportBottom - dropdownHeight - padding;
+                        }
+                      }
+                      
+                      position = { top, left };
                     }
                     
-                    setTimePickerPosition({ 
-                      top: rect.bottom + window.scrollY + 5, 
-                      left: left
-                    });
+                    setTimePickerPosition(position);
                     setShowTimeModal({ medicationId: medication.id, show: true });
                     setCustomTime(new Date().toTimeString().slice(0, 5));
                   }}
@@ -627,13 +674,16 @@ const MedicationTracker = () => {
       {/* Time Picker Dropdown */}
       {showTimeModal.show && (
         <>
-          <div className="fixed inset-0 z-40" onClick={() => setShowTimeModal({ medicationId: null, show: false })} />
           <div 
-            className="absolute bg-white rounded-lg p-4 shadow-xl border z-50 w-64"
+            className="fixed inset-0 z-40 bg-black bg-opacity-25 transition-opacity duration-200" 
+            onClick={() => setShowTimeModal({ medicationId: null, show: false })} 
+          />
+          <div 
+            className={`${isMobile ? 'fixed' : 'absolute'} bg-white rounded-lg p-4 shadow-xl border z-50 w-64 transition-all duration-200 transform ${isMobile ? 'animate-slideUp' : 'animate-fadeIn'}`}
             style={{
               top: `${timePickerPosition.top}px`,
               left: `${timePickerPosition.left}px`,
-              maxWidth: '90vw'
+              maxWidth: '90vw',
             }}
           >
             <div className="mb-3">

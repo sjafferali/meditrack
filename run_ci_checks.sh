@@ -24,61 +24,94 @@ print_error() {
     echo -e "${RED}✗ $1${NC}"
 }
 
-# Backend Tests
-print_header "Backend Tests"
-if docker run --rm -v $(pwd)/backend:/app meditrack:latest pytest -v --cov=app --cov-report=xml --cov-report=term-missing; then
+# Create and activate virtual environment if it doesn't exist
+if [ ! -d "venv" ]; then
+    echo "Creating virtual environment..."
+    python3 -m venv venv
+fi
+
+# Activate virtual environment
+source venv/bin/activate
+
+# Install backend dependencies
+echo "Installing backend dependencies..."
+cd backend
+pip install --upgrade pip
+pip install -r requirements.txt
+pip install pytest pytest-cov black isort flake8 mypy safety
+cd ..
+
+# Backend Tests with Coverage
+print_header "Backend Tests with Coverage"
+cd backend
+if python -m pytest -v --cov=app --cov-report=xml --cov-report=term-missing; then
     print_success "Backend tests passed"
 else
     print_error "Backend tests failed"
+    deactivate
     exit 1
 fi
+cd ..
 
-# Frontend Tests  
-print_header "Frontend Tests"
+# Frontend Tests with Coverage
+print_header "Frontend Tests with Coverage"
 cd frontend
-if npm run test:coverage -- --ci --watchAll=false; then
+if npm run test:coverage -- --ci --watchAll=false --maxWorkers=2; then
     print_success "Frontend tests passed"
 else
     print_error "Frontend tests failed"
+    deactivate
     exit 1
 fi
 cd ..
 
 # Backend Linting - Black
 print_header "Backend Linting - Black"
-if docker run --rm -v $(pwd)/backend:/app meditrack:latest black --check .; then
+cd backend
+if black --check .; then
     print_success "Black check passed"
 else
     print_error "Black check failed - run 'black .' to fix"
+    deactivate
     exit 1
 fi
+cd ..
 
 # Backend Linting - isort
 print_header "Backend Linting - isort"
-if docker run --rm -v $(pwd)/backend:/app meditrack:latest isort --check-only .; then
+cd backend
+if isort --check-only .; then
     print_success "isort check passed"
 else
     print_error "isort check failed - run 'isort .' to fix"
+    deactivate
     exit 1
 fi
+cd ..
 
 # Backend Linting - Flake8
 print_header "Backend Linting - Flake8"
-if docker run --rm -v $(pwd)/backend:/app meditrack:latest flake8 .; then
+cd backend
+if flake8 .; then
     print_success "Flake8 check passed"
 else
     print_error "Flake8 check failed"
+    deactivate
     exit 1
 fi
+cd ..
 
 # Backend Linting - MyPy
 print_header "Backend Linting - MyPy"
-if docker run --rm -v $(pwd)/backend:/app meditrack:latest mypy app/ --ignore-missing-imports; then
+cd backend
+if mypy app/ --ignore-missing-imports; then
     print_success "MyPy check passed"
 else
     print_error "MyPy check failed"
+    deactivate
     exit 1
 fi
+cd ..
 
 # Frontend Linting - ESLint
 print_header "Frontend Linting - ESLint"
@@ -104,17 +137,19 @@ cd ..
 
 # Security Scanning - Python
 print_header "Security Scanning - Python Dependencies"
-if docker run --rm -v $(pwd)/backend:/app meditrack:latest sh -c "pip install safety >/dev/null 2>&1 && safety check -r requirements.txt --json"; then
+cd backend
+if safety check -r requirements.txt --json; then
     print_success "Python dependency security check passed"
 else
     print_error "Python dependency security check failed"
     # Don't exit on security errors (matching CI behavior)
 fi
+cd ..
 
 # Security Scanning - npm
 print_header "Security Scanning - npm Dependencies"
 cd frontend
-if npm audit; then
+if npm audit --json; then
     print_success "npm security check passed"
 else
     print_error "npm security check found vulnerabilities"
@@ -128,8 +163,12 @@ if docker build -t meditrack:test .; then
     print_success "Docker build succeeded"
 else
     print_error "Docker build failed"
+    deactivate
     exit 1
 fi
+
+# Deactivate virtual environment
+deactivate
 
 # Summary
 print_header "Summary"
