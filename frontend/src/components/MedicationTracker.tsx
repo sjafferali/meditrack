@@ -6,7 +6,7 @@ import PersonManager from './PersonManager';
 
 const MedicationTracker = () => {
   const [medications, setMedications] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isAddingMedication, setIsAddingMedication] = useState(false);
   const [editingMedication, setEditingMedication] = useState<any>(null);
@@ -35,7 +35,10 @@ const MedicationTracker = () => {
   });
 
   const loadMedications = useCallback(async () => {
-    if (!currentPersonId) return; // Don't load medications if no person is selected
+    if (!currentPersonId) {
+      setLoading(false);
+      return; // Don't load medications if no person is selected
+    }
     
     try {
       setLoading(true);
@@ -288,10 +291,6 @@ const MedicationTracker = () => {
     last_taken_at?: string | null;
   }
 
-  if (loading) {
-    return <div className="text-center p-4">Loading medications...</div>;
-  }
-
   if (!currentPersonId) {
     return (
       <div className="container mx-auto p-4">
@@ -313,6 +312,10 @@ const MedicationTracker = () => {
         />
       </div>
     );
+  }
+
+  if (loading) {
+    return <div className="text-center p-4">Loading medications...</div>;
   }
 
   return (

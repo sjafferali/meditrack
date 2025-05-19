@@ -5,7 +5,7 @@
     console.log('Person initializer activated');
     
     // Force reload if stuck on loading screen for too long
-    const LOADING_TIMEOUT = 5000; // 5 seconds
+    const LOADING_TIMEOUT = 2000; // 2 seconds
     setTimeout(function() {
       const loadingElements = document.querySelectorAll('.text-center.p-4');
       if (loadingElements.length > 0) {
