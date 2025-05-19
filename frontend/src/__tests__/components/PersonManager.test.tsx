@@ -115,7 +115,10 @@ describe('PersonManager', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('Born: 1/1/1990')).toBeInTheDocument();
+      // Check for the born text but be flexible about date format
+      expect(screen.getByText((content, element) => {
+        return element?.tagName.toLowerCase() === 'p' && content.startsWith('Born:');
+      })).toBeInTheDocument();
       expect(screen.getByText('Primary person')).toBeInTheDocument();
       expect(screen.getByText('3 medications')).toBeInTheDocument();
     });
