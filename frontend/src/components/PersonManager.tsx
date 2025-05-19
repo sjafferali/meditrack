@@ -150,12 +150,13 @@ const PersonManager: React.FC<PersonManagerProps> = ({
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75" onClick={onClose} />
         
         <div className="relative bg-white rounded-lg w-full max-w-2xl">
-          <div className="px-6 py-4 border-b border-gray-200">
+          <div className="px-6 py-4 border-b border-gray-200 bg-blue-50">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Manage People</h2>
+              <h2 className="text-xl font-semibold text-blue-800">Select a Person</h2>
               <button
                 onClick={onClose}
-                className="text-gray-400 hover:text-gray-500"
+                className="text-gray-400 hover:text-gray-500 p-1 rounded-full hover:bg-white"
+                aria-label="Close"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -165,7 +166,21 @@ const PersonManager: React.FC<PersonManagerProps> = ({
           </div>
 
           <div className="p-6">
-            <p className="text-gray-600 mb-4">Select a person to manage their medications or add a new person.</p>
+            <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-5 text-sm">
+              <div className="flex items-start gap-3">
+                <div className="text-blue-500 flex-shrink-0 mt-0.5">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                  </svg>
+                </div>
+                <div className="text-blue-800">
+                  <strong>Choose a person</strong> to manage their medications. Click the <strong>Select</strong> button to continue. You can also add a new person or edit existing details here.
+                </div>
+              </div>
+            </div>
+
             {error && (
               <div className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
                 <span className="block sm:inline">{error}</span>
@@ -247,10 +262,16 @@ const PersonManager: React.FC<PersonManagerProps> = ({
             ) : (
               <div className="space-y-4">
                 {persons.map((person) => (
-                  <div key={person.id} className="bg-white border rounded-lg p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="text-lg font-medium">{person.name}</h4>
+                  <div key={person.id} className="bg-white border rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                      {/* Person info */}
+                      <div className="flex-grow">
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-lg font-medium">{person.name}</h4>
+                          {person.is_default && (
+                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full border border-green-200">Default</span>
+                          )}
+                        </div>
                         {person.date_of_birth && (
                           <p className="text-sm text-gray-500">
                             Born: {new Date(person.date_of_birth).toLocaleDateString()}
@@ -265,59 +286,66 @@ const PersonManager: React.FC<PersonManagerProps> = ({
                           </p>
                         )}
                       </div>
-                      <div className="flex items-center gap-2 flex-wrap">
+                      
+                      {/* Primary action - Select button */}
+                      <div className="sm:self-center">
                         <button
                           onClick={() => {
                             onPersonChange(person.id);
                             onClose();
                           }}
-                          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded"
+                          className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-medium flex items-center justify-center gap-1"
                         >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M5 12h14"></path>
+                            <path d="M12 5l7 7-7 7"></path>
+                          </svg>
                           Select
                         </button>
-                        {person.is_default && (
-                          <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Default</span>
-                        )}
-                        {!person.is_default && (
-                          <button
-                            onClick={() => handleSetDefault(person.id)}
-                            className="text-sm text-blue-600 hover:text-blue-800"
-                          >
-                            Set as Default
-                          </button>
-                        )}
-                        <button
-                          onClick={() => startEdit(person)}
-                          className="text-blue-600 hover:text-blue-800"
-                        >
-                          Edit
-                        </button>
-                        {deleteConfirmId === person.id ? (
-                          <>
-                            <button
-                              onClick={() => handleDeletePerson(person.id)}
-                              className="text-white bg-red-600 hover:bg-red-700 px-3 py-1 rounded"
-                            >
-                              Confirm
-                            </button>
-                            <button
-                              onClick={() => setDeleteConfirmId(null)}
-                              className="text-gray-600 hover:text-gray-800"
-                            >
-                              Cancel
-                            </button>
-                          </>
-                        ) : (
-                          <button
-                            onClick={() => setDeleteConfirmId(person.id)}
-                            className="text-red-600 hover:text-red-800"
-                            disabled={persons.length === 1}
-                            title={persons.length === 1 ? "Cannot delete the last person" : ""}
-                          >
-                            Delete
-                          </button>
-                        )}
                       </div>
+                    </div>
+                    
+                    {/* Secondary actions - in a button bar at the bottom */}
+                    <div className="border-t mt-3 pt-3 flex flex-wrap gap-2 justify-end">
+                      {!person.is_default && (
+                        <button
+                          onClick={() => handleSetDefault(person.id)}
+                          className="text-sm text-blue-600 hover:bg-blue-50 hover:text-blue-800 px-2 py-1 rounded transition-colors"
+                        >
+                          Set as Default
+                        </button>
+                      )}
+                      <button
+                        onClick={() => startEdit(person)}
+                        className="text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-800 px-2 py-1 rounded transition-colors"
+                      >
+                        Edit
+                      </button>
+                      {deleteConfirmId === person.id ? (
+                        <>
+                          <button
+                            onClick={() => handleDeletePerson(person.id)}
+                            className="text-sm text-white bg-red-600 hover:bg-red-700 px-2 py-1 rounded transition-colors"
+                          >
+                            Confirm Delete
+                          </button>
+                          <button
+                            onClick={() => setDeleteConfirmId(null)}
+                            className="text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-800 px-2 py-1 rounded transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => setDeleteConfirmId(person.id)}
+                          className="text-sm text-red-600 hover:bg-red-50 hover:text-red-800 px-2 py-1 rounded transition-colors"
+                          disabled={persons.length === 1}
+                          title={persons.length === 1 ? "Cannot delete the last person" : ""}
+                        >
+                          Delete
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -326,12 +354,17 @@ const PersonManager: React.FC<PersonManagerProps> = ({
 
             {/* Add Person Button */}
             {!isAddingPerson && !editingPerson && (
-              <button 
-                onClick={() => setIsAddingPerson(true)}
-                className="mt-6 bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-md"
-              >
-                + Add Person
-              </button>
+              <div className="mt-6 pt-5 border-t flex justify-center">
+                <button 
+                  onClick={() => setIsAddingPerson(true)}
+                  className="bg-green-600 hover:bg-green-700 text-white font-medium px-5 py-2 rounded-md flex items-center gap-2 shadow-sm">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 5v14"></path>
+                    <path d="M5 12h14"></path>
+                  </svg>
+                  Add New Person
+                </button>
+              </div>
             )}
           </div>
         </div>
