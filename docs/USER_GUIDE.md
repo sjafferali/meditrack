@@ -1,16 +1,17 @@
 # MediTrack User Guide
 
-Welcome to MediTrack! This guide will help you get started with tracking your medications and managing your daily doses.
+Welcome to MediTrack! This guide will help you get started with tracking medications for yourself and your family members, and managing daily doses.
 
 ## Table of Contents
 
 1. [Getting Started](#getting-started)
 2. [Dashboard Overview](#dashboard-overview)
-3. [Managing Medications](#managing-medications)
-4. [Tracking Doses](#tracking-doses)
-5. [Viewing History](#viewing-history)
-6. [Tips and Best Practices](#tips-and-best-practices)
-7. [Troubleshooting](#troubleshooting)
+3. [Managing People](#managing-people)
+4. [Managing Medications](#managing-medications)
+5. [Tracking Doses](#tracking-doses)
+6. [Viewing History](#viewing-history)
+7. [Tips and Best Practices](#tips-and-best-practices)
+8. [Troubleshooting](#troubleshooting)
 
 ## Getting Started
 
@@ -24,19 +25,29 @@ Welcome to MediTrack! This guide will help you get started with tracking your me
 
 ### First Time Setup
 
-When you first access MediTrack, you'll see an empty medications list. Let's add your first medication!
+When you first access MediTrack:
+
+1. A default person profile is created for you
+2. You can immediately start adding medications
+3. To manage medications for other people, use the person selector in the header
 
 ## Dashboard Overview
 
-The main dashboard displays all your medications in card format, showing:
+The main dashboard displays:
 
+- **Person Selector**: Dropdown in the header to switch between people
+- **Medication Cards**: Shows medications for the selected person
+- **Add Medication Button**: Create new medications
+- **View Daily Log Button**: See comprehensive daily summary
+
+Each medication card shows:
 - Medication name and dosage
 - Frequency information
 - Daily dose progress
 - Last taken time
 - Action buttons (Take Now, Edit, Delete)
 
-[Screenshot: Dashboard with multiple medication cards showing various states]
+[Screenshot: Dashboard with person selector and multiple medication cards]
 
 ### Understanding the Medication Cards
 
@@ -53,6 +64,51 @@ Each medication card contains:
    - **Delete**: Remove medication (with confirmation)
 
 [Screenshot: Close-up of a single medication card with annotations]
+
+## Managing People
+
+### Switching Between People
+
+1. Click the **person selector dropdown** in the header
+2. Select the person whose medications you want to manage
+3. The dashboard updates to show only that person's medications
+
+### Adding a New Person
+
+1. Click the **person selector dropdown**
+2. Click **"Manage People"** at the bottom
+3. Click **"+ Add Person"** in the modal
+4. Fill in the person's details:
+   - **Name**: Person's full name (required)
+   - **Date of Birth**: Birth date (optional)
+   - **Notes**: Any additional information (optional)
+5. Click **"Add"** to save
+
+[Screenshot: Person management modal with add person form]
+
+### Editing a Person
+
+1. Open the person management modal
+2. Click **"Edit"** next to the person's name
+3. Update their information
+4. Click **"Update"** to save changes
+
+### Setting a Default Person
+
+1. Open the person management modal
+2. Click **"Set as Default"** next to the person's name
+3. This person will be automatically selected when you open MediTrack
+
+### Deleting a Person
+
+⚠️ **Warning**: Deleting a person removes all their medications and dose history permanently.
+
+1. Open the person management modal
+2. Click **"Delete"** next to the person's name
+3. Confirm the deletion
+4. The person and all their data will be removed
+
+[Screenshot: Person management with delete confirmation]
 
 ## Managing Medications
 
@@ -235,7 +291,7 @@ MediTrack is responsive and works on mobile devices:
 ## Frequently Asked Questions
 
 **Q: Can I track medications for multiple people?**
-A: Currently, MediTrack is designed for single-user use. Multi-user support is planned for future releases.
+A: Yes! MediTrack supports multiple person profiles. Use the person selector in the header to switch between family members or patients. Each person's medications are tracked separately.
 
 **Q: Can I export my medication history?**
 A: Export functionality is available through the API. A user-friendly export feature is planned.

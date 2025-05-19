@@ -2,7 +2,7 @@
 
 ## Overview
 
-The MediTrack API is a RESTful API built with FastAPI that provides endpoints for medication management and dose tracking. All responses are in JSON format.
+The MediTrack API is a RESTful API built with FastAPI that provides endpoints for person management, medication management, and dose tracking. The API supports multi-person functionality, allowing you to track medications for multiple family members or patients. All responses are in JSON format.
 
 ## Base URL
 
@@ -32,16 +32,145 @@ Common HTTP status codes:
 
 ## Endpoints
 
+### Person Management
+
+#### List All Persons
+Get a list of all persons in the system.
+
+```http
+GET /persons/
+```
+
+**Response:**
+```json
+[
+  {
+    "id": 1,
+    "name": "John Doe",
+    "date_of_birth": "1985-05-15",
+    "notes": "Primary user",
+    "is_default": true,
+    "created_at": "2024-01-15T08:00:00",
+    "medication_count": 3
+  },
+  {
+    "id": 2,
+    "name": "Jane Smith",
+    "date_of_birth": "1992-03-20",
+    "notes": "Family member",
+    "is_default": false,
+    "created_at": "2024-01-16T09:00:00",
+    "medication_count": 1
+  }
+]
+```
+
+#### Create Person
+Add a new person to track medications for.
+
+```http
+POST /persons/
+```
+
+**Request Body:**
+```json
+{
+  "name": "Bob Johnson",
+  "date_of_birth": "1978-11-10",
+  "notes": "Elderly parent"
+}
+```
+
+**Response:**
+```json
+{
+  "id": 3,
+  "name": "Bob Johnson",
+  "date_of_birth": "1978-11-10",
+  "notes": "Elderly parent",
+  "is_default": false,
+  "created_at": "2024-01-17T10:00:00"
+}
+```
+
+#### Get Person by ID
+Retrieve details of a specific person.
+
+```http
+GET /persons/{person_id}
+```
+
+**Response:**
+```json
+{
+  "id": 1,
+  "name": "John Doe",
+  "date_of_birth": "1985-05-15",
+  "notes": "Primary user",
+  "is_default": true,
+  "created_at": "2024-01-15T08:00:00",
+  "medication_count": 3
+}
+```
+
+#### Update Person
+Update an existing person's details.
+
+```http
+PUT /persons/{person_id}
+```
+
+**Request Body:**
+```json
+{
+  "name": "John Doe",
+  "date_of_birth": "1985-05-15",
+  "notes": "Updated notes"
+}
+```
+
+#### Delete Person
+Remove a person from the system. This will also delete all their medications and dose history.
+
+```http
+DELETE /persons/{person_id}
+```
+
+**Response:**
+```
+HTTP 204 No Content
+```
+
+#### Set Default Person
+Set a person as the default (automatically selected on login).
+
+```http
+PUT /persons/{person_id}/set-default
+```
+
+**Response:**
+```json
+{
+  "id": 2,
+  "name": "Jane Smith",
+  "date_of_birth": "1992-03-20",
+  "notes": "Family member",
+  "is_default": true,
+  "created_at": "2024-01-16T09:00:00"
+}
+```
+
 ### Medications
 
 #### List All Medications
-Get a list of all medications with their current dose information.
+Get a list of all medications with their current dose information. Medications are filtered by the selected person.
 
 ```http
 GET /medications/
 ```
 
 **Query Parameters:**
+- `person_id` (required): ID of the person to get medications for
 - `skip` (optional): Number of items to skip (default: 0)
 - `limit` (optional): Maximum number of items to return (default: 100)
 
@@ -85,6 +214,7 @@ POST /medications/
 **Request Body:**
 ```json
 {
+  "person_id": 1,
   "name": "Aspirin",
   "dosage": "81mg",
   "frequency": "Once daily",
@@ -108,6 +238,7 @@ POST /medications/
 ```
 
 **Validation Rules:**
+- `person_id`: Required, integer (must be valid person ID)
 - `name`: Required, string
 - `dosage`: Required, string
 - `frequency`: Required, string

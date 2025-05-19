@@ -47,18 +47,22 @@ graph TD
         A[Main App] --> B[API Router]
         B --> C[Medication Endpoints]
         B --> D[Dose Endpoints]
+        B --> P[Person Endpoints]
         
         C --> E[Medication Service]
         D --> F[Dose Service]
+        P --> PS[Person Service]
         
         E --> G[Database Session]
         F --> G
+        PS --> G
         
         G --> H[SQLAlchemy ORM]
         H --> I[(SQLite DB)]
         
         J[Pydantic Schemas] --> C
         J --> D
+        J --> P
         K[SQLAlchemy Models] --> H
     end
 ```
@@ -67,10 +71,21 @@ graph TD
 
 ```mermaid
 erDiagram
+    PERSON ||--o{ MEDICATION : owns
     MEDICATION ||--o{ DOSE : has
+    
+    PERSON {
+        int id PK
+        string name
+        date date_of_birth
+        string notes
+        boolean is_default
+        datetime created_at
+    }
     
     MEDICATION {
         int id PK
+        int person_id FK
         string name
         string dosage
         string frequency
@@ -152,8 +167,10 @@ sequenceDiagram
     participant B as Backend API
     participant D as Database
     
+    U->>F: Select person
     U->>F: Fill medication form
     F->>B: POST /api/v1/medications/
+    Note right of F: Includes person_id
     B->>B: Validate input
     B->>D: INSERT medication
     D-->>B: Medication created
@@ -259,10 +276,12 @@ meditrack/
 │   │   │   └── session.py  # Database session management
 │   │   ├── models/         # SQLAlchemy ORM models
 │   │   │   ├── __init__.py
+│   │   │   ├── person.py
 │   │   │   ├── medication.py
 │   │   │   └── dose.py
 │   │   ├── schemas/        # Pydantic validation schemas
 │   │   │   ├── __init__.py
+│   │   │   ├── person.py
 │   │   │   ├── medication.py
 │   │   │   └── dose.py
 │   │   ├── services/       # Business logic layer
@@ -277,7 +296,10 @@ meditrack/
 ├── frontend/
 │   ├── src/
 │   │   ├── components/     # React components
-│   │   │   └── MedicationTracker.jsx
+│   │   │   ├── MedicationTracker.jsx
+│   │   │   ├── PersonSelector.jsx
+│   │   │   ├── PersonManager.jsx
+│   │   │   └── DailyDoseLog.jsx
 │   │   ├── services/       # API service layer
 │   │   │   └── api.js
 │   │   ├── App.js          # Main React application

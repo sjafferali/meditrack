@@ -9,11 +9,13 @@ MediTrack is a modern medication tracking application that helps users manage th
 
 ## 🌟 Features
 
+- **Multi-Person Support**: Track medications for multiple family members or patients
 - **Medication Management**: Add, edit, and delete medications with detailed information
 - **Dose Tracking**: Record when medications are taken with automatic daily limit enforcement
 - **Daily Summary**: View comprehensive daily medication status and history
 - **Real-time Updates**: Instant UI updates when doses are recorded
 - **Progress Tracking**: Visual progress bars showing daily dose completion
+- **Person Management**: Create and manage profiles for different individuals
 - **Data Persistence**: Reliable SQLite database with migration support
 - **RESTful API**: Full-featured API with automatic documentation
 - **Responsive Design**: Works seamlessly on desktop and mobile devices
@@ -83,6 +85,13 @@ docker compose -f docker-compose.postgres.yml up -d
 
 ## 📱 Usage
 
+### Managing People
+
+1. **Select Person**: Use the person selector dropdown in the header to switch between individuals
+2. **Add Person**: Click "Manage People" to add new family members or patients
+3. **Edit Person**: Update person details including name, date of birth, and notes
+4. **Set Default**: Mark a person as the default for quick access
+
 ### Managing Medications
 
 1. **Add a Medication**: Click "Add Medication" and fill in the details
@@ -97,6 +106,7 @@ docker compose -f docker-compose.postgres.yml up -d
 - "Take Now" button disables when daily limit is reached
 - Last taken time displayed for each medication
 - Daily summary available through the API
+- Each person's medications are tracked separately
 
 ## 🏗️ Architecture
 
@@ -128,8 +138,16 @@ meditrack/
 
 ## 🔌 API Endpoints
 
+### Person Management
+- `GET /api/v1/persons/` - List all persons
+- `POST /api/v1/persons/` - Create a new person
+- `GET /api/v1/persons/{id}` - Get specific person
+- `PUT /api/v1/persons/{id}` - Update person
+- `DELETE /api/v1/persons/{id}` - Delete person
+- `PUT /api/v1/persons/{id}/set-default` - Set person as default
+
 ### Medications
-- `GET /api/v1/medications/` - List all medications
+- `GET /api/v1/medications/` - List all medications (filtered by person)
 - `POST /api/v1/medications/` - Create a new medication
 - `GET /api/v1/medications/{id}` - Get specific medication
 - `PUT /api/v1/medications/{id}` - Update medication
@@ -138,7 +156,7 @@ meditrack/
 ### Doses
 - `POST /api/v1/doses/medications/{id}/dose` - Record a dose
 - `GET /api/v1/doses/medications/{id}/doses` - Get dose history
-- `GET /api/v1/doses/daily-summary` - Get daily summary
+- `GET /api/v1/doses/daily-summary` - Get daily summary (filtered by person)
 
 Full API documentation available at `/docs` when running the backend.
 
