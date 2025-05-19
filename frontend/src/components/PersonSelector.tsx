@@ -49,7 +49,7 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
       
       // If no current person is selected, select the default person
       if (!currentPersonId && data.length > 0) {
-        const defaultPerson = data.find(p => p.is_default) || data[0];
+        const defaultPerson = data.find((p: Person) => p.is_default) || data[0];
         onPersonChange(defaultPerson.id);
       }
     } catch (err) {
