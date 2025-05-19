@@ -53,6 +53,9 @@ cover/
 coverage.json
 coverage/
 **/coverage/
+**/coverage.*
+backend/coverage.*
+frontend/coverage/
 lcov.info
 lcov-report/
 
