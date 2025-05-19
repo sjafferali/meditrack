@@ -145,11 +145,10 @@ const PersonManager: React.FC<PersonManagerProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex items-start justify-center pt-20 p-4">
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75" onClick={onClose} data-testid="modal-overlay" />
-        
-        <div className="relative bg-white rounded-lg w-full max-w-2xl shadow-xl">
+    <>
+      <div className="fixed inset-0 bg-gray-500 bg-opacity-75 z-50" onClick={onClose} data-testid="modal-overlay" />
+      
+      <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg w-full max-w-2xl shadow-xl z-50">
           <div className="px-6 py-4 border-b border-gray-200 bg-blue-50">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-blue-800">Select a Person</h2>
@@ -371,7 +370,7 @@ const PersonManager: React.FC<PersonManagerProps> = ({
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

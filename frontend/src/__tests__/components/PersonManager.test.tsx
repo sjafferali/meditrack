@@ -175,8 +175,9 @@ describe('PersonManager', () => {
     // Wait for the modal to render
     await screen.findByText('Select a Person');
     
-    // Find the overlay using data-testid instead of direct DOM traversal
-    fireEvent.click(screen.getByTestId('modal-overlay'));
+    // Find the overlay using data-testid
+    const overlay = screen.getByTestId('modal-overlay');
+    fireEvent.click(overlay);
     expect(mockOnClose).toHaveBeenCalled();
   });
 
