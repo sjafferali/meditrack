@@ -190,6 +190,15 @@ frontend/node_modules/
 
 # No longer ignoring person-initializer.js as it's needed in production
 
+# Ignore static files in backend (built during deployment)
+backend/app/static/*
+!backend/app/static/.gitkeep
+!backend/app/static/static/
+backend/app/static/static/*
+!backend/app/static/static/js/
+backend/app/static/static/js/*
+!backend/app/static/static/js/person-initializer.js
+
 # Fix scripts that are not part of the core application
 server_health_fix.sh
 frontend_fix.sh

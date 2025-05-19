@@ -29,6 +29,12 @@ COPY backend/ .
 # Copy frontend build into static directory
 COPY --from=frontend-build /app/build ./app/static
 
+# Ensure the static/js directory exists
+RUN mkdir -p ./app/static/static/js
+
+# Copy person-initializer.js from frontend to ensure it exists
+COPY frontend/public/static/js/person-initializer.js ./app/static/static/js/
+
 # Create data directory
 RUN mkdir -p /app/data
 
