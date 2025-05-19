@@ -59,7 +59,7 @@ describe('PersonManager', () => {
       />
     );
 
-    expect(screen.queryByText('Manage People')).not.toBeInTheDocument();
+    expect(screen.queryByText('Select a Person')).not.toBeInTheDocument();
   });
 
   test('renders modal when open', async () => {
@@ -72,7 +72,7 @@ describe('PersonManager', () => {
       />
     );
 
-    expect(screen.getByText('Manage People')).toBeInTheDocument();
+    expect(screen.getByText('Select a Person')).toBeInTheDocument();
     // Wait for async loading to complete to avoid act() warnings
     await waitFor(() => {
       expect(personApi.getAll).toHaveBeenCalled();
@@ -176,14 +176,14 @@ describe('PersonManager', () => {
     );
 
     // Click the overlay (the semi-transparent background)
-    const overlay = screen.getByText('Manage People').closest('.fixed')?.querySelector('.bg-gray-500');
+    const overlay = screen.getByText('Select a Person').closest('.fixed')?.querySelector('.bg-gray-500');
     if (overlay) {
       fireEvent.click(overlay);
       expect(mockOnClose).toHaveBeenCalled();
     }
   });
 
-  test('shows add person form when Add Person clicked', async () => {
+  test('shows add person form when Add New Person clicked', async () => {
     render(
       <PersonManager
         isOpen={true}
@@ -194,10 +194,10 @@ describe('PersonManager', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('+ Add Person')).toBeInTheDocument();
+      expect(screen.getByText('Add New Person')).toBeInTheDocument();
     });
 
-    const addButton = screen.getByText('+ Add Person');
+    const addButton = screen.getByText('Add New Person');
     fireEvent.click(addButton);
 
     expect(screen.getByText('Add New Person')).toBeInTheDocument();
@@ -215,7 +215,7 @@ describe('PersonManager', () => {
     );
 
     // Click Add Person button
-    const addButton = await screen.findByText('+ Add Person');
+    const addButton = await screen.findByText('Add New Person');
     fireEvent.click(addButton);
 
     // Fill in the form
@@ -314,7 +314,7 @@ describe('PersonManager', () => {
     const deleteButtons = screen.getAllByText('Delete');
     fireEvent.click(deleteButtons[1]); // Delete Jane Smith
 
-    expect(screen.getByText('Confirm')).toBeInTheDocument();
+    expect(screen.getByText('Confirm Delete')).toBeInTheDocument();
     expect(screen.getByText('Cancel')).toBeInTheDocument();
   });
 
@@ -335,7 +335,7 @@ describe('PersonManager', () => {
     const deleteButtons = screen.getAllByText('Delete');
     fireEvent.click(deleteButtons[1]); // Delete Jane Smith
 
-    const confirmButton = screen.getByText('Confirm');
+    const confirmButton = screen.getByText('Confirm Delete');
     fireEvent.click(confirmButton);
 
     await waitFor(() => {
@@ -364,7 +364,7 @@ describe('PersonManager', () => {
     fireEvent.click(cancelButton);
 
     // Confirm and Cancel buttons should disappear
-    expect(screen.queryByText('Confirm')).not.toBeInTheDocument();
+    expect(screen.queryByText('Confirm Delete')).not.toBeInTheDocument();
     expect(screen.queryByText('Cancel')).not.toBeInTheDocument();
     expect(personApi.delete).not.toHaveBeenCalled();
   });
@@ -430,7 +430,7 @@ describe('PersonManager', () => {
     const deleteButtons = screen.getAllByText('Delete');
     fireEvent.click(deleteButtons[1]); // Delete Jane Smith (current person)
 
-    const confirmButton = screen.getByText('Confirm');
+    const confirmButton = screen.getByText('Confirm Delete');
     fireEvent.click(confirmButton);
 
     await waitFor(() => {

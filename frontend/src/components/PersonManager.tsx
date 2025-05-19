@@ -114,7 +114,7 @@ const PersonManager: React.FC<PersonManagerProps> = ({
   const handleSetDefault = async (id: number) => {
     try {
       setError(null);
-      const updatedPerson = await personApi.setDefault(id);
+      await personApi.setDefault(id);
       // Update the persons list to reflect the new default
       setPersons(persons.map(p => ({
         ...p,

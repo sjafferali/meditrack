@@ -27,6 +27,7 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
 
   useEffect(() => {
     loadPersons();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
