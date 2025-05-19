@@ -1,0 +1,13 @@
+services:
+  meditrackgigi:
+    container_name: meditrackgigi
+    image: sjafferali/meditrack:latest
+    ports:
+      - "34139:8000"
+    volumes:
+      # Only mount the database directory, not the static files
+      - ./data:/app/data
+    environment:
+      DATABASE_URL: postgresql://meditrackgigi:11AsRHXHYB0f@db.local.samir.systems:5432/meditrackgigi
+      SECRET_KEY: OeL7quuo1ais1aun6evahf1queel4soa
+    restart: unless-stopped
