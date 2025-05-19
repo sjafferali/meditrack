@@ -6,11 +6,17 @@ from sqlalchemy.orm import Session
 from app.models import Dose, Medication
 
 
-def test_medication_dose_count_with_timezone(client: TestClient, db_session: Session):
+def test_medication_dose_count_with_timezone(
+    client: TestClient, db_session: Session, sample_person
+):
     """Test that dose counts work correctly with timezone offset"""
     # Create a medication
     medication = Medication(
-        name="Test Med", dosage="10mg", frequency="Daily", max_doses_per_day=4
+        person_id=sample_person.id,
+        name="Test Med",
+        dosage="10mg",
+        frequency="Daily",
+        max_doses_per_day=4,
     )
     db_session.add(medication)
     db_session.commit()
@@ -56,13 +62,17 @@ def test_medication_dose_count_with_timezone(client: TestClient, db_session: Ses
 
 
 def test_record_dose_and_get_medications_timezone_consistency(
-    client: TestClient, db_session: Session
+    client: TestClient, db_session: Session, sample_person
 ):
     """Test that recording doses and getting medications use
     consistent timezone logic"""
     # Create a medication
     medication = Medication(
-        name="Test Med", dosage="10mg", frequency="Daily", max_doses_per_day=4
+        person_id=sample_person.id,
+        name="Test Med",
+        dosage="10mg",
+        frequency="Daily",
+        max_doses_per_day=4,
     )
     db_session.add(medication)
     db_session.commit()

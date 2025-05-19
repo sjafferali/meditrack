@@ -13,7 +13,7 @@ class MedicationBase(BaseModel):
 
 
 class MedicationCreate(MedicationBase):
-    pass
+    person_id: int
 
 
 class MedicationUpdate(BaseModel):
@@ -26,6 +26,7 @@ class MedicationUpdate(BaseModel):
 
 class MedicationInDB(MedicationBase):
     id: int
+    person_id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
 

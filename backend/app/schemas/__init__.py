@@ -5,6 +5,7 @@ from .medication import (
     MedicationUpdate,
     MedicationWithDoses,
 )
+from .person import PersonCreate, PersonInDB, PersonUpdate, PersonWithStats
 
 __all__ = [
     "MedicationCreate",
@@ -14,4 +15,8 @@ __all__ = [
     "DoseCreate",
     "DoseCreateWithTimezone",
     "DoseInDB",
+    "PersonCreate",
+    "PersonUpdate",
+    "PersonInDB",
+    "PersonWithStats",
 ]

@@ -41,6 +41,9 @@ def get_medications(
     timezone_offset: Optional[int] = Query(
         None, description="Timezone offset in minutes"
     ),
+    person_id: Optional[int] = Query(
+        None, description="Filter medications by person ID"
+    ),
     db: Session = Depends(get_db),
 ):
     """
@@ -50,6 +53,7 @@ def get_medications(
     - **limit**: Maximum number of medications to return
     - **date**: Optional date to get dose information for (defaults to today)
     - **timezone_offset**: Optional timezone offset in minutes
+    - **person_id**: Optional person ID to filter medications
     """
     # Use timezone offset if provided
     if timezone_offset is not None:
@@ -88,7 +92,12 @@ def get_medications(
             tzinfo=timezone.utc
         )
 
-    medications = db.query(Medication).offset(skip).limit(limit).all()
+    # Filter by person_id if provided
+    query = db.query(Medication)
+    if person_id is not None:
+        query = query.filter(Medication.person_id == person_id)
+
+    medications = query.offset(skip).limit(limit).all()
 
     result = []
     for medication in medications:

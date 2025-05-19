@@ -9,7 +9,7 @@ from sqlalchemy.pool import StaticPool
 from app.api.dependencies.database import get_db
 from app.db.base import Base
 from app.main import app
-from app.models import Dose, Medication
+from app.models import Dose, Medication, Person
 
 # Create test database
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
@@ -54,7 +54,17 @@ def client(db_session: Session) -> Generator[TestClient, None, None]:
 
 
 @pytest.fixture
-def sample_medication_data():
+def sample_person(db_session: Session) -> Person:
+    """Create a sample person in the database"""
+    person = Person(name="Test User", is_default=True)
+    db_session.add(person)
+    db_session.commit()
+    db_session.refresh(person)
+    return person
+
+
+@pytest.fixture
+def sample_medication_data(sample_person: Person):
     """Sample medication data for testing"""
     return {
         "name": "Test Medication",
@@ -62,6 +72,7 @@ def sample_medication_data():
         "frequency": "Twice daily",
         "max_doses_per_day": 2,
         "instructions": "Take with food",
+        "person_id": sample_person.id,
     }
 
 
@@ -86,7 +97,9 @@ def sample_dose(db_session: Session, sample_medication: Medication) -> Dose:
 
 
 @pytest.fixture
-def multiple_medications(db_session: Session) -> list[Medication]:
+def multiple_medications(
+    db_session: Session, sample_person: Person
+) -> list[Medication]:
     """Create multiple medications for testing"""
     medications_data = [
         {
@@ -95,6 +108,7 @@ def multiple_medications(db_session: Session) -> list[Medication]:
             "frequency": "Once daily",
             "max_doses_per_day": 1,
             "instructions": "Take with water",
+            "person_id": sample_person.id,
         },
         {
             "name": "Ibuprofen",
@@ -102,6 +116,7 @@ def multiple_medications(db_session: Session) -> list[Medication]:
             "frequency": "Every 6 hours",
             "max_doses_per_day": 4,
             "instructions": "Take with food",
+            "person_id": sample_person.id,
         },
         {
             "name": "Paracetamol",
@@ -109,6 +124,7 @@ def multiple_medications(db_session: Session) -> list[Medication]:
             "frequency": "Every 4 hours",
             "max_doses_per_day": 6,
             "instructions": "Take as needed",
+            "person_id": sample_person.id,
         },
     ]
 

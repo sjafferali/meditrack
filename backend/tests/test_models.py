@@ -10,9 +10,10 @@ class TestMedicationModel:
     """Test Medication model"""
 
     @pytest.mark.unit
-    def test_create_medication(self, db_session):
+    def test_create_medication(self, db_session, sample_person):
         """Test creating a medication"""
         medication = Medication(
+            person_id=sample_person.id,
             name="Test Med",
             dosage="100mg",
             frequency="Once daily",
@@ -25,13 +26,17 @@ class TestMedicationModel:
         assert medication.id is not None
         assert medication.created_at is not None
         assert medication.updated_at is None
+        assert medication.person_id == sample_person.id
 
     @pytest.mark.unit
-    def test_medication_required_fields(self, db_session):
+    def test_medication_required_fields(self, db_session, sample_person):
         """Test medication required fields"""
         # Missing required field (name)
         medication = Medication(
-            dosage="100mg", frequency="Once daily", max_doses_per_day=1
+            person_id=sample_person.id,
+            dosage="100mg",
+            frequency="Once daily",
+            max_doses_per_day=1,
         )
         db_session.add(medication)
 
