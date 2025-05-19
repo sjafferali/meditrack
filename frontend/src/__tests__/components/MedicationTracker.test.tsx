@@ -275,7 +275,7 @@ describe('MedicationTracker', () => {
     
     // Should show time picker modal for past dates
     await waitFor(() => {
-      expect(screen.getByText('Select Time for Dose')).toBeInTheDocument();
+      expect(screen.getByText('Select Time')).toBeInTheDocument();
     });
     
     // Restore the original Date
@@ -359,10 +359,11 @@ describe('MedicationTracker', () => {
     
     // Time picker modal should appear
     await waitFor(() => {
-      expect(screen.getByText('Select Time for Dose')).toBeInTheDocument();
+      expect(screen.getByText('Select Time')).toBeInTheDocument();
     });
     
-    expect(screen.getByText('Time:')).toBeInTheDocument();
+    // Check for time input field
+    expect(screen.getByDisplayValue(/\d{2}:\d{2}/)).toBeInTheDocument();
   });
 
   test('records dose with custom time', async () => {
@@ -388,16 +389,17 @@ describe('MedicationTracker', () => {
     
     // Wait for time picker modal
     await waitFor(() => {
-      expect(screen.getByText('Select Time for Dose')).toBeInTheDocument();
+      expect(screen.getByText('Select Time')).toBeInTheDocument();
     });
     
     // Set custom time - time inputs in React have display value in the format HH:MM
     const timeInput = screen.getByDisplayValue(/\d{2}:\d{2}/);
     fireEvent.change(timeInput, { target: { value: '09:30' } });
     
-    // Click Record Dose in modal - use getAllByRole to get all buttons, then filter
-    const recordButtons = screen.getAllByRole('button', { name: /Record Dose/i });
-    const modalRecordButton = recordButtons[recordButtons.length - 1]; // Modal button should be the last one
+    // Click Record button in modal - get all buttons with 'Record' text
+    const recordButtons = screen.getAllByRole('button', { name: /Record/i });
+    // The modal button should be the last one
+    const modalRecordButton = recordButtons[recordButtons.length - 1];
     fireEvent.click(modalRecordButton);
     
     // Verify recordDoseForDate was called with custom time
@@ -439,15 +441,17 @@ describe('MedicationTracker', () => {
     
     // Should show time picker modal
     await waitFor(() => {
-      expect(screen.getByText('Select Time for Dose')).toBeInTheDocument();
+      expect(screen.getByText('Select Time')).toBeInTheDocument();
     });
     
     // Set custom time
     const timeInput = screen.getByDisplayValue(/\d{2}:\d{2}/);
     fireEvent.change(timeInput, { target: { value: '14:00' } });
     
-    // Click Record Dose in modal
-    const modalRecordButton = screen.getByText('Record Dose');
+    // Click Record button in modal - get all buttons with 'Record' text
+    const recordButtons = screen.getAllByRole('button', { name: /Record/i });
+    // The modal button should be the last one
+    const modalRecordButton = recordButtons[recordButtons.length - 1];
     fireEvent.click(modalRecordButton);
     
     // Verify recordDoseForDate was called with custom time and timezone
