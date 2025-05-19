@@ -191,13 +191,21 @@ frontend/node_modules/
 # Generated static files
 frontend/public/static/js/person-initializer.js
 
-# Fix scripts
-*_fix.sh
-*_fix.py
-fix_*.py
-create_*.py
+# Fix scripts that are not part of the core application
 server_health_fix.sh
 frontend_fix.sh
 verify_fix.py
 person-selector-fix.txt
+create_persons_table.py
+create_persons_table_postgres.py
+fix_health_endpoint.py
+fix_medications_persons.py
+
+# Documentation for fixes
+POSTGRES_MIGRATION_GUIDE.md
+PRODUCTION_DEPLOY_FIX.md
+
+# Database files
+data/meditrack.db
+*.db
 

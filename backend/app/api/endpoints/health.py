@@ -23,23 +23,25 @@ def health_check(db: Session = Depends(get_db)):
         dict: Status and health information
     """
     try:
-        # Check database connectivity with custom function
-        db_health = db.execute(text("SELECT * FROM meditrack_health_check()")).fetchone()
-        api_health = db.execute(text("SELECT * FROM api_health")).fetchone()
+        # Check database connectivity with basic query
+        db.execute(text("SELECT 1")).first()
         
         return {
             "status": "healthy",
             "version": settings.VERSION,
             "components": [
                 {
-                    "component": db_health[0],
-                    "status": db_health[1],
-                    "details": db_health[2]
+                    "component": "database",
+                    "status": "healthy",
+                    "details": {}
                 },
                 {
-                    "component": api_health[0], 
-                    "status": api_health[1],
-                    "details": api_health[2]
+                    "component": "api", 
+                    "status": "healthy",
+                    "details": {
+                        "timestamp": db.execute(text("SELECT NOW()")).scalar(),
+                        "environment": settings.ENVIRONMENT
+                    }
                 }
             ]
         }
