@@ -63,7 +63,7 @@ def get_medications(
         now = datetime.now(current_tz)
     else:
         now = datetime.now(timezone.utc)
-    
+
     # Determine the date to query for
     if date is None:
         query_date = now.date()
@@ -191,7 +191,7 @@ def get_medication(
         now = datetime.now(current_tz)
     else:
         now = datetime.now(timezone.utc)
-    
+
     # Determine the date to query for
     if date is None:
         query_date = now.date()

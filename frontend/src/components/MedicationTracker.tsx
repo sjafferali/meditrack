@@ -18,6 +18,7 @@ const MedicationTracker = () => {
   const [showTimeModal, setShowTimeModal] = useState<{ medicationId: number | null, show: boolean }>({ medicationId: null, show: false });
   const [customTime, setCustomTime] = useState<string>('');
   const [recordingDose, setRecordingDose] = useState<number | null>(null);
+  const [timePickerPosition, setTimePickerPosition] = useState<{ top: number, left: number }>({ top: 0, left: 0 });
 
   // Form state for adding/editing medications
   const [formData, setFormData] = useState({
@@ -459,7 +460,20 @@ const MedicationTracker = () => {
               </button>
               {!isFutureDate(selectedDate) && medication.doses_taken_today < medication.max_doses_per_day && (
                 <button
-                  onClick={() => {
+                  onClick={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const dropdownWidth = 256; // 64 * 4 = 256px (w-64 in tailwind)
+                    let left = rect.left + window.scrollX;
+                    
+                    // Adjust if dropdown would go off-screen on the right
+                    if (left + dropdownWidth > window.innerWidth) {
+                      left = window.innerWidth - dropdownWidth - 10;
+                    }
+                    
+                    setTimePickerPosition({ 
+                      top: rect.bottom + window.scrollY + 5, 
+                      left: left
+                    });
                     setShowTimeModal({ medicationId: medication.id, show: true });
                     setCustomTime(new Date().toTimeString().slice(0, 5));
                   }}
@@ -610,17 +624,25 @@ const MedicationTracker = () => {
         onClose={() => setShowDailyLog(false)}
       />
 
-      {/* Time Picker Modal */}
+      {/* Time Picker Dropdown */}
       {showTimeModal.show && (
         <>
-          <div className="fixed inset-0 bg-black bg-opacity-50 z-50" onClick={() => setShowTimeModal({ medicationId: null, show: false })} />
-          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-6 max-w-sm w-[90%] z-50 shadow-2xl">
-            <h3 className="text-lg font-semibold mb-4">Select Time for Dose</h3>
-            <p className="text-sm text-gray-600 mb-4">
-              Recording dose for: {selectedDate.toLocaleDateString()}
-            </p>
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">Time:</label>
+          <div className="fixed inset-0 z-40" onClick={() => setShowTimeModal({ medicationId: null, show: false })} />
+          <div 
+            className="absolute bg-white rounded-lg p-4 shadow-xl border z-50 w-64"
+            style={{
+              top: `${timePickerPosition.top}px`,
+              left: `${timePickerPosition.left}px`,
+              maxWidth: '90vw'
+            }}
+          >
+            <div className="mb-3">
+              <h3 className="text-sm font-semibold mb-1">Select Time</h3>
+              <p className="text-xs text-gray-600">
+                {selectedDate.toLocaleDateString()}
+              </p>
+            </div>
+            <div className="mb-3">
               <input
                 type="time"
                 value={customTime}
@@ -631,16 +653,16 @@ const MedicationTracker = () => {
             <div className="flex gap-2">
               <button
                 onClick={handleRecordDoseWithTime}
-                className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
+                className="flex-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm"
               >
-                Record Dose
+                Record
               </button>
               <button
                 onClick={() => {
                   setShowTimeModal({ medicationId: null, show: false });
                   setCustomTime('');
                 }}
-                className="flex-1 px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-md"
+                className="flex-1 px-3 py-1.5 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded text-sm"
               >
                 Cancel
               </button>
