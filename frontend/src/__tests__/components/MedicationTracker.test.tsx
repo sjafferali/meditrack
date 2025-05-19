@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import MedicationTracker from '../../components/MedicationTracker';
-import { medicationApi, doseApi } from '../../services/api';
+import { medicationApi, doseApi, personApi } from '../../services/api';
 
 // Mock the API module
 jest.mock('../../services/api');
@@ -44,6 +44,11 @@ describe('MedicationTracker', () => {
       date: '2023-01-01',
       medications: [] 
     });
+    
+    // Mock person API
+    (personApi.getAll as jest.Mock).mockResolvedValue([
+      { id: 1, name: 'Test Person', is_default: true, medication_count: 1 }
+    ]);
   });
 
   afterEach(() => {
@@ -59,6 +64,11 @@ describe('MedicationTracker', () => {
     
     await waitFor(() => {
       expect(screen.getByText(/Medication Tracker/i)).toBeInTheDocument();
+    });
+    
+    // Should show PersonSelector with default person
+    await waitFor(() => {
+      expect(screen.getByText('Test Person')).toBeInTheDocument();
     });
   });
 
@@ -142,9 +152,12 @@ describe('MedicationTracker', () => {
     const prevButton = await screen.findByLabelText('Previous day');
     fireEvent.click(prevButton);
     
-    // Medications should be reloaded with the previous date
+    // Medications should be reloaded with the previous date and person_id
     expect(medicationApi.getAll).toHaveBeenCalledWith(
-      expect.objectContaining({ date: expect.any(String) })
+      expect.objectContaining({ 
+        date: expect.any(String),
+        person_id: 1 
+      })
     );
   });
 
@@ -154,9 +167,12 @@ describe('MedicationTracker', () => {
     const nextButton = await screen.findByLabelText('Next day');
     fireEvent.click(nextButton);
     
-    // Medications should be reloaded with the next date
+    // Medications should be reloaded with the next date and person_id
     expect(medicationApi.getAll).toHaveBeenCalledWith(
-      expect.objectContaining({ date: expect.any(String) })
+      expect.objectContaining({ 
+        date: expect.any(String),
+        person_id: 1 
+      })
     );
   });
 
@@ -168,7 +184,7 @@ describe('MedicationTracker', () => {
     
     // Medications should be reloaded with the selected date
     expect(medicationApi.getAll).toHaveBeenCalledWith(
-      expect.objectContaining({ date: '2023-01-10' })
+      expect.objectContaining({ date: '2023-01-10', person_id: 1 })
     );
   });
 
@@ -206,7 +222,7 @@ describe('MedicationTracker', () => {
     // Wait for API call and re-render
     await waitFor(() => {
       expect(medicationApi.getAll).toHaveBeenCalledWith(
-        expect.objectContaining({ date: '2025-01-10' })
+        expect.objectContaining({ date: '2025-01-10', person_id: 1 })
       );
     });
     
@@ -257,7 +273,7 @@ describe('MedicationTracker', () => {
     // Wait for medications to reload
     await waitFor(() => {
       expect(medicationApi.getAll).toHaveBeenCalledWith(
-        expect.objectContaining({ date: '2023-01-10' })
+        expect.objectContaining({ date: '2023-01-10', person_id: 1 })
       );
     });
     

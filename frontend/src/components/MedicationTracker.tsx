@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { medicationApi, doseApi } from '../services/api';
+import { medicationApi, doseApi, personApi } from '../services/api';
 import DailyDoseLog from './DailyDoseLog';
+import PersonSelector from './PersonSelector';
+import PersonManager from './PersonManager';
 
 const MedicationTracker = () => {
   const [medications, setMedications] = useState<any[]>([]);
@@ -20,6 +22,8 @@ const MedicationTracker = () => {
   const [recordingDose, setRecordingDose] = useState<number | null>(null);
   const [timePickerPosition, setTimePickerPosition] = useState<{ top: number, left: number }>({ top: 0, left: 0 });
   const [isMobile, setIsMobile] = useState<boolean>(false);
+  const [currentPersonId, setCurrentPersonId] = useState<number | null>(null);
+  const [showPersonManager, setShowPersonManager] = useState(false);
 
   // Form state for adding/editing medications
   const [formData, setFormData] = useState({
@@ -31,6 +35,8 @@ const MedicationTracker = () => {
   });
 
   const loadMedications = useCallback(async () => {
+    if (!currentPersonId) return; // Don't load medications if no person is selected
+    
     try {
       setLoading(true);
       setError(null);
@@ -38,7 +44,8 @@ const MedicationTracker = () => {
       const timezoneOffset = new Date().getTimezoneOffset();
       const data = await medicationApi.getAll({ 
         date: dateStr,
-        timezone_offset: timezoneOffset 
+        timezone_offset: timezoneOffset,
+        person_id: currentPersonId 
       });
       setMedications(data);
     } catch (err) {
@@ -46,7 +53,7 @@ const MedicationTracker = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedDate]);
+  }, [selectedDate, currentPersonId]);
 
   // Load medications on component mount and when date changes
   useEffect(() => {
@@ -150,9 +157,16 @@ const MedicationTracker = () => {
 
   const handleAddMedication = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!currentPersonId) {
+      setError('Please select a person first');
+      return;
+    }
     try {
       setError(null);
-      await medicationApi.create(formData);
+      await medicationApi.create({
+        ...formData,
+        person_id: currentPersonId
+      });
       setIsAddingMedication(false);
       resetForm();
       await loadMedications();
@@ -167,7 +181,10 @@ const MedicationTracker = () => {
     
     try {
       setError(null);
-      await medicationApi.update(editingMedication.id, formData);
+      await medicationApi.update(editingMedication.id, {
+        ...formData,
+        person_id: currentPersonId
+      });
       setEditingMedication(null);
       resetForm();
       await loadMedications();
@@ -275,9 +292,39 @@ const MedicationTracker = () => {
     return <div className="text-center p-4">Loading medications...</div>;
   }
 
+  if (!currentPersonId) {
+    return (
+      <div className="container mx-auto p-4">
+        <h1 className="text-3xl font-bold mb-6">Medication Tracker</h1>
+        <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded mb-4 text-center">
+          <p className="mb-2">Please select a person to manage their medications.</p>
+          <button
+            onClick={() => setShowPersonManager(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
+          >
+            Manage People
+          </button>
+        </div>
+        <PersonManager
+          isOpen={showPersonManager}
+          onClose={() => setShowPersonManager(false)}
+          currentPersonId={currentPersonId}
+          onPersonChange={setCurrentPersonId}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6">Medication Tracker</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold">Medication Tracker</h1>
+        <PersonSelector 
+          currentPersonId={currentPersonId}
+          onPersonChange={setCurrentPersonId}
+          onManagePersons={() => setShowPersonManager(true)}
+        />
+      </div>
 
       {/* Date Navigation */}
       <div className="bg-white shadow rounded-lg p-4 mb-6">
@@ -720,6 +767,14 @@ const MedicationTracker = () => {
           </div>
         </>
       )}
+      
+      {/* Person Manager Modal */}
+      <PersonManager
+        isOpen={showPersonManager}
+        onClose={() => setShowPersonManager(false)}
+        currentPersonId={currentPersonId}
+        onPersonChange={setCurrentPersonId}
+      />
     </div>
   );
 };

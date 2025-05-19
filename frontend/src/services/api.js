@@ -167,4 +167,66 @@ const doseApi = {
   },
 };
 
-export { medicationApi, doseApi };
+const personApi = {
+  // Get all persons
+  getAll: async (params = {}) => {
+    try {
+      const response = await api.get('/persons/', { params });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Get a specific person by ID
+  getById: async (id) => {
+    try {
+      const response = await api.get(`/persons/${id}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Create a new person
+  create: async (person) => {
+    try {
+      const response = await api.post('/persons/', person);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Update a person
+  update: async (id, updates) => {
+    try {
+      const response = await api.put(`/persons/${id}`, updates);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Delete a person
+  delete: async (id) => {
+    try {
+      await api.delete(`/persons/${id}`);
+      return true;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Set person as default
+  setDefault: async (id) => {
+    try {
+      const response = await api.put(`/persons/${id}/set-default`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+};
+
+export { medicationApi, doseApi, personApi };
