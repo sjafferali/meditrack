@@ -17,6 +17,7 @@ const MedicationTracker = () => {
   const [deleteDoseConfirmId, setDeleteDoseConfirmId] = useState<number | null>(null);
   const [showTimeModal, setShowTimeModal] = useState<{ medicationId: number | null, show: boolean }>({ medicationId: null, show: false });
   const [customTime, setCustomTime] = useState<string>('');
+  const [recordingDose, setRecordingDose] = useState<number | null>(null);
 
   // Form state for adding/editing medications
   const [formData, setFormData] = useState({
@@ -70,8 +71,14 @@ const MedicationTracker = () => {
   };
 
   const handleTakeMedication = async (medicationId: number, time?: string) => {
+    // Prevent multiple simultaneous recordings for the same medication
+    if (recordingDose === medicationId) {
+      return;
+    }
+    
     try {
       setError(null);
+      setRecordingDose(medicationId);
       
       if (time) {
         // If time is provided, use the date-specific API
@@ -82,6 +89,7 @@ const MedicationTracker = () => {
         // For past dates, show time picker
         setShowTimeModal({ medicationId, show: true });
         setCustomTime(new Date().toTimeString().slice(0, 5));
+        setRecordingDose(null);
         return;
       } else {
         // For today without custom time, include timezone offset
@@ -96,6 +104,8 @@ const MedicationTracker = () => {
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to record dose');
+    } finally {
+      setRecordingDose(null);
     }
   };
 
@@ -424,15 +434,18 @@ const MedicationTracker = () => {
                 onClick={() => handleTakeMedication(medication.id)}
                 disabled={
                   medication.doses_taken_today >= medication.max_doses_per_day || 
-                  isFutureDate(selectedDate)
+                  isFutureDate(selectedDate) ||
+                  recordingDose === medication.id
                 }
                 className={`px-3 py-2 rounded-md ${
-                  medication.doses_taken_today >= medication.max_doses_per_day || isFutureDate(selectedDate)
+                  medication.doses_taken_today >= medication.max_doses_per_day || isFutureDate(selectedDate) || recordingDose === medication.id
                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                     : "bg-blue-600 hover:bg-blue-700 text-white"
                 }`}
               >
-                {medication.doses_taken_today >= medication.max_doses_per_day
+                {recordingDose === medication.id
+                  ? "Recording..."
+                  : medication.doses_taken_today >= medication.max_doses_per_day
                   ? "Max Taken"
                   : isFutureDate(selectedDate)
                   ? "Future Date"
@@ -446,7 +459,12 @@ const MedicationTracker = () => {
                     setShowTimeModal({ medicationId: medication.id, show: true });
                     setCustomTime(new Date().toTimeString().slice(0, 5));
                   }}
-                  className="px-3 py-2 text-purple-600 hover:bg-purple-50 rounded-md"
+                  disabled={recordingDose === medication.id}
+                  className={`px-3 py-2 rounded-md ${
+                    recordingDose === medication.id
+                      ? "text-gray-500 bg-gray-50 cursor-not-allowed"
+                      : "text-purple-600 hover:bg-purple-50"
+                  }`}
                 >
                   Take at Time
                 </button>
