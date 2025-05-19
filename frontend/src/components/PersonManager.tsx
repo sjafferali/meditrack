@@ -146,7 +146,7 @@ const PersonManager: React.FC<PersonManagerProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex items-center justify-center min-h-screen p-4">
+      <div className="flex items-start justify-center pt-20 p-4">
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75" onClick={onClose} data-testid="modal-overlay" />
         
         <div className="relative bg-white rounded-lg w-full max-w-2xl shadow-xl">
