@@ -86,10 +86,8 @@ describe('PersonSelector', () => {
     fireEvent.click(selectorButton);
 
     // All persons should be visible in the dropdown
-    await waitFor(() => {
-      expect(screen.getByText('Jane Smith')).toBeInTheDocument();
-      expect(screen.getByText('Bob Johnson')).toBeInTheDocument();
-    });
+    await screen.findByText('Jane Smith');
+    expect(screen.getByText('Bob Johnson')).toBeInTheDocument();
   });
 
   test('displays medication count for each person', async () => {
@@ -108,11 +106,9 @@ describe('PersonSelector', () => {
     const selectorButton = screen.getByText('John Doe');
     fireEvent.click(selectorButton);
 
-    await waitFor(() => {
-      expect(screen.getByText('3 medications')).toBeInTheDocument();
-      expect(screen.getByText('1 medication')).toBeInTheDocument();
-      expect(screen.getByText('0 medications')).toBeInTheDocument();
-    });
+    await screen.findByText('3 medications');
+    expect(screen.getByText('1 medication')).toBeInTheDocument();
+    expect(screen.getByText('0 medications')).toBeInTheDocument();
   });
 
   test('displays default badge for default person', async () => {

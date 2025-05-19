@@ -102,10 +102,8 @@ describe('PersonManager', () => {
       />
     );
 
-    await waitFor(() => {
-      expect(screen.getByText('John Doe')).toBeInTheDocument();
-      expect(screen.getByText('Jane Smith')).toBeInTheDocument();
-    });
+    await screen.findByText('John Doe');
+    expect(screen.getByText('Jane Smith')).toBeInTheDocument();
   });
 
   test('displays person details', async () => {
@@ -118,15 +116,14 @@ describe('PersonManager', () => {
       />
     );
 
-    await waitFor(() => {
-      // Check for the born text but be flexible about date format - use getAllByText since there are multiple persons
-      const bornElements = screen.getAllByText((content, element) => {
-        return element?.tagName.toLowerCase() === 'p' && content.startsWith('Born:');
-      });
-      expect(bornElements.length).toBeGreaterThan(0);
-      expect(screen.getByText('Primary person')).toBeInTheDocument();
-      expect(screen.getByText('3 medications')).toBeInTheDocument();
+    // Check for the born text but be flexible about date format - use getAllByText since there are multiple persons
+    const bornElements = await screen.findAllByText((content, element) => {
+      return element?.tagName.toLowerCase() === 'p' && content.startsWith('Born:');
     });
+    expect(bornElements.length).toBeGreaterThan(0);
+    
+    expect(screen.getByText('Primary person')).toBeInTheDocument();
+    expect(screen.getByText('3 medications')).toBeInTheDocument();
   });
 
   test('handles error state', async () => {
@@ -175,12 +172,12 @@ describe('PersonManager', () => {
       />
     );
 
-    // Click the overlay (the semi-transparent background)
-    const overlay = screen.getByText('Select a Person').closest('.fixed')?.querySelector('.bg-gray-500');
-    if (overlay) {
-      fireEvent.click(overlay);
-      expect(mockOnClose).toHaveBeenCalled();
-    }
+    // Wait for the modal to render
+    await screen.findByText('Select a Person');
+    
+    // Find the overlay using data-testid instead of direct DOM traversal
+    fireEvent.click(screen.getByTestId('modal-overlay'));
+    expect(mockOnClose).toHaveBeenCalled();
   });
 
   test('shows add person form when Add New Person clicked', async () => {
@@ -238,8 +235,8 @@ describe('PersonManager', () => {
         date_of_birth: '2000-01-01',
         notes: 'Test notes'
       });
-      expect(mockOnPersonChange).toHaveBeenCalledWith(3); // New person ID
     });
+    expect(mockOnPersonChange).toHaveBeenCalledWith(3); // New person ID
   });
 
   test('shows edit form when Edit clicked', async () => {
@@ -433,9 +430,7 @@ describe('PersonManager', () => {
     const confirmButton = screen.getByText('Confirm Delete');
     fireEvent.click(confirmButton);
 
-    await waitFor(() => {
-      expect(personApi.delete).toHaveBeenCalledWith(2);
-      expect(mockOnPersonChange).toHaveBeenCalledWith(1); // Switch to John Doe
-    });
+    await waitFor(() => expect(personApi.delete).toHaveBeenCalledWith(2));
+    expect(mockOnPersonChange).toHaveBeenCalledWith(1); // Switch to John Doe
   });
 });

@@ -1,6 +1,6 @@
 import React from 'react';
-import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
-import MedicationTracker from '../../components/MedicationTracker';
+import { /* render, screen, waitFor, fireEvent, act */ } from '@testing-library/react';
+import { /* MedicationTracker */ } from '../../components/MedicationTracker';
 import { medicationApi, doseApi, personApi } from '../../services/api';
 
 // Mock the API module
@@ -29,6 +29,10 @@ jest.mock('../../components/DailyDoseLog', () => {
 // Mock date to have consistent test results
 const mockDate = new Date('2023-01-15T00:00:00.000Z');
 
+// These components are commented out since they're not being used
+// Keeping them for reference but marking them as unused to avoid eslint warnings
+
+/*
 // Override MedicationTracker component to simplify testing
 const TestableMedicationTracker = () => {
   const OriginalComponent = jest.requireActual('../../components/MedicationTracker').default;
@@ -51,6 +55,7 @@ const MedicationTrackerWithPerson = () => {
   
   return <MedicationTrackerMock {...props} />;
 };
+*/
 
 describe('MedicationTracker', () => {
   const mockMedications = [
