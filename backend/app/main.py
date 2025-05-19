@@ -63,23 +63,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include API router
-app.include_router(api_router, prefix="/api/v1")
-
-# Serve React frontend - must be mounted after API routes
-if static_path.exists():
-    # Mount the React build's static directory for CSS/JS assets
-    static_assets_path = static_path / "static"
-    if static_assets_path.exists():
-        app.mount(
-            "/static",
-            StaticFiles(directory=str(static_assets_path)),
-            name="static_files",
-        )
-
-    # Mount frontend app as a catch-all route (must be last)
-    app.mount("/", StaticFiles(directory=str(static_path), html=True), name="spa")
-
 
 # Health check endpoint
 @app.get(
@@ -96,6 +79,24 @@ def health_check():
         dict: Status and version information
     """
     return {"status": "healthy", "version": settings.VERSION}
+
+
+# Include API router
+app.include_router(api_router, prefix="/api/v1")
+
+# Serve React frontend - must be mounted after API routes
+if static_path.exists():
+    # Mount the React build's static directory for CSS/JS assets
+    static_assets_path = static_path / "static"
+    if static_assets_path.exists():
+        app.mount(
+            "/static",
+            StaticFiles(directory=str(static_assets_path)),
+            name="static_files",
+        )
+
+    # Mount frontend app as a catch-all route (must be last)
+    app.mount("/", StaticFiles(directory=str(static_path), html=True), name="spa")
 
 
 # Root endpoint - removed as static files will be served at /
