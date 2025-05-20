@@ -175,9 +175,13 @@ def create_medication_tracking_pdf(buffer, medications, dates, person_name, curr
             str(medication.max_doses_per_day)
         ]
         
-        # Add empty cells for each date
+        # Add cells with time entry blanks for each date
+        # Number of blanks matches max_doses_per_day
         for _ in dates:
-            row.append("")
+            time_blanks = "_____" * min(medication.max_doses_per_day, 4)
+            if medication.max_doses_per_day > 4:
+                time_blanks += "\n" + "_____" * (medication.max_doses_per_day - 4)
+            row.append(time_blanks)
         
         # Add an empty notes cell
         row.append("")
@@ -185,7 +189,7 @@ def create_medication_tracking_pdf(buffer, medications, dates, person_name, curr
         data.append(row)
     
     # Create the table
-    col_widths = [2*inch, 1.5*inch, 0.7*inch] + [0.7*inch] * len(dates) + [1.5*inch]
+    col_widths = [2*inch, 1.5*inch, 0.7*inch] + [1.5*inch] * len(dates) + [1.5*inch]
     table = Table(data, colWidths=col_widths)
     
     # Style the table
@@ -201,16 +205,11 @@ def create_medication_tracking_pdf(buffer, medications, dates, person_name, curr
         ('ALIGN', (0, 1), (2, -1), 'LEFT'),
         ('ALIGN', (3, 1), (-2, -1), 'CENTER'),
         ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 1), (-1, -1), 10),
+        ('FONTSIZE', (0, 1), (-1, -1), 9),
         ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('ROWHEIGHT', (0, 1), (-1, -1), 0.4*inch),
+        ('ROWHEIGHT', (0, 1), (-1, -1), 0.6*inch),
     ])
-    
-    # Add lighter lines in date cells for checkmarks
-    for row_idx in range(1, len(data)):
-        for col_idx in range(3, 3 + len(dates)):
-            style.add('LINEBEFORE', (col_idx, row_idx), (col_idx, row_idx), 0.25, colors.grey)
     
     table.setStyle(style)
     
@@ -225,7 +224,7 @@ def create_medication_tracking_pdf(buffer, medications, dates, person_name, curr
     
     # Add instructions at the bottom
     pdf.setFont("Helvetica", 9)
-    instructions = "Instructions: Place a checkmark (✓) in the appropriate box when each dose is taken."
+    instructions = "Instructions: Record the time when each dose is taken in the blank spaces provided."
     pdf.drawString(0.5*inch, 0.5*inch, instructions)
     
     # Add generation timestamp

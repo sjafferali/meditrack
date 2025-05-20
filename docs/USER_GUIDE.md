@@ -217,7 +217,7 @@ MediTrack allows you to generate printable medication tracking forms in PDF form
 
 The PDF form includes:
 - **Medication listing**: All medications with dosages
-- **Daily tracking grid**: Space to mark doses as taken
+- **Time entry spaces**: Blank spaces to record the time each dose is taken
 - **Notes section**: For additional information
 
 This feature is useful for:

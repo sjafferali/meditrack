@@ -7,7 +7,7 @@ MediTrack provides a feature to generate printable medication tracking forms in 
 The printable medication tracking form feature:
 
 - Generates a PDF form with your medications listed
-- Provides checkboxes for marking doses as taken
+- Provides blank spaces for recording the time each dose is taken
 - Includes medication information (name, dosage, max doses per day)
 - Can cover one or more days in a single form
 - Supports filtering by person in a multi-person setup
@@ -25,7 +25,7 @@ The generated PDF includes:
 - **Date Range**: Shows which date(s) the form covers
 - **Person Information**: Displays the person's name (when applicable)
 - **Medication Details**: Lists all medications with names and dosage information
-- **Tracking Grid**: Provides spaces to mark when doses are taken
+- **Time Entry Blanks**: Provides blank spaces to record the time each dose is taken (number of blanks matches the maximum daily doses)
 - **Notes Section**: Space for additional information
 
 ## Custom Options
