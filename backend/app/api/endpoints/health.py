@@ -27,6 +27,10 @@ def health_check(db: Session = Depends(get_db)):
         # Check database connectivity with basic query
         db.execute(text("SELECT 1")).first()
 
+        # Use a database-agnostic way to get timestamp
+        from datetime import datetime
+        timestamp = datetime.now().isoformat()
+
         return {
             "status": "healthy",
             "version": settings.VERSION,
@@ -36,7 +40,7 @@ def health_check(db: Session = Depends(get_db)):
                     "component": "api",
                     "status": "healthy",
                     "details": {
-                        "timestamp": db.execute(text("SELECT NOW()")).scalar(),
+                        "timestamp": timestamp,
                         "environment": settings.ENVIRONMENT,
                     },
                 },

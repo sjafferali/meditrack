@@ -194,7 +194,7 @@ def test_medication_with_long_instructions(client, db_session):
         dosage="5mg",
         frequency="Twice daily",
         max_doses_per_day=8,  # Many doses to test time slot wrapping
-        person_id=person.id,
+        person_id=person.id
     )
 
     db_session.add(med)
@@ -218,3 +218,110 @@ def test_medication_with_long_instructions(client, db_session):
 
     # Verify the PDF contains the long medication name
     assert very_long_name in page_text
+
+
+def test_multipage_pdf_generation(client, db_session):
+    """Test PDF generation with enough medications to create multiple pages"""
+    # Create test person
+    person = Person(name="Test Person")
+    db_session.add(person)
+    db_session.commit()
+    db_session.refresh(person)
+    
+    # Create multiple medications to force multiple pages
+    for i in range(10):  # This should be enough to cause pagination
+        med = Medication(
+            name=f"Test Medication {i}",
+            dosage=f"{i*5+5}mg",
+            frequency="Daily",
+            max_doses_per_day=4,
+            instructions=f"Take medication {i} with water. This medication is for testing pagination in PDF generation. Some more instructions to make this longer and ensure it takes up space in the PDF.",
+            person_id=person.id
+        )
+        db_session.add(med)
+    
+    db_session.commit()
+    
+    # Test date for the PDF
+    test_date = date.today().isoformat()
+    
+    # Request the PDF
+    response = client.get(
+        f"/api/v1/reports/medications/pdf/{test_date}?person_id={person.id}"
+    )
+    
+    # Check response status
+    assert response.status_code == 200
+    
+    # Parse the PDF
+    pdf_content = io.BytesIO(response.content)
+    pdf = PdfReader(pdf_content)
+    
+    # Verify the PDF has multiple pages
+    assert len(pdf.pages) > 1
+    
+    # Check content on first page
+    first_page_text = pdf.pages[0].extract_text()
+    assert "Test Person Medication Log" in first_page_text
+    assert "Test Medication 0" in first_page_text
+    
+    # Check content on second page
+    second_page_text = pdf.pages[1].extract_text()
+    assert "Test Person Medication Log" in second_page_text
+
+
+def test_person_not_found(client):
+    """Test PDF generation with a non-existent person ID"""
+    # Test date for the PDF
+    test_date = date.today().isoformat()
+    
+    # Request PDF with non-existent person ID
+    response = client.get(
+        f"/api/v1/reports/medications/pdf/{test_date}?person_id=999"
+    )
+    
+    # Should return 404 for person not found
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Person not found"
+
+
+def test_pdf_generation_with_very_long_instructions(client, db_session):
+    """Test PDF generation with extremely long medication instructions"""
+    # Create test person
+    person = Person(name="Test Person")
+    db_session.add(person)
+    db_session.commit()
+    db_session.refresh(person)
+    
+    # Create a medication that matches one of the known medications in get_medication_instructions
+    med = Medication(
+        name="Pred Acetate", # This will get special instructions from get_medication_instructions
+        dosage="10mg",
+        frequency="Twice daily",
+        max_doses_per_day=2,
+        person_id=person.id
+    )
+    
+    db_session.add(med)
+    db_session.commit()
+    
+    # Test date for the PDF
+    test_date = date.today().isoformat()
+    
+    # Request the PDF
+    response = client.get(
+        f"/api/v1/reports/medications/pdf/{test_date}?person_id={person.id}"
+    )
+    
+    # Check response status
+    assert response.status_code == 200
+    
+    # Parse the PDF
+    pdf_content = io.BytesIO(response.content)
+    pdf = PdfReader(pdf_content)
+    page_text = pdf.pages[0].extract_text()
+    
+    # Verify the PDF contains the medication name
+    assert "Pred Acetate" in page_text
+    # Verify the special instructions appear (from the get_medication_instructions function)
+    assert "Steroid for inflammation" in page_text
