@@ -15,15 +15,13 @@ interface PersonManagerProps {
   onClose: () => void;
   currentPersonId: number | null;
   onPersonChange: (personId: number) => void;
-  anchorToDateSection?: boolean;
 }
 
 const PersonManager: React.FC<PersonManagerProps> = ({
   isOpen,
   onClose,
   currentPersonId,
-  onPersonChange,
-  anchorToDateSection = false
+  onPersonChange
 }) => {
   const [persons, setPersons] = useState<Person[]>([]);
   const [loading, setLoading] = useState(true);
@@ -145,22 +143,11 @@ const PersonManager: React.FC<PersonManagerProps> = ({
 
   if (!isOpen) return null;
 
-  // Determine position class based on where it should be anchored
-  let modalPositionClass;
-  
-  if (anchorToDateSection) {
-    // Position under date navigation section
-    modalPositionClass = "fixed top-44 left-1/2 transform -translate-x-1/2";
-  } else {
-    // Default centered position
-    modalPositionClass = "fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2";
-  }
-
   return (
     <>
       <div className="fixed inset-0 bg-gray-500 bg-opacity-75 z-[9999]" onClick={onClose} data-testid="modal-overlay" />
       
-      <div className={`${modalPositionClass} bg-white rounded-lg w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col shadow-xl z-[10000]`}>
+      <div className="bg-white rounded-lg w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col shadow-xl z-[10000]">
         <div className="px-6 py-4 border-b border-gray-200 bg-blue-50">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-blue-800">Select a Person</h2>

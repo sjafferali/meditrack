@@ -346,13 +346,14 @@ const MedicationTracker = () => {
             Select Person
           </button>
         </div>
-        <PersonManager
-          isOpen={showPersonManager}
-          onClose={() => setShowPersonManager(false)}
-          currentPersonId={currentPersonId}
-          onPersonChange={setCurrentPersonId}
-          anchorToDateSection={false} 
-        />
+        <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[10000]">
+          <PersonManager
+            isOpen={showPersonManager}
+            onClose={() => setShowPersonManager(false)}
+            currentPersonId={currentPersonId}
+            onPersonChange={setCurrentPersonId}
+          />
+        </div>
       </div>
     );
   }
@@ -414,6 +415,18 @@ const MedicationTracker = () => {
         <div className="text-center mt-3">
           <p className="text-lg font-medium">{selectedDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
         </div>
+        
+        {/* Person Manager Modal - Positioned DIRECTLY under date section */}
+        {showPersonManager && (
+          <div className="absolute top-full left-0 right-0 z-[10000] mt-2">
+            <PersonManager
+              isOpen={showPersonManager}
+              onClose={() => setShowPersonManager(false)}
+              currentPersonId={currentPersonId}
+              onPersonChange={setCurrentPersonId}
+            />
+          </div>
+        )}
       </div>
 
       {/* Error Alert */}
@@ -810,14 +823,7 @@ const MedicationTracker = () => {
         </>
       )}
       
-      {/* Person Manager Modal - Positioned under date section */}
-      <PersonManager
-        isOpen={showPersonManager}
-        onClose={() => setShowPersonManager(false)}
-        currentPersonId={currentPersonId}
-        onPersonChange={setCurrentPersonId}
-        anchorToDateSection={true}
-      />
+      {/* Person Manager Modal moved to date section */}
     </div>
   );
 };
