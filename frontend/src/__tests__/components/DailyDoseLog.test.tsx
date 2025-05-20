@@ -161,4 +161,43 @@ describe('DailyDoseLog Component', () => {
       expect(preElement).toBeInTheDocument();
     });
   });
+  
+  test('displays reload button when no data is found', async () => {
+    // First API call returns null to simulate no data found
+    (doseApi.getDailySummaryByDate as jest.Mock).mockResolvedValueOnce(null);
+    
+    render(<DailyDoseLog {...mockProps} />);
+    
+    await waitFor(() => {
+      expect(screen.getByText('No data found for this date.')).toBeInTheDocument();
+      expect(screen.getByText('Reload Data')).toBeInTheDocument();
+    });
+  });
+  
+  test('uses selectedDate prop for formatting the header correctly', async () => {
+    (doseApi.getDailySummaryByDate as jest.Mock).mockResolvedValue(mockSummary);
+    
+    // Create a specific test date
+    const testDate = new Date('2025-05-19'); // May 19, 2025
+    const dateFormatted = testDate.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    
+    render(
+      <DailyDoseLog 
+        selectedDate={testDate}
+        isOpen={true}
+        onClose={jest.fn()}
+      />
+    );
+    
+    await waitFor(() => {
+      // The formatted date should appear in the log heading
+      const preElement = screen.getByText(new RegExp(`MEDICATION LOG - ${dateFormatted}`));
+      expect(preElement).toBeInTheDocument();
+    });
+  });
 });

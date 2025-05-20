@@ -28,9 +28,16 @@ const DailyDoseLog: React.FC<DailyDoseLogProps> = ({ selectedDate, isOpen, onClo
     try {
       setLoading(true);
       setError(null);
-      const dateStr = selectedDate.toISOString().split('T')[0];
+      
+      // Format date directly from the Date object to ensure correct date in local timezone
+      const year = selectedDate.getFullYear();
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const day = String(selectedDate.getDate()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${day}`;
+      
       // Get timezone offset in minutes from user's browser
       const timezoneOffset = new Date().getTimezoneOffset();
+      
       // Pass timezone offset as a number
       const data = await doseApi.getDailySummaryByDate(dateStr, timezoneOffset);
       setSummary(data);
@@ -41,9 +48,24 @@ const DailyDoseLog: React.FC<DailyDoseLogProps> = ({ selectedDate, isOpen, onClo
     }
   };
 
+  // Function to reload data - helpful for fixing inconsistent loading issues
+  const reloadDailySummary = async () => {
+    if (!loading) {
+      await loadDailySummary();
+    }
+  };
+
   useEffect(() => {
     if (isOpen) {
       loadDailySummary();
+      
+      // Set up a small delay then reload to ensure data is properly loaded
+      // This helps fix the issue where data doesn't appear on first attempt
+      const reloadTimer = setTimeout(() => {
+        reloadDailySummary();
+      }, 300);
+      
+      return () => clearTimeout(reloadTimer);
     }
   }, [isOpen, selectedDate]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -55,7 +77,8 @@ const DailyDoseLog: React.FC<DailyDoseLogProps> = ({ selectedDate, isOpen, onClo
   const formatExportText = () => {
     if (!summary) return '';
 
-    const dateFormatted = new Date(summary.date).toLocaleDateString('en-US', {
+    // Use the selectedDate from props instead of summary.date to ensure consistency
+    const dateFormatted = selectedDate.toLocaleDateString('en-US', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
@@ -148,7 +171,7 @@ const DailyDoseLog: React.FC<DailyDoseLogProps> = ({ selectedDate, isOpen, onClo
         </div>
 
         <div className="text-center mb-4">
-          <p className="text-lg text-gray-600">
+          <p className="text-lg text-gray-600 font-semibold">
             {selectedDate.toLocaleDateString('en-US', {
               weekday: 'long',
               year: 'numeric',
@@ -166,7 +189,27 @@ const DailyDoseLog: React.FC<DailyDoseLogProps> = ({ selectedDate, isOpen, onClo
 
         {error && (
           <div className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {error}
+            <div className="flex justify-between">
+              <span>{error}</span>
+              <button
+                onClick={reloadDailySummary}
+                className="text-blue-600 hover:text-blue-800 font-medium"
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        )}
+        
+        {!loading && !error && (!summary || (summary?.medications?.length === 0 && summary?.date)) && (
+          <div className="text-center py-4">
+            <p className="text-gray-600 mb-2">No data found for this date.</p>
+            <button
+              onClick={reloadDailySummary}
+              className="px-3 py-1 bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 transition-colors text-sm"
+            >
+              Reload Data
+            </button>
           </div>
         )}
 

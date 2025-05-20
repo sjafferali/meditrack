@@ -260,6 +260,7 @@ def get_daily_summary_by_date(
     # Handle timezone for the date range
     if timezone_offset is not None:
         # Convert timezone offset from minutes to timedelta
+        # Negative because JS returns offset in opposite direction
         tz_offset = timedelta(minutes=-timezone_offset)
         current_tz = timezone(tz_offset)
         start_of_day = datetime.combine(date, datetime.min.time()).replace(
@@ -287,6 +288,10 @@ def get_daily_summary_by_date(
             tzinfo=timezone.utc
         )
 
+    # Log timezone information for debugging
+    print(f"Summary for date: {date.isoformat()}, timezone_offset: {timezone_offset}")
+    print(f"Start of day: {start_of_day.isoformat()}, End of day: {end_of_day.isoformat()}")
+
     medications = db.query(Medication).all()
     summary: dict = {"date": date.isoformat(), "medications": []}
 
@@ -302,6 +307,11 @@ def get_daily_summary_by_date(
             )
             .all()
         )
+        
+        if len(doses_on_date) > 0:
+            print(f"Found {len(doses_on_date)} doses for medication {medication.name}")
+            for dose in doses_on_date:
+                print(f"  - Dose at {dose.taken_at.isoformat()}")
 
         summary["medications"].append(
             {
@@ -313,6 +323,10 @@ def get_daily_summary_by_date(
             }
         )
 
+    print(f"Returning summary with {len(summary['medications'])} medications")
+    total_doses = sum(med["doses_taken"] for med in summary["medications"])
+    print(f"Total doses in summary: {total_doses}")
+    
     return summary
 
 
