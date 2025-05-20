@@ -281,9 +281,7 @@ def create_medication_tracking_pdf(
         max_doses = medication.max_doses_per_day
 
         # Calculate how many time slots can fit per line - increase slots per line
-        slot_width = (
-            1.75 * inch
-        )  # Reduced width for each time slot to fit more per line
+        slot_width = 1.85 * inch  # Adjusted width for each time slot to prevent overlap
         slots_per_line = max(1, int(content_width / slot_width))
 
         # Draw the time slots
@@ -310,9 +308,9 @@ def create_medication_tracking_pdf(
                     y_position - 2,
                 )
 
-                # AM/PM indicator
+                # AM/PM indicator - increased spacing to prevent overlap
                 pdf.drawString(
-                    slot_x + 0.2 * inch + line_length + 0.1 * inch,
+                    slot_x + 0.25 * inch + line_length,  # Increased spacing
                     y_position,
                     "(AM/PM)",
                 )
