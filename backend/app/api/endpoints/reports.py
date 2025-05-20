@@ -182,7 +182,8 @@ def create_medication_tracking_pdf(
             page_height - margin_tb - 2,
         )
 
-        # Start position just below the header with less spacing to better utilize the page
+        # Start position just below the header with less spacing
+        # This better utilizes the full page height
         y_position = page_height - margin_tb - 0.3 * inch
 
     # Initialize position - first page (page 0)
