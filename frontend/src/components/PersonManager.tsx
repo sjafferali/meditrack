@@ -39,13 +39,19 @@ const PersonManager: React.FC<PersonManagerProps> = ({
     if (isOpen) {
       loadPersons();
     }
+    
+    // Cleanup function to handle unmounting properly
+    return () => {
+      // Any cleanup if needed
+    };
   }, [isOpen]);
 
   const loadPersons = async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await personApi.getAll();
+      
+      const data = await withTimeout(personApi.getAll());
       setPersons(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load persons');
@@ -54,14 +60,23 @@ const PersonManager: React.FC<PersonManagerProps> = ({
     }
   };
 
+  // Helper function to handle API timeouts
+  const withTimeout = async (promise: Promise<any>, timeoutMs = 5000) => {
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error(`API request timed out after ${timeoutMs}ms`)), timeoutMs);
+    });
+    
+    return Promise.race([promise, timeoutPromise]);
+  };
+
   const handleAddPerson = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       setError(null);
-      const newPerson = await personApi.create({
+      const newPerson = await withTimeout(personApi.create({
         ...formData,
         date_of_birth: formData.date_of_birth || null
-      });
+      }));
       setPersons([...persons, newPerson]);
       setIsAddingPerson(false);
       resetForm();
@@ -79,10 +94,10 @@ const PersonManager: React.FC<PersonManagerProps> = ({
     
     try {
       setError(null);
-      const updatedPerson = await personApi.update(editingPerson.id, {
+      const updatedPerson = await withTimeout(personApi.update(editingPerson.id, {
         ...formData,
         date_of_birth: formData.date_of_birth || null
-      });
+      }));
       
       setPersons(persons.map(p => p.id === updatedPerson.id ? updatedPerson : p));
       setEditingPerson(null);
@@ -95,7 +110,7 @@ const PersonManager: React.FC<PersonManagerProps> = ({
   const handleDeletePerson = async (id: number) => {
     try {
       setError(null);
-      await personApi.delete(id);
+      await withTimeout(personApi.delete(id));
       setDeleteConfirmId(null);
       setPersons(persons.filter(p => p.id !== id));
       
@@ -113,7 +128,7 @@ const PersonManager: React.FC<PersonManagerProps> = ({
   const handleSetDefault = async (id: number) => {
     try {
       setError(null);
-      await personApi.setDefault(id);
+      await withTimeout(personApi.setDefault(id));
       // Update the persons list to reflect the new default
       setPersons(persons.map(p => ({
         ...p,
@@ -150,7 +165,7 @@ const PersonManager: React.FC<PersonManagerProps> = ({
       <div className="bg-white rounded-lg w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col shadow-xl z-[10000]">
         <div className="px-6 py-4 border-b border-gray-200 bg-blue-50">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-blue-800 pl-2">Select a Person</h2>
+            <h2 className="text-xl font-semibold text-blue-800 pl-4">Select a Person</h2>
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-gray-500 p-1 rounded-full hover:bg-white"

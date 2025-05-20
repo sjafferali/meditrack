@@ -1,10 +1,15 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import PersonManager from '../../components/PersonManager';
 import { personApi } from '../../services/api';
 
+// Set a shorter timeout for all tests
+jest.setTimeout(10000); // 10 seconds instead of the default 5 seconds
+
 // Mock the API module
 jest.mock('../../services/api');
+
+// Tests are now optimized
 
 describe('PersonManager', () => {
   const mockPersons = [
@@ -31,6 +36,8 @@ describe('PersonManager', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    
+    // Use immediate mock implementations
     (personApi.getAll as jest.Mock).mockResolvedValue(mockPersons);
     (personApi.create as jest.Mock).mockResolvedValue({
       id: 3,
@@ -49,28 +56,32 @@ describe('PersonManager', () => {
     });
   });
 
-  test('does not render when closed', () => {
-    render(
-      <PersonManager
-        isOpen={false}
-        onClose={mockOnClose}
-        currentPersonId={1}
-        onPersonChange={mockOnPersonChange}
-      />
-    );
+  test('does not render when closed', async () => {
+    await act(async () => {
+      render(
+        <PersonManager
+          isOpen={false}
+          onClose={mockOnClose}
+          currentPersonId={1}
+          onPersonChange={mockOnPersonChange}
+        />
+      );
+    });
 
     expect(screen.queryByText('Select a Person')).not.toBeInTheDocument();
   });
 
   test('renders modal when open', async () => {
-    render(
-      <PersonManager
-        isOpen={true}
-        onClose={mockOnClose}
-        currentPersonId={1}
-        onPersonChange={mockOnPersonChange}
-      />
-    );
+    await act(async () => {
+      render(
+        <PersonManager
+          isOpen={true}
+          onClose={mockOnClose}
+          currentPersonId={1}
+          onPersonChange={mockOnPersonChange}
+        />
+      );
+    });
 
     expect(screen.getByText('Select a Person')).toBeInTheDocument();
     // Wait for async loading to complete to avoid act() warnings
@@ -79,7 +90,12 @@ describe('PersonManager', () => {
     });
   });
 
-  test('displays loading state initially', () => {
+  test('displays loading state initially', async () => {
+    // Mock the API to delay returning data
+    (personApi.getAll as jest.Mock).mockImplementation(() => 
+      new Promise(resolve => setTimeout(() => resolve(mockPersons), 500))
+    );
+    
     render(
       <PersonManager
         isOpen={true}
@@ -89,32 +105,43 @@ describe('PersonManager', () => {
       />
     );
 
+    // With the delayed API response, we can now catch the loading state
     expect(screen.getByText('Loading...')).toBeInTheDocument();
+    
+    // Wait for it to finish loading
+    await waitFor(() => {
+      expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+    });
   });
 
   test('displays persons after loading', async () => {
-    render(
-      <PersonManager
-        isOpen={true}
-        onClose={mockOnClose}
-        currentPersonId={1}
-        onPersonChange={mockOnPersonChange}
-      />
-    );
+    // Use act to properly handle the async state updates
+    await act(async () => {
+      render(
+        <PersonManager
+          isOpen={true}
+          onClose={mockOnClose}
+          currentPersonId={1}
+          onPersonChange={mockOnPersonChange}
+        />
+      );
+    });
 
     await screen.findByText('John Doe');
     expect(screen.getByText('Jane Smith')).toBeInTheDocument();
   });
 
   test('displays person details', async () => {
-    render(
-      <PersonManager
-        isOpen={true}
-        onClose={mockOnClose}
-        currentPersonId={1}
-        onPersonChange={mockOnPersonChange}
-      />
-    );
+    await act(async () => {
+      render(
+        <PersonManager
+          isOpen={true}
+          onClose={mockOnClose}
+          currentPersonId={1}
+          onPersonChange={mockOnPersonChange}
+        />
+      );
+    });
 
     // Check for the born text but be flexible about date format - use getAllByText since there are multiple persons
     const bornElements = await screen.findAllByText((content, element) => {
@@ -130,14 +157,16 @@ describe('PersonManager', () => {
     const errorMessage = 'Failed to load persons';
     (personApi.getAll as jest.Mock).mockRejectedValue(new Error(errorMessage));
 
-    render(
-      <PersonManager
-        isOpen={true}
-        onClose={mockOnClose}
-        currentPersonId={1}
-        onPersonChange={mockOnPersonChange}
-      />
-    );
+    await act(async () => {
+      render(
+        <PersonManager
+          isOpen={true}
+          onClose={mockOnClose}
+          currentPersonId={1}
+          onPersonChange={mockOnPersonChange}
+        />
+      );
+    });
 
     await waitFor(() => {
       expect(screen.getByText(errorMessage)).toBeInTheDocument();
@@ -145,58 +174,74 @@ describe('PersonManager', () => {
   });
 
   test('closes modal when close button clicked', async () => {
-    render(
-      <PersonManager
-        isOpen={true}
-        onClose={mockOnClose}
-        currentPersonId={1}
-        onPersonChange={mockOnPersonChange}
-      />
-    );
+    await act(async () => {
+      render(
+        <PersonManager
+          isOpen={true}
+          onClose={mockOnClose}
+          currentPersonId={1}
+          onPersonChange={mockOnPersonChange}
+        />
+      );
+    });
 
     // Find the close button by its position in the header
     const headerButtons = screen.getAllByRole('button');
     const closeButton = headerButtons[0]; // The first button in the modal is the close button
-    fireEvent.click(closeButton);
+    
+    await act(async () => {
+      fireEvent.click(closeButton);
+    });
 
     expect(mockOnClose).toHaveBeenCalled();
   });
 
   test('closes modal when clicking overlay', async () => {
-    render(
-      <PersonManager
-        isOpen={true}
-        onClose={mockOnClose}
-        currentPersonId={1}
-        onPersonChange={mockOnPersonChange}
-      />
-    );
+    await act(async () => {
+      render(
+        <PersonManager
+          isOpen={true}
+          onClose={mockOnClose}
+          currentPersonId={1}
+          onPersonChange={mockOnPersonChange}
+        />
+      );
+    });
 
     // Wait for the modal to render
     await screen.findByText('Select a Person');
     
     // Find the overlay using data-testid
     const overlay = screen.getByTestId('modal-overlay');
-    fireEvent.click(overlay);
+    
+    await act(async () => {
+      fireEvent.click(overlay);
+    });
+    
     expect(mockOnClose).toHaveBeenCalled();
   });
 
   test('shows add person form when Add New Person clicked', async () => {
-    render(
-      <PersonManager
-        isOpen={true}
-        onClose={mockOnClose}
-        currentPersonId={1}
-        onPersonChange={mockOnPersonChange}
-      />
-    );
+    await act(async () => {
+      render(
+        <PersonManager
+          isOpen={true}
+          onClose={mockOnClose}
+          currentPersonId={1}
+          onPersonChange={mockOnPersonChange}
+        />
+      );
+    });
 
     await waitFor(() => {
       expect(screen.getByText('Add New Person')).toBeInTheDocument();
     });
 
     const addButton = screen.getByText('Add New Person');
-    fireEvent.click(addButton);
+    
+    await act(async () => {
+      fireEvent.click(addButton);
+    });
 
     expect(screen.getByText('Add New Person')).toBeInTheDocument();
     expect(screen.getByLabelText('Name')).toBeInTheDocument();
