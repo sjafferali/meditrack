@@ -150,7 +150,7 @@ const PersonManager: React.FC<PersonManagerProps> = ({
       <div className="bg-white rounded-lg w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col shadow-xl z-[10000]">
         <div className="px-6 py-4 border-b border-gray-200 bg-blue-50">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-blue-800">Select a Person</h2>
+            <h2 className="text-xl font-semibold text-blue-800 pl-2">Select a Person</h2>
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-gray-500 p-1 rounded-full hover:bg-white"
@@ -259,7 +259,7 @@ const PersonManager: React.FC<PersonManagerProps> = ({
             <div className="text-center py-8">Loading...</div>
           ) : (
             <div className="space-y-4">
-              {persons.map((person) => (
+              {persons && persons.map((person) => (
                 <div key={person.id} className="bg-white border rounded-lg p-4 hover:shadow-md transition-shadow">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     {/* Person info */}
