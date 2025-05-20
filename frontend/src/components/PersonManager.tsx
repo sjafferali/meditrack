@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { personApi } from '../services/api';
 
 interface Person {
@@ -35,18 +35,16 @@ const PersonManager: React.FC<PersonManagerProps> = ({
     notes: ''
   });
 
-  useEffect(() => {
-    if (isOpen) {
-      loadPersons();
-    }
+  // Helper function to handle API timeouts
+  const withTimeout = async (promise: Promise<any>, timeoutMs = 5000) => {
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error(`API request timed out after ${timeoutMs}ms`)), timeoutMs);
+    });
     
-    // Cleanup function to handle unmounting properly
-    return () => {
-      // Any cleanup if needed
-    };
-  }, [isOpen]);
+    return Promise.race([promise, timeoutPromise]);
+  };
 
-  const loadPersons = async () => {
+  const loadPersons = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -58,16 +56,18 @@ const PersonManager: React.FC<PersonManagerProps> = ({
     } finally {
       setLoading(false);
     }
-  };
-
-  // Helper function to handle API timeouts
-  const withTimeout = async (promise: Promise<any>, timeoutMs = 5000) => {
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error(`API request timed out after ${timeoutMs}ms`)), timeoutMs);
-    });
+  }, []);
+  
+  useEffect(() => {
+    if (isOpen) {
+      loadPersons();
+    }
     
-    return Promise.race([promise, timeoutPromise]);
-  };
+    // Cleanup function to handle unmounting properly
+    return () => {
+      // Any cleanup if needed
+    };
+  }, [isOpen, loadPersons]);
 
   const handleAddPerson = async (e: React.FormEvent) => {
     e.preventDefault();
