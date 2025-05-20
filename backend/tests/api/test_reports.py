@@ -235,7 +235,11 @@ def test_multipage_pdf_generation(client, db_session):
             dosage=f"{i*5+5}mg",
             frequency="Daily",
             max_doses_per_day=4,
-            instructions=f"Take medication {i} with water. This medication is for testing pagination in PDF generation. Some more instructions to make this longer and ensure it takes up space in the PDF.",
+            instructions=(
+                f"Take medication {i} with water. "
+                "This medication is for testing pagination in PDF generation. "
+                "Some instructions to make this longer for the PDF."
+            ),
             person_id=person.id,
         )
         db_session.add(med)
@@ -291,9 +295,10 @@ def test_pdf_generation_with_very_long_instructions(client, db_session):
     db_session.commit()
     db_session.refresh(person)
 
-    # Create a medication that matches one of the known medications in get_medication_instructions
+    # Create a medication that matches a known medication in get_medication_instructions
     med = Medication(
-        name="Pred Acetate",  # This will get special instructions from get_medication_instructions
+        # This will get special instructions from get_medication_instructions
+        name="Pred Acetate",
         dosage="10mg",
         frequency="Twice daily",
         max_doses_per_day=2,
@@ -321,5 +326,5 @@ def test_pdf_generation_with_very_long_instructions(client, db_session):
 
     # Verify the PDF contains the medication name
     assert "Pred Acetate" in page_text
-    # Verify the special instructions appear (from the get_medication_instructions function)
+    # Verify special instructions from get_medication_instructions function
     assert "Steroid for inflammation" in page_text

@@ -1,5 +1,3 @@
-import pytest
-from fastapi import Depends
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 

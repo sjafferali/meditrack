@@ -1,7 +1,4 @@
 import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy import text
-from sqlalchemy.orm import Session
 
 
 class TestHealthEndpoint:
@@ -55,9 +52,8 @@ class TestHealthEndpoint:
             raise Exception("Database connection error")
 
         # Use monkeypatch to replace the execution method temporarily
-        from sqlalchemy.orm import Session
-
-        monkeypatch.setattr(Session, "execute", mock_execute)
+        from sqlalchemy.orm import Session as SQLAlchemySession
+        monkeypatch.setattr(SQLAlchemySession, "execute", mock_execute)
 
         # Call API health endpoint, which should now return 500
         response = client.get("/api/v1/health")
