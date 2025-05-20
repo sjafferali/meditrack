@@ -771,7 +771,7 @@ const MedicationTracker = () => {
             // Set a flag to automatically trigger print dialog when modal opens
             setPrintMedicationTracking(true);
           }}
-          className="ml-4 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-md font-medium transition-colors"
+          className="ml-4 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium transition-colors"
           type="button"
           title="Generate a printable medication tracking form for this date"
         >

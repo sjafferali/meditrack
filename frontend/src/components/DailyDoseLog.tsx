@@ -306,7 +306,7 @@ const DailyDoseLog: React.FC<DailyDoseLogProps> = ({ selectedDate, isOpen, onClo
               </button>
               <button
                 onClick={handlePrintTracking}
-                className={`px-6 py-2 ${isGeneratingPDF ? 'bg-teal-500' : 'bg-teal-600 hover:bg-teal-700'} text-white rounded-md flex items-center justify-center`}
+                className={`px-6 py-2 ${isGeneratingPDF ? 'bg-green-500' : 'bg-green-600 hover:bg-green-700'} text-white rounded-md flex items-center justify-center`}
                 title="Generate a printable PDF tracking form"
                 disabled={isGeneratingPDF}
               >
