@@ -3,8 +3,7 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import PersonManager from '../../components/PersonManager';
 import { personApi } from '../../services/api';
 
-// Set a shorter timeout for all tests
-jest.setTimeout(10000); // 10 seconds instead of the default 5 seconds
+// The Jest config now has a 30-second default timeout
 
 // Mock the API module
 jest.mock('../../services/api');
