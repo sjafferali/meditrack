@@ -1,22 +1,19 @@
 from datetime import date, datetime, timedelta, timezone
-from typing import List, Optional
 from io import BytesIO
+from typing import Optional
 
-from fastapi import APIRouter, Depends, Path, Query, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from fastapi.responses import StreamingResponse
-from sqlalchemy import and_
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import landscape, letter
+from reportlab.lib.units import inch
+from reportlab.pdfgen import canvas
+from reportlab.platypus import Table, TableStyle
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.database import get_db
 from app.core.config import settings
-from app.models import Dose, Medication, Person
-
-# Import ReportLab components
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import letter, landscape
-from reportlab.lib.units import inch
-from reportlab.lib import colors
-from reportlab.platypus import Table, TableStyle
+from app.models import Medication, Person
 
 router = APIRouter(
     tags=["reports"],
@@ -36,26 +33,34 @@ router = APIRouter(
     },
 )
 def generate_medication_pdf(
-    date: date = Path(..., description="The date to generate the tracking form for (YYYY-MM-DD)"),
-    timezone_offset: Optional[int] = Query(None, description="Timezone offset in minutes"),
-    person_id: Optional[int] = Query(None, description="Person ID to filter medications"),
-    days: Optional[int] = Query(1, ge=1, le=7, description="Number of days to include in the form"),
+    date: date = Path(
+        ..., description="The date to generate the tracking form for (YYYY-MM-DD)"
+    ),
+    timezone_offset: Optional[int] = Query(
+        None, description="Timezone offset in minutes"
+    ),
+    person_id: Optional[int] = Query(
+        None, description="Person ID to filter medications"
+    ),
+    days: Optional[int] = Query(
+        1, ge=1, le=7, description="Number of days to include in the form"
+    ),
     db: Session = Depends(get_db),
 ):
     """
     Generate a printable medication tracking form in PDF format.
-    
+
     This endpoint will:
     - Get medication data for the specified date
     - Generate a PDF document with a tracking form
     - Return the PDF as a streaming response for download
-    
+
     The form includes:
     - Date(s) covered by the form
     - Medication names and dosage information
     - Grid for tracking doses over multiple days
     - Space for marking when doses are taken
-    
+
     Optional parameters:
     - timezone_offset: Adjust for user's local timezone
     - person_id: Filter medications for a specific person
@@ -73,7 +78,7 @@ def generate_medication_pdf(
     else:
         # Default to UTC if no timezone information provided
         current_tz = timezone.utc
-    
+
     # Get medications with optional person filter
     query = db.query(Medication)
     if person_id:
@@ -81,44 +86,49 @@ def generate_medication_pdf(
         if not person:
             raise HTTPException(status_code=404, detail="Person not found")
         query = query.filter(Medication.person_id == person_id)
-    
+
     medications = query.all()
-    
+
     if not medications:
         raise HTTPException(status_code=404, detail="No medications found")
-    
+
     # Get person name if person_id is provided
     person_name = None
     if person_id:
         person = db.query(Person).filter(Person.id == person_id).first()
         if person:
             person_name = person.name
-    
+
     # Create dates list for multiple days
     dates = []
-    for day_offset in range(days):
+    days_count = days if days is not None else 1
+    for day_offset in range(days_count):
         dates.append(date + timedelta(days=day_offset))
-    
+
     # Create in-memory PDF
     buffer = BytesIO()
-    create_medication_tracking_pdf(buffer, medications, dates, person_name, current_tz, db)
+    create_medication_tracking_pdf(
+        buffer, medications, dates, person_name, current_tz, db
+    )
     buffer.seek(0)
-    
+
     # Generate filename with date
     filename = f"medication_tracking_{date.isoformat()}.pdf"
-    
+
     # Return the PDF as a streaming response
     return StreamingResponse(
-        buffer, 
+        buffer,
         media_type="application/pdf",
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
 
 
-def create_medication_tracking_pdf(buffer, medications, dates, person_name, current_tz, db):
+def create_medication_tracking_pdf(
+    buffer, medications, dates, person_name, current_tz, db
+):
     """
     Create a medication tracking PDF document with a grid for recording doses.
-    
+
     Args:
         buffer: BytesIO object to write the PDF to
         medications: List of medication objects
@@ -129,52 +139,50 @@ def create_medication_tracking_pdf(buffer, medications, dates, person_name, curr
     """
     # Calculate page dimensions
     page_width, page_height = landscape(letter)
-    
+
     # Create PDF canvas
     pdf = canvas.Canvas(buffer, pagesize=landscape(letter))
-    
+
     # Set title and metadata
     title = "Medication Tracking Form"
     pdf.setTitle(title)
     pdf.setAuthor("MediTrack")
     pdf.setSubject("Medication Tracking")
-    
+
     # Add header
     pdf.setFont("Helvetica-Bold", 16)
-    pdf.drawCentredString(page_width/2, page_height - 0.5*inch, title)
-    
+    pdf.drawCentredString(page_width / 2, page_height - 0.5 * inch, title)
+
     # Add date range and person info
     pdf.setFont("Helvetica", 12)
     date_range_text = f"Date: {dates[0].strftime('%B %d, %Y')}"
     if len(dates) > 1:
-        date_range_text = f"Dates: {dates[0].strftime('%B %d, %Y')} to {dates[-1].strftime('%B %d, %Y')}"
-    
-    pdf.drawString(0.5*inch, page_height - 0.8*inch, date_range_text)
-    
+        start_date = dates[0].strftime("%B %d, %Y")
+        end_date = dates[-1].strftime("%B %d, %Y")
+        date_range_text = f"Dates: {start_date} to {end_date}"
+
+    pdf.drawString(0.5 * inch, page_height - 0.8 * inch, date_range_text)
+
     if person_name:
-        pdf.drawString(0.5*inch, page_height - 1.1*inch, f"Person: {person_name}")
+        pdf.drawString(0.5 * inch, page_height - 1.1 * inch, f"Person: {person_name}")
         y_offset = 1.4
     else:
         y_offset = 1.1
-    
+
     # Create data for the medication grid
     data = []
-    
+
     # Add header row with date columns
     header_row = ["Medication", "Dosage", "Max/Day"]
     for date_obj in dates:
         header_row.append(date_obj.strftime("%m/%d"))
     header_row.append("Notes")
     data.append(header_row)
-    
+
     # Add medication rows
     for medication in medications:
-        row = [
-            medication.name,
-            medication.dosage,
-            str(medication.max_doses_per_day)
-        ]
-        
+        row = [medication.name, medication.dosage, str(medication.max_doses_per_day)]
+
         # Add cells with time entry blanks for each date
         # Number of blanks matches max_doses_per_day
         for _ in dates:
@@ -182,58 +190,65 @@ def create_medication_tracking_pdf(buffer, medications, dates, person_name, curr
             if medication.max_doses_per_day > 4:
                 time_blanks += "\n" + "_____" * (medication.max_doses_per_day - 4)
             row.append(time_blanks)
-        
+
         # Add an empty notes cell
         row.append("")
-        
+
         data.append(row)
-    
+
     # Create the table
-    col_widths = [2*inch, 1.5*inch, 0.7*inch] + [1.5*inch] * len(dates) + [1.5*inch]
+    col_widths = (
+        [2 * inch, 1.5 * inch, 0.7 * inch] + [1.5 * inch] * len(dates) + [1.5 * inch]
+    )
     table = Table(data, colWidths=col_widths)
-    
+
     # Style the table
-    style = TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
-        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 10),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.white),
-        ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
-        ('ALIGN', (0, 1), (2, -1), 'LEFT'),
-        ('ALIGN', (3, 1), (-2, -1), 'CENTER'),
-        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 1), (-1, -1), 9),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('ROWHEIGHT', (0, 1), (-1, -1), 0.6*inch),
-    ])
-    
+    style = TableStyle(
+        [
+            ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.black),
+            ("ALIGN", (0, 0), (-1, 0), "CENTER"),
+            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("FONTSIZE", (0, 0), (-1, 0), 10),
+            ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
+            ("BACKGROUND", (0, 1), (-1, -1), colors.white),
+            ("TEXTCOLOR", (0, 1), (-1, -1), colors.black),
+            ("ALIGN", (0, 1), (2, -1), "LEFT"),
+            ("ALIGN", (3, 1), (-2, -1), "CENTER"),
+            ("FONTNAME", (0, 1), (-1, -1), "Helvetica"),
+            ("FONTSIZE", (0, 1), (-1, -1), 9),
+            ("GRID", (0, 0), (-1, -1), 0.5, colors.black),
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("ROWHEIGHT", (0, 1), (-1, -1), 0.6 * inch),
+        ]
+    )
+
     table.setStyle(style)
-    
+
     # Draw the table
     table_width = sum(col_widths)
     table_height = len(data) * 0.4 * inch + 0.5 * inch  # Approximate height
     table_x = (page_width - table_width) / 2
-    table_y = page_height - y_offset*inch - table_height
-    
+    table_y = page_height - y_offset * inch - table_height
+
     table.wrapOn(pdf, page_width, page_height)
     table.drawOn(pdf, table_x, table_y)
-    
+
     # Add instructions at the bottom
     pdf.setFont("Helvetica", 9)
-    instructions = "Instructions: Record the time when each dose is taken in the blank spaces provided."
-    pdf.drawString(0.5*inch, 0.5*inch, instructions)
-    
+    instructions = (
+        "Instructions: Record the time when each dose is taken "
+        "in the blank spaces provided."
+    )
+    pdf.drawString(0.5 * inch, 0.5 * inch, instructions)
+
     # Add generation timestamp
     timestamp = datetime.now(current_tz).strftime("%Y-%m-%d %H:%M:%S")
-    pdf.drawRightString(page_width - 0.5*inch, 0.5*inch, f"Generated: {timestamp}")
-    
+    pdf.drawRightString(page_width - 0.5 * inch, 0.5 * inch, f"Generated: {timestamp}")
+
     # Add page info
     pdf.setFont("Helvetica", 8)
-    pdf.drawCentredString(page_width/2, 0.25*inch, "Page 1 of 1")
-    
+    pdf.drawCentredString(page_width / 2, 0.25 * inch, "Page 1 of 1")
+
     # Finalize PDF
     pdf.save()
