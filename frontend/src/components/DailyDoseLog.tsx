@@ -1,10 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { doseApi } from '../services/api';
 
+// Optional import to allow tests to run without react-router-dom
+let useParams: () => { personId?: string } = () => ({ personId: undefined });
+try {
+  const router = require('react-router-dom');
+  if (router && router.useParams) {
+    useParams = router.useParams;
+  }
+} catch (error) {
+  // Silently fail if react-router-dom is not available (in tests)
+  console.log('React Router not available, using mock useParams');
+}
+
 interface DailyDoseLogProps {
   selectedDate: Date;
   isOpen: boolean;
   onClose: () => void;
+  personId?: string; // Optional prop for tests
 }
 
 interface DailySummary {
@@ -18,11 +31,16 @@ interface DailySummary {
   }>;
 }
 
-const DailyDoseLog: React.FC<DailyDoseLogProps> = ({ selectedDate, isOpen, onClose }) => {
+const DailyDoseLog: React.FC<DailyDoseLogProps> = ({ selectedDate, isOpen, onClose, personId: propPersonId }) => {
   const [summary, setSummary] = useState<DailySummary | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  
+  // Get the current person ID from the URL if available, or from props
+  const { personId: urlPersonId } = useParams<{ personId?: string }>();
+  const personId = propPersonId || urlPersonId;
 
   const loadDailySummary = async () => {
     try {
@@ -145,6 +163,42 @@ const DailyDoseLog: React.FC<DailyDoseLogProps> = ({ selectedDate, isOpen, onClo
       setError('Failed to copy to clipboard. Please try again.');
     }
   };
+  
+  const handlePrintTracking = async () => {
+    try {
+      setIsGeneratingPDF(true);
+      setError(null);
+      
+      // Format date for the API call - YYYY-MM-DD format
+      const year = selectedDate.getFullYear();
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const day = String(selectedDate.getDate()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${day}`;
+      
+      // Get timezone offset in minutes from user's browser
+      const timezoneOffset = new Date().getTimezoneOffset();
+      
+      // Prepare options for the PDF generation
+      const options = {
+        timezoneOffset,
+        days: 1 // Default to 1 day
+      };
+      
+      // Add person ID if available
+      if (personId) {
+        options.personId = parseInt(personId, 10);
+      }
+      
+      // Call the API to generate and download the PDF
+      await doseApi.downloadMedicationTrackingPDF(dateStr, options);
+      
+    } catch (err) {
+      console.error('Failed to generate PDF:', err);
+      setError(err instanceof Error ? err.message : 'Failed to generate PDF tracking form');
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -231,6 +285,14 @@ const DailyDoseLog: React.FC<DailyDoseLogProps> = ({ selectedDate, isOpen, onClo
                 }`}
               >
                 {copied ? 'Copied!' : 'Copy to Clipboard'}
+              </button>
+              <button
+                onClick={handlePrintTracking}
+                className={`px-6 py-2 ${isGeneratingPDF ? 'bg-teal-500' : 'bg-teal-600 hover:bg-teal-700'} text-white rounded-md flex items-center justify-center`}
+                title="Generate a printable PDF tracking form"
+                disabled={isGeneratingPDF}
+              >
+                {isGeneratingPDF ? 'Generating PDF...' : 'Print Tracking Form'}
               </button>
               <button
                 onClick={onClose}

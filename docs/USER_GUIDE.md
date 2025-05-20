@@ -10,8 +10,9 @@ Welcome to MediTrack! This guide will help you get started with tracking medicat
 4. [Managing Medications](#managing-medications)
 5. [Tracking Doses](#tracking-doses)
 6. [Viewing History](#viewing-history)
-7. [Tips and Best Practices](#tips-and-best-practices)
-8. [Troubleshooting](#troubleshooting)
+7. [Printable Tracking Forms](#printable-tracking-forms)
+8. [Tips and Best Practices](#tips-and-best-practices)
+9. [Troubleshooting](#troubleshooting)
 
 ## Getting Started
 
@@ -184,11 +185,12 @@ Instructions: Take with food in the morning
 
 ### Daily Summary
 
-While the current interface shows today's doses, you can access historical data through the API:
+You can access historical data through the daily log:
 
-- **Daily Summary**: Shows all medications and doses taken today
-- **Dose History**: View when each dose was taken
-- **Medication History**: Track changes to medication details
+1. Click on a date in the calendar view
+2. The **Daily Medication Log** modal shows all medications and doses taken that day
+3. You can view and copy a formatted summary of all doses
+4. Generate a printable version (see next section)
 
 [Screenshot: Example of daily summary view]
 
@@ -198,6 +200,33 @@ All times are displayed in your local timezone:
 - **Last taken**: Shows exact time of most recent dose
 - **Today's doses**: Only counts doses taken since midnight
 - **History**: Preserves all dose records with timestamps
+
+## Printable Tracking Forms
+
+### Generating Printable Forms
+
+MediTrack allows you to generate printable medication tracking forms in PDF format:
+
+1. Click on a date in the calendar to open the **Daily Medication Log** modal
+2. Click the **Print Tracking Form** button
+3. A PDF file will automatically download to your device
+
+[Screenshot: Daily Log modal with Print Tracking Form button]
+
+### Using Printable Forms
+
+The PDF form includes:
+- **Medication listing**: All medications with dosages
+- **Daily tracking grid**: Space to mark doses as taken
+- **Notes section**: For additional information
+
+This feature is useful for:
+- Traveling when digital access may be limited
+- Creating a backup physical record
+- Sharing information with healthcare providers
+- Setting up a physical reminder system
+
+For more details, see the [Printable Tracking Forms](PRINTABLE_TRACKING_FORMS.md) documentation.
 
 ## Tips and Best Practices
 
@@ -294,7 +323,7 @@ MediTrack is responsive and works on mobile devices:
 A: Yes! MediTrack supports multiple person profiles. Use the person selector in the header to switch between family members or patients. Each person's medications are tracked separately.
 
 **Q: Can I export my medication history?**
-A: Export functionality is available through the API. A user-friendly export feature is planned.
+A: Yes! You can export as plaintext via the "Copy to Clipboard" feature in the Daily Log, or generate a printable PDF form by clicking the "Print Tracking Form" button.
 
 **Q: Is my data backed up?**
 A: In the default configuration, data is stored locally. We recommend regular backups of your database file.

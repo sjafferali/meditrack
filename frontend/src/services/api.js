@@ -173,6 +173,50 @@ const doseApi = {
       throw error;
     }
   },
+  
+  // Download a printable medication tracking PDF
+  downloadMedicationTrackingPDF: async (date, options = {}) => {
+    try {
+      const { timezoneOffset, personId, days = 1 } = options;
+      
+      // Build URL with query parameters
+      let url = `/reports/medications/pdf/${date}`;
+      const params = {};
+      
+      if (timezoneOffset !== null && timezoneOffset !== undefined) {
+        params.timezone_offset = timezoneOffset;
+      }
+      
+      if (personId) {
+        params.person_id = personId;
+      }
+      
+      if (days && days > 1) {
+        params.days = days;
+      }
+      
+      // Use axios with responseType blob to handle binary data
+      const response = await api.get(url, { 
+        params,
+        responseType: 'blob' 
+      });
+      
+      // Create a download link and trigger it
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = `medication_tracking_${date}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+      
+      return true;
+    } catch (error) {
+      throw error;
+    }
+  },
 };
 
 const personApi = {

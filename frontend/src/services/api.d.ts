@@ -56,6 +56,11 @@ export interface DoseApi {
   getDailySummary: () => Promise<DailySummary>;
   getDailySummaryByDate: (date: string, timezoneOffset?: number | null) => Promise<DailySummary>;
   deleteDose: (doseId: number) => Promise<boolean>;
+  downloadMedicationTrackingPDF: (date: string, options?: {
+    timezoneOffset?: number | null;
+    personId?: number;
+    days?: number;
+  }) => Promise<boolean>;
 }
 
 export interface PersonApi {
