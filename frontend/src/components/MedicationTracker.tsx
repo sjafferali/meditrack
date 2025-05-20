@@ -43,7 +43,7 @@ const MedicationTracker = () => {
     try {
       setLoading(true);
       setError(null);
-      const dateStr = selectedDate.toISOString().split('T')[0];
+      const dateStr = formatDateForInput(selectedDate); // Use local timezone date string
       const timezoneOffset = new Date().getTimezoneOffset();
       const data = await medicationApi.getAll({ 
         date: dateStr,
@@ -137,7 +137,7 @@ const MedicationTracker = () => {
       
       if (time) {
         // If time is provided, use the date-specific API
-        const dateStr = selectedDate.toISOString().split('T')[0];
+        const dateStr = formatDateForInput(selectedDate); // Use local timezone date string
         const timezoneOffset = isToday(selectedDate) ? new Date().getTimezoneOffset() : undefined;
         await doseApi.recordDoseForDate(medicationId, dateStr, time, timezoneOffset);
       } else if (isPastDate(selectedDate) && !isToday(selectedDate)) {
@@ -256,7 +256,10 @@ const MedicationTracker = () => {
   };
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSelectedDate(new Date(e.target.value + 'T00:00:00'));
+    // Create a date in local timezone based on the input value
+    const [year, month, day] = e.target.value.split('-').map(Number);
+    const newDate = new Date(year, month - 1, day);
+    setSelectedDate(newDate);
   };
 
   const navigateDate = (direction: 'prev' | 'next') => {
@@ -285,6 +288,14 @@ const MedicationTracker = () => {
     const todayStr = today.toLocaleDateString();
     const compareDateStr = date.toLocaleDateString();
     return new Date(compareDateStr) > new Date(todayStr);
+  };
+
+  // Format a date in YYYY-MM-DD format for the date input in local timezone
+  const formatDateForInput = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   const formatDateTime = (dateString: string) => {
@@ -372,7 +383,7 @@ const MedicationTracker = () => {
           <div className="flex items-center gap-4">
             <input
               type="date"
-              value={selectedDate.toISOString().split('T')[0]}
+              value={formatDateForInput(selectedDate)}
               onChange={handleDateChange}
               className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
