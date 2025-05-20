@@ -39,7 +39,7 @@ const DailyDoseLog: React.FC<DailyDoseLogProps> = ({ selectedDate, isOpen, onClo
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   
   // Get the current person ID from the URL if available, or from props
-  const { personId: urlPersonId } = useParams<{ personId?: string }>();
+  const { personId: urlPersonId } = useParams();
   const personId = propPersonId || urlPersonId;
 
   const loadDailySummary = async () => {
@@ -179,7 +179,11 @@ const DailyDoseLog: React.FC<DailyDoseLogProps> = ({ selectedDate, isOpen, onClo
       const timezoneOffset = new Date().getTimezoneOffset();
       
       // Prepare options for the PDF generation
-      const options = {
+      const options: {
+        timezoneOffset: number;
+        days: number;
+        personId?: number;
+      } = {
         timezoneOffset,
         days: 1 // Default to 1 day
       };
