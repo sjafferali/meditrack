@@ -95,14 +95,14 @@ if static_path.exists():
             StaticFiles(directory=str(static_assets_path)),
             name="static_assets",
         )
-    
+
     # Handle JS and CSS files directly
     js_path = static_path / "js"
     css_path = static_path / "css"
-    
+
     if js_path.exists():
         app.mount("/js", StaticFiles(directory=str(js_path)), name="js_files")
-    
+
     if css_path.exists():
         app.mount("/css", StaticFiles(directory=str(css_path)), name="css_files")
 
