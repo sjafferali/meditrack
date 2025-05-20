@@ -111,7 +111,7 @@ def test_generate_medication_pdf_with_multiple_days(client, sample_medication):
     pdf = PdfReader(pdf_content)
     page_text = pdf.pages[0].extract_text()
 
-    # For multiple days, we simply check that we still get a valid PDF with the medication
+    # For multiple days, check that we get a valid PDF with the medication
     assert "Test Medication" in page_text
     assert "Date:" in page_text
 

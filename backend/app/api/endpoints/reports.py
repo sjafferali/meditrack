@@ -4,11 +4,9 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from fastapi.responses import StreamingResponse
-from reportlab.lib import colors
 from reportlab.lib.pagesizes import landscape, letter
 from reportlab.lib.units import inch
 from reportlab.pdfgen import canvas
-from reportlab.platypus import Table, TableStyle
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.database import get_db
@@ -158,54 +156,54 @@ def create_medication_tracking_pdf(
     date_text = "Date: "
     date_text_width = pdf.stringWidth(date_text, "Helvetica", 12)
     pdf.drawString(page_width - 3 * inch, page_height - 0.5 * inch, date_text)
-    
+
     # Add a blank line for the date
     pdf.setLineWidth(0.5)
     pdf.line(
-        page_width - 3 * inch + date_text_width, 
-        page_height - 0.5 * inch - 2, 
-        page_width - 0.5 * inch, 
-        page_height - 0.5 * inch - 2
+        page_width - 3 * inch + date_text_width,
+        page_height - 0.5 * inch - 2,
+        page_width - 0.5 * inch,
+        page_height - 0.5 * inch - 2,
     )
 
     y_position = page_height - 1.0 * inch
-    
+
     # Create each medication section
     for medication in medications:
         # Medication name and dosage
         pdf.setFont("Helvetica-Bold", 12)
         pdf.drawString(0.5 * inch, y_position, f"{medication.name} {medication.dosage}")
-        
+
         # Move down
         y_position -= 0.3 * inch
-        
+
         # Add usage instructions in italics
         # In a real implementation, these would come from the medication database
-        # Here we're adding sample instructions based on the medication name for demonstration
+        # Here we're adding sample instructions based on medication name
         pdf.setFont("Helvetica-Oblique", 10)
         instructions = get_medication_instructions(medication.name)
         pdf.drawString(0.5 * inch, y_position, instructions)
-        
+
         # Move down
         y_position -= 0.4 * inch
-        
+
         # Create time slots
         max_slots = min(medication.max_doses_per_day, 4)  # Limit to 4 slots per line
-        
+
         # Draw the time slots
         pdf.setFont("Helvetica", 10)
         line_position = y_position
-        
+
         for i in range(1, max_slots + 1):
             # Time label
             pdf.drawString(0.5 * inch, line_position, f"{i}:")
-            
+
             # Blank line for time
             pdf.line(0.7 * inch, line_position - 2, 1.7 * inch, line_position - 2)
-            
+
             # AM/PM indicator
             pdf.drawString(1.8 * inch, line_position, "(AM/PM)")
-            
+
             # Move to next position horizontally (2.5 inches per slot)
             if i % 2 == 0 or i == max_slots:
                 # Move to next line after every 2 slots or if at the end
@@ -215,10 +213,10 @@ def create_medication_tracking_pdf(
                 pdf.drawString(3.5 * inch, line_position, f"{i+1}:")
                 pdf.line(3.7 * inch, line_position - 2, 4.7 * inch, line_position - 2)
                 pdf.drawString(4.8 * inch, line_position, "(AM/PM)")
-        
+
         # Add space for the next medication
         y_position = line_position - 0.4 * inch
-    
+
     # Add instructions at the bottom
     pdf.setFont("Helvetica", 9)
     instructions = (
@@ -244,32 +242,37 @@ def get_medication_instructions(medication_name):
     Get instructions for a medication based on name.
     This is a helper function that provides sample instructions.
     In a real implementation, these would come from the database.
-    
+
     Args:
         medication_name: Name of the medication
-    
+
     Returns:
         String with usage instructions
     """
     # Map of sample instructions based on common medication names
     # This would typically come from the database in a real implementation
     instructions_map = {
-        "Pred Acetate": "Apply 1 drop to right eye only. Steroid for inflammation. Stop if pain or squinting. (Pink cap)",
+        "Pred Acetate": "Apply 1 drop to right eye only. Steroid for inflammation. "
+        "Stop if pain or squinting. (Pink cap)",
         "Ofloxacin": "Antibiotic to prevent infection. (Beige cap)",
         "Dorzolamide": "Reduces eye pressure. (Orange cap)",
-        "Gabapentin": "Give 1 tablet every 8-24 hours for pain and sedation. (Pill bottle)",
-        "I-Drop": "Apply a small dot to the left eye 3x daily for lubrication. Apply before bedtime. (White bottle)",
-        "Tacrolimus": "Tear stimulant for dry eye. Long-term use. (Bottle in pill bottle)",
+        "Gabapentin": "Give 1 tablet every 8-24 hours for pain and sedation. "
+        "(Pill bottle)",
+        "I-Drop": "Apply a small dot to the left eye 3x daily for lubrication. "
+        "Apply before bedtime. (White bottle)",
+        "Tacrolimus": "Tear stimulant for dry eye. Long-term use. "
+        "(Bottle in pill bottle)",
         "Diclofenac": "NSAID for pain/inflammation. Stop if squinting. (Grey cap)",
         "Clavacillin": "Antibiotic. Give with food. (Single use packets)",
-        "Prednisone": "Steroid for inflammation. Give with food. May cause upset stomach or bloody stools. (Pill bottle)",
+        "Prednisone": "Steroid for inflammation. Give with food. "
+        "May cause upset stomach or bloody stools. (Pill bottle)",
         "Artificial Tears": "Lubricates eyes. Use 1-2 times daily. (OTC)",
-        "Trazodone": "Give 1/2 tab twice a day with food to relieve anxiety. (Tablet)"
+        "Trazodone": "Give 1/2 tab twice a day with food to relieve anxiety. (Tablet)",
     }
-    
+
     # Return instructions if found, otherwise a generic message
     for key, value in instructions_map.items():
         if key.lower() in medication_name.lower():
             return value
-    
+
     return "Follow prescription instructions as directed."
