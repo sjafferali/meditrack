@@ -170,8 +170,10 @@ describe('DailyDoseLog Component', () => {
     
     await waitFor(() => {
       expect(screen.getByText('No data found for this date.')).toBeInTheDocument();
-      expect(screen.getByText('Reload Data')).toBeInTheDocument();
     });
+    
+    // Check for Reload Data button
+    expect(screen.getByText('Reload Data')).toBeInTheDocument();
   });
   
   test('uses selectedDate prop for formatting the header correctly', async () => {
