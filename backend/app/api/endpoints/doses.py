@@ -238,6 +238,9 @@ def get_daily_summary(
 )
 def get_daily_summary_by_date(
     date: date = Path(..., description="The date to get summary for (YYYY-MM-DD)"),
+    timezone_offset: Optional[int] = Query(
+        None, description="Timezone offset in minutes"
+    ),
     db: Session = Depends(get_db),
 ):
     """
@@ -250,13 +253,39 @@ def get_daily_summary_by_date(
       - Number of doses taken on that date
       - Maximum doses allowed
       - Timestamps of all doses taken on that date
+
+    Optional timezone_offset parameter ensures doses are correctly filtered
+    for the user's timezone.
     """
-    start_of_day = datetime.combine(date, datetime.min.time()).replace(
-        tzinfo=timezone.utc
-    )
-    end_of_day = datetime.combine(date, datetime.max.time()).replace(
-        tzinfo=timezone.utc
-    )
+    # Handle timezone for the date range
+    if timezone_offset is not None:
+        # Convert timezone offset from minutes to timedelta
+        tz_offset = timedelta(minutes=-timezone_offset)
+        current_tz = timezone(tz_offset)
+        start_of_day = datetime.combine(date, datetime.min.time()).replace(
+            tzinfo=current_tz
+        )
+        end_of_day = datetime.combine(date, datetime.max.time()).replace(
+            tzinfo=current_tz
+        )
+    elif settings.TIMEZONE_OFFSET != 0:
+        # Use environment variable timezone if set
+        tz_offset = timedelta(minutes=-settings.TIMEZONE_OFFSET)
+        current_tz = timezone(tz_offset)
+        start_of_day = datetime.combine(date, datetime.min.time()).replace(
+            tzinfo=current_tz
+        )
+        end_of_day = datetime.combine(date, datetime.max.time()).replace(
+            tzinfo=current_tz
+        )
+    else:
+        # Default to UTC if no timezone information provided
+        start_of_day = datetime.combine(date, datetime.min.time()).replace(
+            tzinfo=timezone.utc
+        )
+        end_of_day = datetime.combine(date, datetime.max.time()).replace(
+            tzinfo=timezone.utc
+        )
 
     medications = db.query(Medication).all()
     summary: dict = {"date": date.isoformat(), "medications": []}

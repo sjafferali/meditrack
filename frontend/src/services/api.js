@@ -147,9 +147,16 @@ const doseApi = {
   },
 
   // Get daily summary for a specific date
-  getDailySummaryByDate: async (date) => {
+  getDailySummaryByDate: async (date, timezoneOffset = null) => {
     try {
-      const response = await api.get(`/doses/daily-summary/${date}`);
+      let url = `/doses/daily-summary/${date}`;
+      const params = {};
+      
+      if (timezoneOffset !== null) {
+        params.timezone_offset = timezoneOffset;
+      }
+      
+      const response = await api.get(url, { params });
       return response.data;
     } catch (error) {
       throw error;

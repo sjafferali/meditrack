@@ -29,7 +29,9 @@ const DailyDoseLog: React.FC<DailyDoseLogProps> = ({ selectedDate, isOpen, onClo
       setLoading(true);
       setError(null);
       const dateStr = selectedDate.toISOString().split('T')[0];
-      const data = await doseApi.getDailySummaryByDate(dateStr);
+      // Get timezone offset in minutes from user's browser
+      const timezoneOffset = new Date().getTimezoneOffset();
+      const data = await doseApi.getDailySummaryByDate(dateStr, timezoneOffset);
       setSummary(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load daily summary');
