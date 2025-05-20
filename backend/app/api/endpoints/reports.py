@@ -152,13 +152,13 @@ def create_medication_tracking_pdf(
     content_width = page_width - 2 * margin
 
     # Track current page number
-    current_page = 1
+    current_page = 0
     medications_processed = 0
 
     # Start a new page
     def start_new_page():
         nonlocal y_position, current_page
-        if current_page > 1:
+        if current_page > 0:  # For any page after initialization
             pdf.showPage()
         current_page += 1
 
@@ -183,9 +183,11 @@ def create_medication_tracking_pdf(
 
         y_position = page_height - 1.0 * inch
 
-    # Initialize position
-    start_new_page()
-    current_page = 1  # Reset page counter since start_new_page increments it
+    # Initialize position - first page (page 0)
+    # Set current_page to 0 before calling start_new_page to ensure
+    # we don't get duplication on the first page
+    current_page = 0
+    start_new_page()  # This will increment current_page to 1
 
     # Create each medication section
     for medication in medications:
