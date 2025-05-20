@@ -280,7 +280,7 @@ const PersonManager: React.FC<PersonManagerProps> = ({
                       <div className="flex items-center gap-2">
                         <h4 className="text-lg font-medium">{person.name}</h4>
                         {person.is_default && (
-                          <span className="ml-3 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full border border-green-200">
+                          <span className="ml-4 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full border border-green-200">
                             Default
                           </span>
                         )}
