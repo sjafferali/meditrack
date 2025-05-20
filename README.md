@@ -5,7 +5,7 @@
 [![codecov](https://codecov.io/gh/sjafferali/meditrack/branch/main/graph/badge.svg)](https://codecov.io/gh/sjafferali/meditrack)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-MediTrack is a modern medication tracking application that helps users manage their daily medication schedules and maintain adherence to their prescribed regimens. Built with FastAPI and React, it provides a clean, intuitive interface for medication management with robust API support.
+MediTrack is a modern medication tracking application that helps users manage their daily medication schedules and maintain adherence to their prescribed regimens. Built with FastAPI and React, it provides a clean, intuitive interface for medication management with robust API support. Done
 
 ## 🌟 Features
 
