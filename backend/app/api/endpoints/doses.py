@@ -290,7 +290,9 @@ def get_daily_summary_by_date(
 
     # Log timezone information for debugging
     print(f"Summary for date: {date.isoformat()}, timezone_offset: {timezone_offset}")
-    print(f"Start of day: {start_of_day.isoformat()}, End of day: {end_of_day.isoformat()}")
+    print(
+        f"Start of day: {start_of_day.isoformat()}, End of day: {end_of_day.isoformat()}"
+    )
 
     medications = db.query(Medication).all()
     summary: dict = {"date": date.isoformat(), "medications": []}
@@ -307,7 +309,7 @@ def get_daily_summary_by_date(
             )
             .all()
         )
-        
+
         if len(doses_on_date) > 0:
             print(f"Found {len(doses_on_date)} doses for medication {medication.name}")
             for dose in doses_on_date:
@@ -326,7 +328,7 @@ def get_daily_summary_by_date(
     print(f"Returning summary with {len(summary['medications'])} medications")
     total_doses = sum(med["doses_taken"] for med in summary["medications"])
     print(f"Total doses in summary: {total_doses}")
-    
+
     return summary
 
 

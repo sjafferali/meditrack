@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     # Environment settings (with defaults)
     ENVIRONMENT: str = "production"
     DEBUG: bool = False
+    TESTING: bool = False
 
     # CORS settings (default to same-origin)
     CORS_ORIGINS: list[str] = ["*"]  # In production, served from same origin

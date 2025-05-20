@@ -44,7 +44,8 @@ cd ..
 # Backend Tests with Coverage
 print_header "Backend Tests with Coverage"
 cd backend
-if python -m pytest -v --cov=app --cov-report=xml --cov-report=term-missing; then
+chmod +x run_tests.sh
+if ./run_tests.sh; then
     print_success "Backend tests passed"
 else
     print_error "Backend tests failed"
