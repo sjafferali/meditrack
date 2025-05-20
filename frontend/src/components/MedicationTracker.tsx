@@ -368,7 +368,7 @@ const MedicationTracker = () => {
       </div>
 
       {/* Date Navigation */}
-      <div className="bg-white shadow rounded-lg p-4 mb-6">
+      <div id="date-navigation" className="bg-white shadow rounded-lg p-4 mb-6 relative">
         <div className="flex items-center justify-between">
           <button
             onClick={() => navigateDate('prev')}
@@ -809,13 +809,16 @@ const MedicationTracker = () => {
         </>
       )}
       
-      {/* Person Manager Modal */}
-      <PersonManager
-        isOpen={showPersonManager}
-        onClose={() => setShowPersonManager(false)}
-        currentPersonId={currentPersonId}
-        onPersonChange={setCurrentPersonId}
-      />
+      {/* Person Manager Modal - Positioned under date section */}
+      <div className="relative">
+        <PersonManager
+          isOpen={showPersonManager}
+          onClose={() => setShowPersonManager(false)}
+          currentPersonId={currentPersonId}
+          onPersonChange={setCurrentPersonId}
+          anchorToDateSection={true}
+        />
+      </div>
     </div>
   );
 };

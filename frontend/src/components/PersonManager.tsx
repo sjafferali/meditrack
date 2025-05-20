@@ -15,13 +15,15 @@ interface PersonManagerProps {
   onClose: () => void;
   currentPersonId: number | null;
   onPersonChange: (personId: number) => void;
+  anchorToDateSection?: boolean;
 }
 
 const PersonManager: React.FC<PersonManagerProps> = ({
   isOpen,
   onClose,
   currentPersonId,
-  onPersonChange
+  onPersonChange,
+  anchorToDateSection = false
 }) => {
   const [persons, setPersons] = useState<Person[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,12 +31,29 @@ const PersonManager: React.FC<PersonManagerProps> = ({
   const [isAddingPerson, setIsAddingPerson] = useState(false);
   const [editingPerson, setEditingPerson] = useState<Person | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+  const [modalPosition, setModalPosition] = useState({ top: 0 });
   
   const [formData, setFormData] = useState({
     name: '',
     date_of_birth: '',
     notes: ''
   });
+
+  // Position the modal based on date section when opened
+  useEffect(() => {
+    if (isOpen && anchorToDateSection) {
+      const dateSection = document.getElementById('date-navigation');
+      if (dateSection) {
+        const dateSectionRect = dateSection.getBoundingClientRect();
+        // Add 8px gap between date section and modal
+        const top = dateSectionRect.bottom + window.scrollY + 8;
+        setModalPosition({ top });
+      } else {
+        // Fallback position if date section not found
+        setModalPosition({ top: 220 });
+      }
+    }
+  }, [isOpen, anchorToDateSection]);
 
   useEffect(() => {
     if (isOpen) {
@@ -144,11 +163,25 @@ const PersonManager: React.FC<PersonManagerProps> = ({
 
   if (!isOpen) return null;
 
+  // Determine the position class based on the calculated position
+  let modalPositionClass = "fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2";
+  
+  if (anchorToDateSection) {
+    if (modalPosition.top > 0) {
+      modalPositionClass = `fixed left-1/2 transform -translate-x-1/2`;
+    } else {
+      // Default fallback position
+      modalPositionClass = "fixed top-[8rem] left-1/2 transform -translate-x-1/2";
+    }
+  }
+
   return (
     <>
       <div className="fixed inset-0 bg-gray-500 bg-opacity-75 z-[9999]" onClick={onClose} data-testid="modal-overlay" />
       
-      <div className="fixed top-[160px] left-1/2 transform -translate-x-1/2 bg-white rounded-lg w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col shadow-xl z-[10000]">
+      <div 
+        className={`${modalPositionClass} bg-white rounded-lg w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col shadow-xl z-[10000]`}
+        style={anchorToDateSection && modalPosition.top > 0 ? { top: `${modalPosition.top}px` } : {}}>
         <div className="px-6 py-4 border-b border-gray-200 bg-blue-50">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-blue-800">Select a Person</h2>
