@@ -5,10 +5,11 @@ This script creates a test PDF with a customizable number of medications
 to verify that multi-page support works correctly.
 """
 
-import sys
 import os
+import sys
 from datetime import date, datetime, timedelta, timezone
 from io import BytesIO
+
 from fastapi import FastAPI
 
 # Add the backend directory to the Python path
@@ -18,9 +19,10 @@ sys.path.insert(0, backend_dir)
 # Create a FastAPI app for testing
 app = FastAPI()
 
+from app.api.endpoints.reports import create_medication_tracking_pdf
+
 # Import the necessary modules
 from app.models import Medication, Person
-from app.api.endpoints.reports import create_medication_tracking_pdf
 
 
 class MockMedication:
