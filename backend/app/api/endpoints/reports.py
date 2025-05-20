@@ -144,96 +144,81 @@ def create_medication_tracking_pdf(
     pdf = canvas.Canvas(buffer, pagesize=landscape(letter))
 
     # Set title and metadata
-    title = "Medication Tracking Form"
+    title = f"{person_name} Medication Log" if person_name else "Medication Log"
     pdf.setTitle(title)
     pdf.setAuthor("MediTrack")
     pdf.setSubject("Medication Tracking")
 
     # Add header
     pdf.setFont("Helvetica-Bold", 16)
-    pdf.drawCentredString(page_width / 2, page_height - 0.5 * inch, title)
+    pdf.drawString(0.5 * inch, page_height - 0.5 * inch, title)
 
-    # Add date range and person info
+    # Add date field
     pdf.setFont("Helvetica", 12)
-    date_range_text = f"Date: {dates[0].strftime('%B %d, %Y')}"
-    if len(dates) > 1:
-        start_date = dates[0].strftime("%B %d, %Y")
-        end_date = dates[-1].strftime("%B %d, %Y")
-        date_range_text = f"Dates: {start_date} to {end_date}"
+    date_text = "Date: "
+    date_text_width = pdf.stringWidth(date_text, "Helvetica", 12)
+    pdf.drawString(page_width - 3 * inch, page_height - 0.5 * inch, date_text)
+    
+    # Add a blank line for the date
+    pdf.setLineWidth(0.5)
+    pdf.line(
+        page_width - 3 * inch + date_text_width, 
+        page_height - 0.5 * inch - 2, 
+        page_width - 0.5 * inch, 
+        page_height - 0.5 * inch - 2
+    )
 
-    pdf.drawString(0.5 * inch, page_height - 0.8 * inch, date_range_text)
-
-    if person_name:
-        pdf.drawString(0.5 * inch, page_height - 1.1 * inch, f"Person: {person_name}")
-        y_offset = 1.4
-    else:
-        y_offset = 1.1
-
-    # Create data for the medication grid
-    data = []
-
-    # Add header row with date columns
-    header_row = ["Medication", "Dosage", "Max/Day"]
-    for date_obj in dates:
-        header_row.append(date_obj.strftime("%m/%d"))
-    header_row.append("Notes")
-    data.append(header_row)
-
-    # Add medication rows
+    y_position = page_height - 1.0 * inch
+    
+    # Create each medication section
     for medication in medications:
-        row = [medication.name, medication.dosage, str(medication.max_doses_per_day)]
-
-        # Add cells with time entry blanks for each date
-        # Number of blanks matches max_doses_per_day
-        for _ in dates:
-            time_blanks = "_____" * min(medication.max_doses_per_day, 4)
-            if medication.max_doses_per_day > 4:
-                time_blanks += "\n" + "_____" * (medication.max_doses_per_day - 4)
-            row.append(time_blanks)
-
-        # Add an empty notes cell
-        row.append("")
-
-        data.append(row)
-
-    # Create the table
-    col_widths = (
-        [2 * inch, 1.5 * inch, 0.7 * inch] + [1.5 * inch] * len(dates) + [1.5 * inch]
-    )
-    table = Table(data, colWidths=col_widths)
-
-    # Style the table
-    style = TableStyle(
-        [
-            ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
-            ("TEXTCOLOR", (0, 0), (-1, 0), colors.black),
-            ("ALIGN", (0, 0), (-1, 0), "CENTER"),
-            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-            ("FONTSIZE", (0, 0), (-1, 0), 10),
-            ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
-            ("BACKGROUND", (0, 1), (-1, -1), colors.white),
-            ("TEXTCOLOR", (0, 1), (-1, -1), colors.black),
-            ("ALIGN", (0, 1), (2, -1), "LEFT"),
-            ("ALIGN", (3, 1), (-2, -1), "CENTER"),
-            ("FONTNAME", (0, 1), (-1, -1), "Helvetica"),
-            ("FONTSIZE", (0, 1), (-1, -1), 9),
-            ("GRID", (0, 0), (-1, -1), 0.5, colors.black),
-            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-            ("ROWHEIGHT", (0, 1), (-1, -1), 0.6 * inch),
-        ]
-    )
-
-    table.setStyle(style)
-
-    # Draw the table
-    table_width = sum(col_widths)
-    table_height = len(data) * 0.4 * inch + 0.5 * inch  # Approximate height
-    table_x = (page_width - table_width) / 2
-    table_y = page_height - y_offset * inch - table_height
-
-    table.wrapOn(pdf, page_width, page_height)
-    table.drawOn(pdf, table_x, table_y)
-
+        # Medication name and dosage
+        pdf.setFont("Helvetica-Bold", 12)
+        pdf.drawString(0.5 * inch, y_position, f"{medication.name} {medication.dosage}")
+        
+        # Move down
+        y_position -= 0.3 * inch
+        
+        # Add usage instructions in italics
+        # In a real implementation, these would come from the medication database
+        # Here we're adding sample instructions based on the medication name for demonstration
+        pdf.setFont("Helvetica-Oblique", 10)
+        instructions = get_medication_instructions(medication.name)
+        pdf.drawString(0.5 * inch, y_position, instructions)
+        
+        # Move down
+        y_position -= 0.4 * inch
+        
+        # Create time slots
+        max_slots = min(medication.max_doses_per_day, 4)  # Limit to 4 slots per line
+        
+        # Draw the time slots
+        pdf.setFont("Helvetica", 10)
+        line_position = y_position
+        
+        for i in range(1, max_slots + 1):
+            # Time label
+            pdf.drawString(0.5 * inch, line_position, f"{i}:")
+            
+            # Blank line for time
+            pdf.line(0.7 * inch, line_position - 2, 1.7 * inch, line_position - 2)
+            
+            # AM/PM indicator
+            pdf.drawString(1.8 * inch, line_position, "(AM/PM)")
+            
+            # Move to next position horizontally (2.5 inches per slot)
+            if i % 2 == 0 or i == max_slots:
+                # Move to next line after every 2 slots or if at the end
+                line_position -= 0.4 * inch
+            else:
+                # For odd-numbered slots, add the even-numbered one to the right
+                pdf.drawString(3.5 * inch, line_position, f"{i+1}:")
+                pdf.line(3.7 * inch, line_position - 2, 4.7 * inch, line_position - 2)
+                pdf.drawString(4.8 * inch, line_position, "(AM/PM)")
+        
+        # Add space for the next medication
+        y_position = line_position - 0.4 * inch
+    
     # Add instructions at the bottom
     pdf.setFont("Helvetica", 9)
     instructions = (
@@ -252,3 +237,39 @@ def create_medication_tracking_pdf(
 
     # Finalize PDF
     pdf.save()
+
+
+def get_medication_instructions(medication_name):
+    """
+    Get instructions for a medication based on name.
+    This is a helper function that provides sample instructions.
+    In a real implementation, these would come from the database.
+    
+    Args:
+        medication_name: Name of the medication
+    
+    Returns:
+        String with usage instructions
+    """
+    # Map of sample instructions based on common medication names
+    # This would typically come from the database in a real implementation
+    instructions_map = {
+        "Pred Acetate": "Apply 1 drop to right eye only. Steroid for inflammation. Stop if pain or squinting. (Pink cap)",
+        "Ofloxacin": "Antibiotic to prevent infection. (Beige cap)",
+        "Dorzolamide": "Reduces eye pressure. (Orange cap)",
+        "Gabapentin": "Give 1 tablet every 8-24 hours for pain and sedation. (Pill bottle)",
+        "I-Drop": "Apply a small dot to the left eye 3x daily for lubrication. Apply before bedtime. (White bottle)",
+        "Tacrolimus": "Tear stimulant for dry eye. Long-term use. (Bottle in pill bottle)",
+        "Diclofenac": "NSAID for pain/inflammation. Stop if squinting. (Grey cap)",
+        "Clavacillin": "Antibiotic. Give with food. (Single use packets)",
+        "Prednisone": "Steroid for inflammation. Give with food. May cause upset stomach or bloody stools. (Pill bottle)",
+        "Artificial Tears": "Lubricates eyes. Use 1-2 times daily. (OTC)",
+        "Trazodone": "Give 1/2 tab twice a day with food to relieve anxiety. (Tablet)"
+    }
+    
+    # Return instructions if found, otherwise a generic message
+    for key, value in instructions_map.items():
+        if key.lower() in medication_name.lower():
+            return value
+    
+    return "Follow prescription instructions as directed."
