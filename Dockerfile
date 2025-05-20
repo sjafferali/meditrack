@@ -26,14 +26,22 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy backend code
 COPY backend/ .
 
-# Copy frontend build into static directory
-COPY --from=frontend-build /app/build ./app/static
+# Create simplified directory structure
+RUN mkdir -p ./app/static/js ./app/static/css ./app/static/assets
 
-# Ensure the static/js directory exists
-RUN mkdir -p ./app/static/static/js
+# Copy frontend build into static directory with restructuring
+COPY --from=frontend-build /app/build/index.html ./app/static/
+COPY --from=frontend-build /app/build/asset-manifest.json ./app/static/
+COPY --from=frontend-build /app/build/static/js/* ./app/static/js/
+COPY --from=frontend-build /app/build/static/css/* ./app/static/css/
 
 # Copy person-initializer.js from frontend to ensure it exists
-COPY frontend/public/static/js/person-initializer.js ./app/static/static/js/
+COPY frontend/public/static/js/person-initializer.js ./app/static/js/
+
+# Update path references in index.html
+RUN sed -i 's|/static/js/|/js/|g' ./app/static/index.html && \
+    sed -i 's|/static/css/|/css/|g' ./app/static/index.html && \
+    sed -i 's|/static/media/|/assets/media/|g' ./app/static/index.html
 
 # Create data directory
 RUN mkdir -p /app/data

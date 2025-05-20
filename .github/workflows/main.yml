@@ -250,14 +250,34 @@ jobs:
         # Clear any existing static files
         rm -rf backend/app/static
         
-        # Create directory structure
-        mkdir -p backend/app/static/static/js
+        # Create simplified directory structure
+        mkdir -p backend/app/static/js
+        mkdir -p backend/app/static/css
+        mkdir -p backend/app/static/assets
         
-        # Copy all built files
-        cp -r frontend/build/* backend/app/static/
+        # Copy index.html and other root files
+        cp frontend/build/index.html backend/app/static/
+        cp frontend/build/asset-manifest.json backend/app/static/
         
-        # Ensure person-initializer.js exists
-        cp frontend/public/static/js/person-initializer.js backend/app/static/static/js/
+        # Copy JS files
+        cp -r frontend/build/static/js/* backend/app/static/js/
+        
+        # Copy CSS files
+        cp -r frontend/build/static/css/* backend/app/static/css/
+        
+        # Copy the person-initializer.js
+        cp frontend/public/static/js/person-initializer.js backend/app/static/js/
+        
+        # Copy any other static assets (if they exist)
+        if [ -d "frontend/build/static/media" ]; then
+          mkdir -p backend/app/static/assets/media
+          cp -r frontend/build/static/media/* backend/app/static/assets/media/
+        fi
+        
+        # Update path references in index.html
+        sed -i 's|/static/js/|/js/|g' backend/app/static/index.html
+        sed -i 's|/static/css/|/css/|g' backend/app/static/index.html
+        sed -i 's|/static/media/|/assets/media/|g' backend/app/static/index.html
         
         # Debug: List files to verify
         echo "Files in backend/app/static:"
