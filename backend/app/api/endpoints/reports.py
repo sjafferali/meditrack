@@ -157,7 +157,7 @@ def create_medication_tracking_pdf(
 
     # Start a new page
     def start_new_page():
-        nonlocal current_page, y_position
+        nonlocal y_position
         if current_page > 1:
             pdf.showPage()
 
