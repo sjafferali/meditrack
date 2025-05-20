@@ -53,8 +53,8 @@ EOF
 
 4. **Build and deploy**
 ```bash
-# Build images
-./build_images.sh
+# Build the single-container image
+docker build -t meditrack:latest .
 
 # Start services using appropriate compose file
 # For SQLite deployment

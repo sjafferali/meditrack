@@ -47,8 +47,8 @@ Access:
 ### Production Mode
 
 ```bash
-# Build production images
-./build_images.sh
+# Build the single-container image
+docker build -t meditrack:latest .
 
 # Start services
 # Option 1: Simple deployment with SQLite

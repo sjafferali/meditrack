@@ -54,32 +54,26 @@ Make sure to handle network errors gracefully and provide user feedback.
 ## Docker Setup Prompt
 
 ```
-I need to dockerize the MediTrack application. The backend and frontend are complete.
+I need to review the Docker setup for the MediTrack application. The backend and frontend are complete.
 
 Please:
-1. Create a Dockerfile for the backend in backend/Dockerfile
-   - Use Python 3.9 slim image
-   - Install dependencies
-   - Copy application code
-   - Expose port 8000
-   - Set proper CMD for production
-2. Create a Dockerfile for the frontend in frontend/Dockerfile
-   - Use Node 16 alpine image
-   - Install dependencies
-   - Build React app
-   - Use nginx to serve static files
-3. Update docker-compose files as needed (docker-compose.simple.yml or docker-compose.postgres.yml)
-4. Add .dockerignore files for both services
-5. Test the complete stack with docker-compose -f docker-compose.simple.yml up
-6. Update the existing docker-compose files for production settings
+1. Review the main Dockerfile at the project root which uses a multi-stage build:
+   - First stage: Node 18 alpine image for frontend build
+   - Second stage: Python 3.9 slim image for backend with frontend static files
+   - Make sure static files are properly copied between stages
+   - Check that the CMD is properly set for production
+2. Review docker-compose files as needed (docker-compose.simple.yml or docker-compose.postgres.yml)
+3. Ensure .dockerignore file exists for improved build efficiency
+4. Test the complete stack with docker-compose -f docker-compose.simple.yml up
+5. Review the docker-compose files for production settings
 
 After each step:
-- Build and test the Docker images
+- Build and test the Docker setup
 - Commit changes with descriptive messages
 - Update TASKS.md to mark completed items
 - Push changes to the repository
 
-Ensure the images are optimized for size and security.
+Ensure the Docker setup is optimized for size and security.
 ```
 
 ## Database Migration Prompt

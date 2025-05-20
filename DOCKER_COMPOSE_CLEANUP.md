@@ -34,18 +34,14 @@ This document summarizes the cleanup of docker-compose file references in the Me
 - Updated the Docker setup prompt to reference the actual docker-compose files
 - Changed instructions from creating docker-compose.prod.yml to updating existing files
 
-### 6. build_images.sh
-- Updated the output messages to reference the actual docker-compose files
-- Removed references to docker-compose.prod.yml and docker-compose.yml
-
-### 7. TASKS.md
+### 6. TASKS.md
 - Updated the containerization task list to reflect the actual docker-compose files created
 
-### 8. docs/ARCHITECTURE.md
+### 7. docs/ARCHITECTURE.md
 - Updated the directory structure to show the actual docker-compose files
 - Removed reference to generic docker-compose.yml
 
-### 9. backend/MIGRATIONS.md
+### 8. backend/MIGRATIONS.md
 - Updated production deployment instructions to use the appropriate docker-compose file
 
 ## Summary of Changes

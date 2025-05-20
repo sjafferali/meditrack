@@ -40,7 +40,7 @@ This plan ensures all tests and linters pass before committing and pushing the n
 - [ ] Update tests if needed
 
 ### 6. Final Verification ✅
-- [ ] Run full CI check script: `./run_ci_checks_simple.sh`
+- [ ] Run full CI check script: `./run_ci_checks.sh`
 - [ ] Ensure all checks pass
 
 ### 7. Commit and Push ✅
@@ -71,7 +71,7 @@ npx tsc --noEmit --project tsconfig.json
 
 # Full CI check
 cd ..
-./run_ci_checks_simple.sh
+./run_ci_checks.sh
 ```
 
 ## Expected Files Changed

@@ -102,17 +102,14 @@ aws ecr get-login-password --region us-east-1 | docker login --username AWS --pa
 3. Build and push images:
 
 ```bash
-# Build images
-docker build -t meditrack-backend ./backend
-docker build -t meditrack-frontend ./frontend
+# Build the single-container image
+docker build -t meditrack:latest .
 
-# Tag images
-docker tag meditrack-backend:latest [your-account-id].dkr.ecr.us-east-1.amazonaws.com/meditrack-backend:latest
-docker tag meditrack-frontend:latest [your-account-id].dkr.ecr.us-east-1.amazonaws.com/meditrack-frontend:latest
+# Tag image
+docker tag meditrack:latest [your-account-id].dkr.ecr.us-east-1.amazonaws.com/meditrack:latest
 
-# Push images
-docker push [your-account-id].dkr.ecr.us-east-1.amazonaws.com/meditrack-backend:latest
-docker push [your-account-id].dkr.ecr.us-east-1.amazonaws.com/meditrack-frontend:latest
+# Push image
+docker push [your-account-id].dkr.ecr.us-east-1.amazonaws.com/meditrack:latest
 ```
 
 4. Create ECS task definition (`task-definition.json`):
@@ -243,32 +240,21 @@ gcloud services enable run.googleapis.com
 # Configure Docker for GCR
 gcloud auth configure-docker
 
-# Build and push backend
-docker build -t gcr.io/YOUR_PROJECT_ID/meditrack-backend ./backend
-docker push gcr.io/YOUR_PROJECT_ID/meditrack-backend
-
-# Build and push frontend
-docker build -t gcr.io/YOUR_PROJECT_ID/meditrack-frontend ./frontend
-docker push gcr.io/YOUR_PROJECT_ID/meditrack-frontend
+# Build the single-container image
+docker build -t gcr.io/YOUR_PROJECT_ID/meditrack .
+docker push gcr.io/YOUR_PROJECT_ID/meditrack
 ```
 
 4. Deploy to Cloud Run:
 
 ```bash
-# Deploy backend
-gcloud run deploy meditrack-backend \
-  --image gcr.io/YOUR_PROJECT_ID/meditrack-backend \
+# Deploy the application
+gcloud run deploy meditrack \
+  --image gcr.io/YOUR_PROJECT_ID/meditrack \
   --platform managed \
   --region us-central1 \
   --allow-unauthenticated \
   --set-env-vars DATABASE_URL=$DATABASE_URL
-
-# Deploy frontend
-gcloud run deploy meditrack-frontend \
-  --image gcr.io/YOUR_PROJECT_ID/meditrack-frontend \
-  --platform managed \
-  --region us-central1 \
-  --allow-unauthenticated
 ```
 
 ### Using Google Kubernetes Engine (GKE)
@@ -313,35 +299,24 @@ az acr create --resource-group meditrack-rg --name meditrackcr --sku Basic
 az acr login --name meditrackcr
 ```
 
-4. Build and push images:
+4. Build and push image:
 
 ```bash
-# Build and push backend
-docker build -t meditrackcr.azurecr.io/meditrack-backend ./backend
-docker push meditrackcr.azurecr.io/meditrack-backend
-
-# Build and push frontend
-docker build -t meditrackcr.azurecr.io/meditrack-frontend ./frontend
-docker push meditrackcr.azurecr.io/meditrack-frontend
+# Build and push the combined image
+docker build -t meditrackcr.azurecr.io/meditrack:latest .
+docker push meditrackcr.azurecr.io/meditrack:latest
 ```
 
-5. Deploy containers:
+5. Deploy container:
 
 ```bash
-# Deploy backend
+# Deploy the application
 az container create \
   --resource-group meditrack-rg \
-  --name meditrack-backend \
-  --image meditrackcr.azurecr.io/meditrack-backend \
+  --name meditrack \
+  --image meditrackcr.azurecr.io/meditrack:latest \
   --ports 8000 \
-  --environment-variables DATABASE_URL=$DATABASE_URL
-
-# Deploy frontend
-az container create \
-  --resource-group meditrack-rg \
-  --name meditrack-frontend \
-  --image meditrackcr.azurecr.io/meditrack-frontend \
-  --ports 3000
+  --environment-variables DATABASE_URL=$DATABASE_URL SECRET_KEY=$SECRET_KEY
 ```
 
 ## Heroku Deployment
@@ -352,36 +327,23 @@ az container create \
 heroku login
 ```
 
-2. Create Heroku apps:
+2. Create Heroku app:
 
 ```bash
-heroku create meditrack-backend
-heroku create meditrack-frontend
+heroku create meditrack
 ```
 
 3. Add Heroku PostgreSQL:
 
 ```bash
-heroku addons:create heroku-postgresql:hobby-dev --app meditrack-backend
+heroku addons:create heroku-postgresql:hobby-dev --app meditrack
 ```
 
-4. Deploy backend:
+4. Deploy application:
 
 ```bash
-cd backend
 git init
-heroku git:remote -a meditrack-backend
-git add .
-git commit -m "Initial commit"
-git push heroku main
-```
-
-5. Deploy frontend:
-
-```bash
-cd ../frontend
-git init
-heroku git:remote -a meditrack-frontend
+heroku git:remote -a meditrack
 git add .
 git commit -m "Initial commit"
 git push heroku main
@@ -438,28 +400,28 @@ docker compose -f docker-compose.postgres.yml up -d
 kubectl create namespace meditrack
 ```
 
-2. Create deployment manifests:
+2. Create deployment manifest:
 
 ```yaml
-# backend-deployment.yaml
+# meditrack-deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: meditrack-backend
+  name: meditrack
   namespace: meditrack
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: meditrack-backend
+      app: meditrack
   template:
     metadata:
       labels:
-        app: meditrack-backend
+        app: meditrack
     spec:
       containers:
-      - name: backend
-        image: your-registry/meditrack-backend:latest
+      - name: meditrack
+        image: your-registry/meditrack:latest
         ports:
         - containerPort: 8000
         env:
@@ -468,57 +430,24 @@ spec:
             secretKeyRef:
               name: meditrack-secrets
               key: database-url
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: meditrack-secrets
+              key: secret-key
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: meditrack-backend-service
+  name: meditrack-service
   namespace: meditrack
 spec:
   selector:
-    app: meditrack-backend
+    app: meditrack
   ports:
     - protocol: TCP
       port: 8000
       targetPort: 8000
-  type: ClusterIP
-```
-
-```yaml
-# frontend-deployment.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: meditrack-frontend
-  namespace: meditrack
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: meditrack-frontend
-  template:
-    metadata:
-      labels:
-        app: meditrack-frontend
-    spec:
-      containers:
-      - name: frontend
-        image: your-registry/meditrack-frontend:latest
-        ports:
-        - containerPort: 3000
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: meditrack-frontend-service
-  namespace: meditrack
-spec:
-  selector:
-    app: meditrack-frontend
-  ports:
-    - protocol: TCP
-      port: 3000
-      targetPort: 3000
   type: ClusterIP
 ```
 
@@ -527,14 +456,14 @@ spec:
 ```bash
 kubectl create secret generic meditrack-secrets \
   --from-literal=database-url=postgresql://user:password@host/db \
+  --from-literal=secret-key=your-secure-secret-key \
   -n meditrack
 ```
 
 4. Deploy:
 
 ```bash
-kubectl apply -f backend-deployment.yaml
-kubectl apply -f frontend-deployment.yaml
+kubectl apply -f meditrack-deployment.yaml
 ```
 
 5. Create ingress:
@@ -553,7 +482,6 @@ spec:
   tls:
   - hosts:
     - meditrack.yourdomain.com
-    - api.meditrack.yourdomain.com
     secretName: meditrack-tls
   rules:
   - host: meditrack.yourdomain.com
@@ -563,20 +491,28 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: meditrack-frontend-service
-            port:
-              number: 3000
-  - host: api.meditrack.yourdomain.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: meditrack-backend-service
+            name: meditrack-service
             port:
               number: 8000
 ```
+
+## GitHub Actions CI/CD
+
+MediTrack uses GitHub Actions for continuous integration and deployment. When code is pushed to the main branch, GitHub Actions will:
+
+1. Run all backend and frontend tests
+2. Perform code linting and type checking
+3. Run security scans and dependency checks
+4. Build a Docker image with both backend and frontend
+5. Push the image to Docker Hub
+
+The GitHub Actions workflow is defined in `.github/workflows/main.yml` and handles:
+
+- Building the frontend and copying static files to the backend
+- Building a single container image using the root Dockerfile
+- Tagging and pushing the image to Docker registries
+
+This means that manual building of Docker images is only necessary for local development. For production, simply push to the main branch and let GitHub Actions handle the build and deployment process.
 
 ## Production Considerations
 
