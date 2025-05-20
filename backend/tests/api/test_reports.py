@@ -228,8 +228,8 @@ def test_multipage_pdf_generation(client, db_session):
     db_session.commit()
     db_session.refresh(person)
 
-    # Create multiple medications to force multiple pages
-    for i in range(10):  # This should be enough to cause pagination
+    # Create more medications to force multiple pages (increased from 10 to 20)
+    for i in range(20):  # Create more medications to ensure we get multiple pages
         med = Medication(
             name=f"Test Medication {i}",
             dosage=f"{i*5+5}mg",

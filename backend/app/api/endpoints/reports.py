@@ -147,9 +147,10 @@ def create_medication_tracking_pdf(
     pdf.setAuthor("MediTrack")
     pdf.setSubject("Medication Tracking")
 
-    # Set margins - 0.5 inch on left/right, 0.75 inch on top/bottom
+    # Set margins - 0.5 inch on left/right, reduced bottom margin to improve space utilization
     margin_lr = 0.5 * inch  # Left/right margins
-    margin_tb = 0.75 * inch  # Top/bottom margins
+    margin_top = 0.75 * inch  # Top margin
+    margin_bottom = 0.5 * inch  # Reduced bottom margin
     content_width = page_width - 2 * margin_lr
 
     # Track current page number
@@ -165,26 +166,26 @@ def create_medication_tracking_pdf(
 
         # Add header
         pdf.setFont("Helvetica-Bold", 16)
-        pdf.drawString(margin_lr, page_height - margin_tb, title)
+        pdf.drawString(margin_lr, page_height - margin_top, title)
 
         # Add date field
         pdf.setFont("Helvetica", 12)
         date_text = "Date: "
         date_text_width = pdf.stringWidth(date_text, "Helvetica", 12)
-        pdf.drawString(page_width - 3 * inch, page_height - margin_tb, date_text)
+        pdf.drawString(page_width - 3 * inch, page_height - margin_top, date_text)
 
         # Add a blank line for the date
         pdf.setLineWidth(0.5)
         pdf.line(
             page_width - 3 * inch + date_text_width,
-            page_height - margin_tb - 2,
+            page_height - margin_top - 2,
             page_width - margin_lr,
-            page_height - margin_tb - 2,
+            page_height - margin_top - 2,
         )
 
         # Start position just below the header with less spacing
         # This better utilizes the full page height
-        y_position = page_height - margin_tb - 0.3 * inch
+        y_position = page_height - margin_top - 0.3 * inch
 
     # Initialize position - first page (page 0)
     # Set current_page to 0 before calling start_new_page to ensure
@@ -196,11 +197,13 @@ def create_medication_tracking_pdf(
     for medication in medications:
         medications_processed += 1
 
-        # Check if we need a new page (leave 2 inches at bottom for instructions)
-        # Base height for medication entry (title, instructions, and some dose lines)
-        required_height = 1.5 * inch
-        # Height for time slots (4 per line)
-        required_height += (medication.max_doses_per_day / 4 + 1) * 0.4 * inch
+        # Check if we need a new page
+        # Base height for medication entry (title, instructions)
+        required_height = 0.8 * inch  # Reduced height requirement
+        # Height for time slots - optimized to use more time slots per line
+        required_height += (
+            (medication.max_doses_per_day / 4 + 0.5) * 0.3 * inch
+        )  # Reduced
 
         # Get the instructions and calculate how many lines they'll require
         instructions = get_medication_instructions(medication.name)
@@ -235,8 +238,9 @@ def create_medication_tracking_pdf(
         required_height += instruction_height
 
         # Check if there's enough space on the current page
+        # Use less reserved space at the bottom to maximize page usage
         if (
-            y_position - required_height < margin_tb
+            y_position - required_height < margin_bottom
         ):  # Only need space for the footer within bottom margin
             start_new_page()
 
@@ -244,8 +248,8 @@ def create_medication_tracking_pdf(
         pdf.setFont("Helvetica-Bold", 12)
         pdf.drawString(margin_lr, y_position, f"{medication.name} {medication.dosage}")
 
-        # Move down
-        y_position -= 0.3 * inch
+        # Move down (reduced spacing)
+        y_position -= 0.25 * inch
 
         # Add usage instructions in italics
         pdf.setFont("Helvetica-Oblique", 10)
@@ -272,17 +276,23 @@ def create_medication_tracking_pdf(
 
             for line in lines:
                 pdf.drawString(margin_lr, y_position, line)
-                y_position -= 0.18 * inch  # Reduced spacing between instruction lines
+                y_position -= (
+                    0.15 * inch
+                )  # Further reduced spacing between instruction lines
         else:
             pdf.drawString(margin_lr, y_position, instructions)
-            y_position -= 0.25 * inch  # Reduced spacing after instructions
+            y_position -= 0.2 * inch  # Further reduced spacing after instructions
 
         # Create time slots
         max_doses = medication.max_doses_per_day
 
         # Calculate how many time slots can fit per line - increase slots per line
-        slot_width = 1.85 * inch  # Adjusted width for each time slot to prevent overlap
+        slot_width = (
+            1.7 * inch
+        )  # Further reduced width to fit more slots per line while preventing overlap
         slots_per_line = max(1, int(content_width / slot_width))
+        # Force at least 4 slots per line on standard letter paper
+        slots_per_line = max(4, slots_per_line)
 
         # Draw the time slots
         pdf.setFont("Helvetica", 10)
@@ -320,10 +330,10 @@ def create_medication_tracking_pdf(
                 slot_count += 1
 
             # Move to next line
-            y_position -= 0.35 * inch  # Reduced spacing between dose lines
+            y_position -= 0.3 * inch  # Further reduced spacing between dose lines
 
         # Add smaller space between medications
-        y_position -= 0.15 * inch
+        y_position -= 0.1 * inch  # Further reduced spacing between medications
 
     # Add instructions at the bottom of the last page
     pdf.setFont("Helvetica", 9)
@@ -331,18 +341,18 @@ def create_medication_tracking_pdf(
         "Instructions: Record the time when each dose is taken "
         "in the blank spaces provided."
     )
-    pdf.drawString(margin_lr, margin_tb + 0.25 * inch, instructions)
+    pdf.drawString(margin_lr, margin_bottom + 0.15 * inch, instructions)
 
     # Add generation timestamp
     timestamp = datetime.now(current_tz).strftime("%Y-%m-%d %H:%M:%S")
     pdf.drawRightString(
-        page_width - margin_lr, margin_tb + 0.25 * inch, f"Generated: {timestamp}"
+        page_width - margin_lr, margin_bottom + 0.15 * inch, f"Generated: {timestamp}"
     )
 
     # Add page info
     pdf.setFont("Helvetica", 8)
     pdf.drawCentredString(
-        page_width / 2, margin_tb, f"Page {current_page} of {current_page}"
+        page_width / 2, margin_bottom, f"Page {current_page} of {current_page}"
     )
 
     # Finalize PDF
