@@ -53,6 +53,7 @@ class TestHealthEndpoint:
 
         # Use monkeypatch to replace the execution method temporarily
         from sqlalchemy.orm import Session as SQLAlchemySession
+
         monkeypatch.setattr(SQLAlchemySession, "execute", mock_execute)
 
         # Call API health endpoint, which should now return 500
