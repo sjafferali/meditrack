@@ -295,9 +295,9 @@ jobs:
           exit 1
         fi
         
-        # Ensure JS files exist
-        if [ ! -d "backend/app/static/static/js" ]; then
-          echo "ERROR: static/js directory not found!"
+        # Ensure JS files exist - check both the new and old structure for compatibility
+        if [ ! -d "backend/app/static/js" ] && [ ! -d "backend/app/static/static/js" ]; then
+          echo "ERROR: neither js nor static/js directory found!"
           exit 1
         fi
         
