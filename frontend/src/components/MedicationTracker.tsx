@@ -351,6 +351,7 @@ const MedicationTracker = () => {
           onClose={() => setShowPersonManager(false)}
           currentPersonId={currentPersonId}
           onPersonChange={setCurrentPersonId}
+          anchorToDateSection={false} 
         />
       </div>
     );
@@ -810,15 +811,13 @@ const MedicationTracker = () => {
       )}
       
       {/* Person Manager Modal - Positioned under date section */}
-      <div className="relative">
-        <PersonManager
-          isOpen={showPersonManager}
-          onClose={() => setShowPersonManager(false)}
-          currentPersonId={currentPersonId}
-          onPersonChange={setCurrentPersonId}
-          anchorToDateSection={true}
-        />
-      </div>
+      <PersonManager
+        isOpen={showPersonManager}
+        onClose={() => setShowPersonManager(false)}
+        currentPersonId={currentPersonId}
+        onPersonChange={setCurrentPersonId}
+        anchorToDateSection={true}
+      />
     </div>
   );
 };
