@@ -7,22 +7,16 @@ to verify that multi-page support works correctly.
 
 import os
 import sys
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, timezone
 from io import BytesIO
-
-from fastapi import FastAPI
 
 # Add the backend directory to the Python path
 backend_dir = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, backend_dir)
 
-# Create a FastAPI app for testing
-app = FastAPI()
-
+# Import the necessary modules - must be after adjusting sys.path
+# flake8: noqa: E402
 from app.api.endpoints.reports import create_medication_tracking_pdf
-
-# Import the necessary modules
-from app.models import Medication, Person
 
 
 class MockMedication:
