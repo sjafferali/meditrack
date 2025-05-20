@@ -1,7 +1,7 @@
 import io
 from datetime import date
 
-from PyPDF2 import PdfReader
+from pypdf import PdfReader
 
 from app.models.medication import Medication
 from app.models.person import Person
