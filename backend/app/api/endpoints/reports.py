@@ -4,7 +4,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from fastapi.responses import StreamingResponse
-from reportlab.lib.pagesizes import landscape, letter
+from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from reportlab.pdfgen import canvas
 from sqlalchemy.orm import Session
@@ -135,11 +135,11 @@ def create_medication_tracking_pdf(
         current_tz: Timezone for date calculations
         db: Database session
     """
-    # Calculate page dimensions
-    page_width, page_height = landscape(letter)
+    # Calculate page dimensions - using portrait orientation
+    page_width, page_height = letter
 
     # Create PDF canvas
-    pdf = canvas.Canvas(buffer, pagesize=landscape(letter))
+    pdf = canvas.Canvas(buffer, pagesize=letter)
 
     # Set title and metadata
     title = f"{person_name} Medication Log" if person_name else "Medication Log"
@@ -147,91 +147,167 @@ def create_medication_tracking_pdf(
     pdf.setAuthor("MediTrack")
     pdf.setSubject("Medication Tracking")
 
-    # Add header
-    pdf.setFont("Helvetica-Bold", 16)
-    pdf.drawString(0.5 * inch, page_height - 0.5 * inch, title)
+    # Set margins
+    margin = 0.5 * inch  # 0.5 inch margins all around
+    content_width = page_width - 2 * margin
 
-    # Add date field
-    pdf.setFont("Helvetica", 12)
-    date_text = "Date: "
-    date_text_width = pdf.stringWidth(date_text, "Helvetica", 12)
-    pdf.drawString(page_width - 3 * inch, page_height - 0.5 * inch, date_text)
+    # Track current page number
+    current_page = 1
+    medications_processed = 0
 
-    # Add a blank line for the date
-    pdf.setLineWidth(0.5)
-    pdf.line(
-        page_width - 3 * inch + date_text_width,
-        page_height - 0.5 * inch - 2,
-        page_width - 0.5 * inch,
-        page_height - 0.5 * inch - 2,
-    )
+    # Start a new page
+    def start_new_page():
+        nonlocal current_page, y_position
+        if current_page > 1:
+            pdf.showPage()
 
-    y_position = page_height - 1.0 * inch
+        # Add header
+        pdf.setFont("Helvetica-Bold", 16)
+        pdf.drawString(margin, page_height - margin, title)
+
+        # Add date field
+        pdf.setFont("Helvetica", 12)
+        date_text = "Date: "
+        date_text_width = pdf.stringWidth(date_text, "Helvetica", 12)
+        pdf.drawString(page_width - 3 * inch, page_height - margin, date_text)
+
+        # Add a blank line for the date
+        pdf.setLineWidth(0.5)
+        pdf.line(
+            page_width - 3 * inch + date_text_width,
+            page_height - margin - 2,
+            page_width - margin,
+            page_height - margin - 2,
+        )
+
+        y_position = page_height - 1.0 * inch
+
+    # Initialize position
+    y_position = 0
+    start_new_page()
 
     # Create each medication section
     for medication in medications:
+        medications_processed += 1
+
+        # Check if we need a new page (leave 2 inches at bottom for instructions)
+        # Base height for medication entry (title, instructions, and some dose lines)
+        required_height = 1.5 * inch
+        # Height for time slots (4 per line)
+        required_height += (medication.max_doses_per_day / 4 + 1) * 0.4 * inch
+
+        if (
+            y_position - required_height < margin + 1.0 * inch
+        ):  # Ensure at least 1 inch for footer
+            start_new_page()
+
         # Medication name and dosage
         pdf.setFont("Helvetica-Bold", 12)
-        pdf.drawString(0.5 * inch, y_position, f"{medication.name} {medication.dosage}")
+        pdf.drawString(margin, y_position, f"{medication.name} {medication.dosage}")
 
         # Move down
         y_position -= 0.3 * inch
 
         # Add usage instructions in italics
-        # In a real implementation, these would come from the medication database
-        # Here we're adding sample instructions based on medication name
         pdf.setFont("Helvetica-Oblique", 10)
         instructions = get_medication_instructions(medication.name)
-        pdf.drawString(0.5 * inch, y_position, instructions)
 
-        # Move down
-        y_position -= 0.4 * inch
+        # Handle long instructions by wrapping text
+        max_text_width = content_width - margin
+        if pdf.stringWidth(instructions, "Helvetica-Oblique", 10) > max_text_width:
+            words = instructions.split()
+            lines = []
+            current_line = []
+
+            for word in words:
+                test_line = " ".join(current_line + [word])
+                if (
+                    pdf.stringWidth(test_line, "Helvetica-Oblique", 10)
+                    <= max_text_width
+                ):
+                    current_line.append(word)
+                else:
+                    lines.append(" ".join(current_line))
+                    current_line = [word]
+
+            if current_line:
+                lines.append(" ".join(current_line))
+
+            for line in lines:
+                pdf.drawString(margin, y_position, line)
+                y_position -= 0.2 * inch
+        else:
+            pdf.drawString(margin, y_position, instructions)
+            y_position -= 0.3 * inch
 
         # Create time slots
-        max_slots = min(medication.max_doses_per_day, 4)  # Limit to 4 slots per line
+        max_doses = medication.max_doses_per_day
+
+        # Calculate how many time slots can fit per line
+        slot_width = 2.0 * inch  # Width of each time slot with label, line, and AM/PM
+        slots_per_line = max(1, int(content_width / slot_width))
 
         # Draw the time slots
         pdf.setFont("Helvetica", 10)
-        line_position = y_position
+        slot_count = 1
 
-        for i in range(1, max_slots + 1):
-            # Time label
-            pdf.drawString(0.5 * inch, line_position, f"{i}:")
+        while slot_count <= max_doses:
+            slot_x = margin
 
-            # Blank line for time
-            pdf.line(0.7 * inch, line_position - 2, 1.7 * inch, line_position - 2)
+            # Add slots for this line
+            for i in range(slots_per_line):
+                if slot_count > max_doses:
+                    break
 
-            # AM/PM indicator
-            pdf.drawString(1.8 * inch, line_position, "(AM/PM)")
+                # Time label
+                pdf.drawString(slot_x, y_position, f"{slot_count}:")
 
-            # Move to next position horizontally (2.5 inches per slot)
-            if i % 2 == 0 or i == max_slots:
-                # Move to next line after every 2 slots or if at the end
-                line_position -= 0.4 * inch
-            else:
-                # For odd-numbered slots, add the even-numbered one to the right
-                pdf.drawString(3.5 * inch, line_position, f"{i+1}:")
-                pdf.line(3.7 * inch, line_position - 2, 4.7 * inch, line_position - 2)
-                pdf.drawString(4.8 * inch, line_position, "(AM/PM)")
+                # Blank line for time
+                line_length = 1.0 * inch
+                pdf.line(
+                    slot_x + 0.2 * inch,
+                    y_position - 2,
+                    slot_x + 0.2 * inch + line_length,
+                    y_position - 2,
+                )
 
-        # Add space for the next medication
-        y_position = line_position - 0.4 * inch
+                # AM/PM indicator
+                pdf.drawString(
+                    slot_x + 0.2 * inch + line_length + 0.1 * inch,
+                    y_position,
+                    "(AM/PM)",
+                )
 
-    # Add instructions at the bottom
+                # Move to next slot position horizontally
+                slot_x += slot_width
+                slot_count += 1
+
+            # Move to next line
+            y_position -= 0.4 * inch
+
+        # Add space between medications
+        y_position -= 0.2 * inch
+
+    # Add instructions at the bottom of the last page
     pdf.setFont("Helvetica", 9)
     instructions = (
         "Instructions: Record the time when each dose is taken "
         "in the blank spaces provided."
     )
-    pdf.drawString(0.5 * inch, 0.5 * inch, instructions)
+    pdf.drawString(margin, margin + 0.5 * inch, instructions)
 
     # Add generation timestamp
     timestamp = datetime.now(current_tz).strftime("%Y-%m-%d %H:%M:%S")
-    pdf.drawRightString(page_width - 0.5 * inch, 0.5 * inch, f"Generated: {timestamp}")
+    pdf.drawRightString(
+        page_width - margin, margin + 0.5 * inch, f"Generated: {timestamp}"
+    )
 
     # Add page info
     pdf.setFont("Helvetica", 8)
-    pdf.drawCentredString(page_width / 2, 0.25 * inch, "Page 1 of 1")
+    page_info = (
+        f"Page {current_page} of {current_page}"  # Updated when we know total pages
+    )
+    pdf.drawCentredString(page_width / 2, margin, page_info)
 
     # Finalize PDF
     pdf.save()
