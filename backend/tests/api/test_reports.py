@@ -3,6 +3,7 @@ from datetime import date
 
 from pypdf import PdfReader
 
+from app.api.endpoints.reports import get_medication_instructions
 from app.models.medication import Medication
 from app.models.person import Person
 
@@ -134,3 +135,86 @@ def test_generate_medication_pdf_no_medications(client, db_session):
     # Should return 404 since no medications found
     assert response.status_code == 404
     assert response.json()["detail"] == "No medications found"
+
+
+def test_generate_medication_pdf_with_timezone(client, sample_medication):
+    # Test date for the PDF with timezone offset
+    test_date = date.today().isoformat()
+
+    # Request the PDF with timezone offset (480 minutes = UTC-8)
+    response = client.get(
+        f"/api/v1/reports/medications/pdf/{test_date}?timezone_offset=480"
+    )
+
+    # Check response status
+    assert response.status_code == 200
+
+    # Verify response content type
+    assert response.headers["content-type"] == "application/pdf"
+
+    # Try to parse the PDF content to ensure it's valid
+    pdf_content = io.BytesIO(response.content)
+    pdf = PdfReader(pdf_content)
+
+    # PDF should have at least one page
+    assert len(pdf.pages) > 0
+
+    # Extract text from the first page to verify content
+    page_text = pdf.pages[0].extract_text()
+
+    # Verify the PDF contains expected timezone-adjusted content
+    assert "Medication Log" in page_text
+    assert "Test Medication" in page_text
+
+
+def test_get_medication_instructions():
+    # Test instructions for known medications
+    assert "Steroid for inflammation" in get_medication_instructions("Pred Acetate")
+    assert "Antibiotic" in get_medication_instructions("Ofloxacin")
+
+    # Test instructions for unknown medication
+    assert "Follow prescription instructions" in get_medication_instructions(
+        "Unknown Medication"
+    )
+
+
+def test_medication_with_long_instructions(client, db_session):
+    # Create test person
+    person = Person(name="Test Person")
+    db_session.add(person)
+    db_session.commit()
+    db_session.refresh(person)
+
+    # Create medication with really long name to force text wrapping
+    part1 = "Test Medication with Extremely Long Name"
+    part2 = "that Will Force Text Wrapping in PDF Generation"
+    very_long_name = f"{part1} {part2}"
+    med = Medication(
+        name=very_long_name,
+        dosage="5mg",
+        frequency="Twice daily",
+        max_doses_per_day=8,  # Many doses to test time slot wrapping
+        person_id=person.id,
+    )
+
+    db_session.add(med)
+    db_session.commit()
+
+    # Test date for the PDF
+    test_date = date.today().isoformat()
+
+    # Request the PDF
+    response = client.get(
+        f"/api/v1/reports/medications/pdf/{test_date}?person_id={person.id}"
+    )
+
+    # Check response status
+    assert response.status_code == 200
+
+    # Parse the PDF
+    pdf_content = io.BytesIO(response.content)
+    pdf = PdfReader(pdf_content)
+    page_text = pdf.pages[0].extract_text()
+
+    # Verify the PDF contains the long medication name
+    assert very_long_name in page_text
