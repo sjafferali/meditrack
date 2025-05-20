@@ -157,9 +157,10 @@ def create_medication_tracking_pdf(
 
     # Start a new page
     def start_new_page():
-        nonlocal y_position
+        nonlocal y_position, current_page
         if current_page > 1:
             pdf.showPage()
+        current_page += 1
 
         # Add header
         pdf.setFont("Helvetica-Bold", 16)
@@ -185,6 +186,7 @@ def create_medication_tracking_pdf(
     # Initialize position
     y_position = 0
     start_new_page()
+    current_page = 1  # Reset page counter since start_new_page increments it
 
     # Create each medication section
     for medication in medications:
@@ -196,6 +198,39 @@ def create_medication_tracking_pdf(
         # Height for time slots (4 per line)
         required_height += (medication.max_doses_per_day / 4 + 1) * 0.4 * inch
 
+        # Get the instructions and calculate how many lines they'll require
+        instructions = get_medication_instructions(medication.name)
+        max_text_width = content_width - margin
+        
+        # Calculate instruction height
+        instruction_height = 0.3 * inch  # Default for short instructions
+        if pdf.stringWidth(instructions, "Helvetica-Oblique", 10) > max_text_width:
+            # Split instructions into lines
+            words = instructions.split()
+            lines = []
+            current_line = []
+
+            for word in words:
+                test_line = " ".join(current_line + [word])
+                if (
+                    pdf.stringWidth(test_line, "Helvetica-Oblique", 10)
+                    <= max_text_width
+                ):
+                    current_line.append(word)
+                else:
+                    lines.append(" ".join(current_line))
+                    current_line = [word]
+
+            if current_line:
+                lines.append(" ".join(current_line))
+                
+            # Calculate height needed for all instruction lines
+            instruction_height = len(lines) * 0.2 * inch
+        
+        # Add instruction height to required height
+        required_height += instruction_height
+
+        # Check if there's enough space on the current page
         if (
             y_position - required_height < margin + 1.0 * inch
         ):  # Ensure at least 1 inch for footer
@@ -210,10 +245,8 @@ def create_medication_tracking_pdf(
 
         # Add usage instructions in italics
         pdf.setFont("Helvetica-Oblique", 10)
-        instructions = get_medication_instructions(medication.name)
 
         # Handle long instructions by wrapping text
-        max_text_width = content_width - margin
         if pdf.stringWidth(instructions, "Helvetica-Oblique", 10) > max_text_width:
             words = instructions.split()
             lines = []
@@ -304,10 +337,7 @@ def create_medication_tracking_pdf(
 
     # Add page info
     pdf.setFont("Helvetica", 8)
-    page_info = (
-        f"Page {current_page} of {current_page}"  # Updated when we know total pages
-    )
-    pdf.drawCentredString(page_width / 2, margin, page_info)
+    pdf.drawCentredString(page_width / 2, margin, f"Page {current_page} of {current_page}")
 
     # Finalize PDF
     pdf.save()
