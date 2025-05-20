@@ -29,6 +29,7 @@ def health_check(db: Session = Depends(get_db)):
 
         # Use a database-agnostic way to get timestamp
         from datetime import datetime
+
         timestamp = datetime.now().isoformat()
 
         return {

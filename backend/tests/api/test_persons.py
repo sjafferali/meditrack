@@ -15,24 +15,26 @@ class TestPersons:
         return {
             "name": "John Doe",
             "date_of_birth": "1990-01-01",
-            "notes": "Test notes"
+            "notes": "Test notes",
         }
 
     @pytest.fixture
-    def multiple_persons(self, db_session: Session, sample_person: Person) -> list[Person]:
+    def multiple_persons(
+        self, db_session: Session, sample_person: Person
+    ) -> list[Person]:
         """Create multiple persons for testing"""
         persons_data = [
             {
                 "name": "Jane Smith",
                 "date_of_birth": date(1985, 5, 15),
                 "notes": "Test person 2",
-                "is_default": False
+                "is_default": False,
             },
             {
                 "name": "Bob Johnson",
                 "date_of_birth": date(1992, 10, 20),
                 "notes": "Test person 3",
-                "is_default": False
+                "is_default": False,
             },
         ]
 
@@ -68,12 +70,14 @@ class TestPersons:
         assert "created_at" in data
 
     @pytest.mark.unit
-    def test_create_second_person_not_default(self, client, sample_person, sample_person_data):
+    def test_create_second_person_not_default(
+        self, client, sample_person, sample_person_data
+    ):
         """Test creating a second person isn't default"""
         new_person_data = {
             "name": "Jane Smith",
             "date_of_birth": "1985-05-15",
-            "notes": "Second person"
+            "notes": "Second person",
         }
         response = client.post("/api/v1/persons/", json=new_person_data)
         assert response.status_code == 201
@@ -86,7 +90,7 @@ class TestPersons:
         invalid_data = {
             # Missing required 'name' field
             "date_of_birth": "1990-01-01",
-            "notes": "Test notes"
+            "notes": "Test notes",
         }
         response = client.post("/api/v1/persons/", json=invalid_data)
         assert response.status_code == 422
@@ -99,7 +103,7 @@ class TestPersons:
         if persons:
             for person in persons:
                 client.delete(f"/api/v1/persons/{person['id']}")
-                
+
         response = client.get("/api/v1/persons/")
         assert response.status_code == 200
         assert response.json() == []
@@ -142,9 +146,7 @@ class TestPersons:
     def test_update_person_success(self, client, sample_person):
         """Test updating a person"""
         update_data = {"name": "Updated Name", "notes": "Updated notes"}
-        response = client.put(
-            f"/api/v1/persons/{sample_person.id}", json=update_data
-        )
+        response = client.put(f"/api/v1/persons/{sample_person.id}", json=update_data)
         assert response.status_code == 200
         data = response.json()
         assert data["name"] == update_data["name"]
@@ -170,7 +172,7 @@ class TestPersons:
         persons = persons_response.json()
         non_default_person = next((p for p in persons if not p["is_default"]), None)
         assert non_default_person is not None
-        
+
         response = client.delete(f"/api/v1/persons/{non_default_person['id']}")
         assert response.status_code == 204
 
@@ -186,7 +188,7 @@ class TestPersons:
         persons = persons_response.json()
         default_person = next((p for p in persons if p["is_default"]), None)
         assert default_person is not None
-        
+
         response = client.delete(f"/api/v1/persons/{default_person['id']}")
         assert response.status_code == 400
         assert "Cannot delete the default person" in response.json()["detail"]
@@ -212,7 +214,7 @@ class TestPersons:
         persons = persons_response.json()
         non_default_person = next((p for p in persons if not p["is_default"]), None)
         assert non_default_person is not None
-        
+
         response = client.put(f"/api/v1/persons/{non_default_person['id']}/set-default")
         assert response.status_code == 200
         data = response.json()
@@ -223,7 +225,17 @@ class TestPersons:
         # Only one person should be default
         assert len([p for p in persons_after if p["is_default"]]) == 1
         # The new default should be our chosen person
-        assert next((p["is_default"] for p in persons_after if p["id"] == non_default_person["id"]), False) is True
+        assert (
+            next(
+                (
+                    p["is_default"]
+                    for p in persons_after
+                    if p["id"] == non_default_person["id"]
+                ),
+                False,
+            )
+            is True
+        )
 
     @pytest.mark.unit
     def test_set_default_person_not_found(self, client):
@@ -232,12 +244,16 @@ class TestPersons:
         assert response.status_code == 404
 
     @pytest.mark.integration
-    def test_person_with_medications_count(self, client, sample_person, multiple_medications):
+    def test_person_with_medications_count(
+        self, client, sample_person, multiple_medications
+    ):
         """Test person with medication count"""
         response = client.get(f"/api/v1/persons/{sample_person.id}")
         assert response.status_code == 200
         data = response.json()
-        assert data["medication_count"] == 3  # Matches the number in multiple_medications fixture
+        assert (
+            data["medication_count"] == 3
+        )  # Matches the number in multiple_medications fixture
 
     @pytest.mark.integration
     def test_person_lifecycle(self, client, sample_person_data):
@@ -260,13 +276,15 @@ class TestPersons:
         # Create second person so we can delete the first
         second_person_data = {
             "name": "Second Person",
-            "notes": "This person allows us to delete the first"
+            "notes": "This person allows us to delete the first",
         }
         second_response = client.post("/api/v1/persons/", json=second_person_data)
         assert second_response.status_code == 201
-        
+
         # Set second person as default so we can delete the first
-        default_response = client.put(f"/api/v1/persons/{second_response.json()['id']}/set-default")
+        default_response = client.put(
+            f"/api/v1/persons/{second_response.json()['id']}/set-default"
+        )
         assert default_response.status_code == 200
 
         # Delete
