@@ -152,7 +152,8 @@ const doseApi = {
       let url = `/doses/daily-summary/${date}`;
       const params = {};
       
-      if (timezoneOffset !== null) {
+      // Explicitly check for non-null values (works with both null and numeric values)
+      if (timezoneOffset !== null && timezoneOffset !== undefined) {
         params.timezone_offset = timezoneOffset;
       }
       

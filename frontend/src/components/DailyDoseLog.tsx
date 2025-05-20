@@ -31,6 +31,7 @@ const DailyDoseLog: React.FC<DailyDoseLogProps> = ({ selectedDate, isOpen, onClo
       const dateStr = selectedDate.toISOString().split('T')[0];
       // Get timezone offset in minutes from user's browser
       const timezoneOffset = new Date().getTimezoneOffset();
+      // Pass timezone offset as a number
       const data = await doseApi.getDailySummaryByDate(dateStr, timezoneOffset);
       setSummary(data);
     } catch (err) {

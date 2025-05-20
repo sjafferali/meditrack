@@ -195,7 +195,7 @@ const MedicationTracker = () => {
       setError(null);
       await medicationApi.create({
         ...formData,
-        person_id: currentPersonId
+        person_id: currentPersonId || undefined
       });
       setIsAddingMedication(false);
       resetForm();
@@ -213,7 +213,7 @@ const MedicationTracker = () => {
       setError(null);
       await medicationApi.update(editingMedication.id, {
         ...formData,
-        person_id: currentPersonId
+        person_id: currentPersonId || undefined
       });
       setEditingMedication(null);
       resetForm();
