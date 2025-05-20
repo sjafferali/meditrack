@@ -201,7 +201,7 @@ def create_medication_tracking_pdf(
         # Get the instructions and calculate how many lines they'll require
         instructions = get_medication_instructions(medication.name)
         max_text_width = content_width - margin
-        
+
         # Calculate instruction height
         instruction_height = 0.3 * inch  # Default for short instructions
         if pdf.stringWidth(instructions, "Helvetica-Oblique", 10) > max_text_width:
@@ -223,10 +223,10 @@ def create_medication_tracking_pdf(
 
             if current_line:
                 lines.append(" ".join(current_line))
-                
+
             # Calculate height needed for all instruction lines
             instruction_height = len(lines) * 0.2 * inch
-        
+
         # Add instruction height to required height
         required_height += instruction_height
 
@@ -337,7 +337,9 @@ def create_medication_tracking_pdf(
 
     # Add page info
     pdf.setFont("Helvetica", 8)
-    pdf.drawCentredString(page_width / 2, margin, f"Page {current_page} of {current_page}")
+    pdf.drawCentredString(
+        page_width / 2, margin, f"Page {current_page} of {current_page}"
+    )
 
     # Finalize PDF
     pdf.save()
