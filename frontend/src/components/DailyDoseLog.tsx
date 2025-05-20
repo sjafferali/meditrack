@@ -18,6 +18,7 @@ interface DailyDoseLogProps {
   isOpen: boolean;
   onClose: () => void;
   personId?: string; // Optional prop for tests
+  autoPrint?: boolean; // Automatically trigger print when true
 }
 
 interface DailySummary {
@@ -31,7 +32,7 @@ interface DailySummary {
   }>;
 }
 
-const DailyDoseLog: React.FC<DailyDoseLogProps> = ({ selectedDate, isOpen, onClose, personId: propPersonId }) => {
+const DailyDoseLog: React.FC<DailyDoseLogProps> = ({ selectedDate, isOpen, onClose, personId: propPersonId, autoPrint = false }) => {
   const [summary, setSummary] = useState<DailySummary | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -86,6 +87,19 @@ const DailyDoseLog: React.FC<DailyDoseLogProps> = ({ selectedDate, isOpen, onClo
       return () => clearTimeout(reloadTimer);
     }
   }, [isOpen, selectedDate]); // eslint-disable-line react-hooks/exhaustive-deps
+  
+  // Effect to handle automatic printing when requested
+  useEffect(() => {
+    // Only trigger when modal is open, summary is loaded, and autoPrint is true
+    if (isOpen && !loading && !error && summary && autoPrint) {
+      // Short delay to ensure the modal is fully rendered
+      const printTimer = setTimeout(() => {
+        handlePrintTracking();
+      }, 500);
+      
+      return () => clearTimeout(printTimer);
+    }
+  }, [isOpen, loading, error, summary, autoPrint]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const formatTimeFromISO = (isoString: string) => {
     const date = new Date(isoString);

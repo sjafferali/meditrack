@@ -16,6 +16,7 @@ const MedicationTracker = () => {
   const [loadingHistory, setLoadingHistory] = useState<{ [key: number]: boolean }>({});
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [showDailyLog, setShowDailyLog] = useState(false);
+  const [printMedicationTracking, setPrintMedicationTracking] = useState(false);
   const [deleteDoseConfirmId, setDeleteDoseConfirmId] = useState<number | null>(null);
   const [showTimeModal, setShowTimeModal] = useState<{ medicationId: number | null, show: boolean }>({ medicationId: null, show: false });
   const [customTime, setCustomTime] = useState<string>('');
@@ -764,13 +765,29 @@ const MedicationTracker = () => {
         >
           View Daily Log
         </button>
+        <button
+          onClick={() => {
+            setShowDailyLog(true);
+            // Set a flag to automatically trigger print dialog when modal opens
+            setPrintMedicationTracking(true);
+          }}
+          className="ml-4 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-md font-medium transition-colors"
+          type="button"
+          title="Generate a printable medication tracking form for this date"
+        >
+          Print Tracking Form
+        </button>
       </div>
 
       {/* Daily Dose Log Modal */}
       <DailyDoseLog
         selectedDate={selectedDate}
         isOpen={showDailyLog}
-        onClose={() => setShowDailyLog(false)}
+        onClose={() => {
+          setShowDailyLog(false);
+          setPrintMedicationTracking(false);
+        }}
+        autoPrint={printMedicationTracking}
       />
 
       {/* Time Picker Dropdown */}
