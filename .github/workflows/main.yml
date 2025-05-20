@@ -247,48 +247,41 @@ jobs:
         
     - name: Copy frontend build to backend static directory
       run: |
-        mkdir -p backend/app/static
-        cp -r frontend/build/* backend/app/static/
-        mkdir -p backend/app/static/static/js
-        cp frontend/public/static/js/person-initializer.js backend/app/static/static/js/
-        ls -la backend/app/static
-        ls -la backend/app/static/static/js
+        # Clear any existing static files
+        rm -rf backend/app/static
         
-    # Create a modified Dockerfile for the CI environment
-    - name: Create CI Dockerfile
+        # Create directory structure
+        mkdir -p backend/app/static/static/js
+        
+        # Copy all built files
+        cp -r frontend/build/* backend/app/static/
+        
+        # Ensure person-initializer.js exists
+        cp frontend/public/static/js/person-initializer.js backend/app/static/static/js/
+        
+        # Debug: List files to verify
+        echo "Files in backend/app/static:"
+        find backend/app/static -type f | sort
+        
+    # Use the main Dockerfile which correctly handles frontend static files
+    - name: Verify Static Files
       run: |
-        # Create a new Dockerfile without multi-stage build that assumes frontend is already built
-        cat > Dockerfile.ci << EOF
-        FROM python:3.9-slim
-        WORKDIR /app
-
-        # Install system dependencies
-        RUN apt-get update && apt-get install -y --no-install-recommends \\
-            gcc \\
-            curl \\
-            libpq-dev \\
-            && rm -rf /var/lib/apt/lists/*
-
-        # Install Python dependencies
-        COPY backend/requirements.txt .
-        RUN pip install --no-cache-dir -r requirements.txt
-
-        # Copy backend code
-        COPY backend/ .
-
-        # Copy pre-built frontend files
-        COPY backend/app/static ./app/static
-
-        # Create data directory
-        RUN mkdir -p /app/data
-
-        # Create non-root user
-        RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
-        USER appuser
-
-        EXPOSE 8000
-        CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
-        EOF
+        echo "Verifying frontend static files before build:"
+        find backend/app/static -type f | sort
+        
+        # Ensure static files are properly set up for the Docker build
+        if [ ! -f "backend/app/static/index.html" ]; then
+          echo "ERROR: index.html not found in static directory!"
+          exit 1
+        fi
+        
+        # Ensure JS files exist
+        if [ ! -d "backend/app/static/static/js" ]; then
+          echo "ERROR: static/js directory not found!"
+          exit 1
+        fi
+        
+        echo "Static files verified and ready for Docker build"
       
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
@@ -318,7 +311,7 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: .
-        file: ./Dockerfile.ci
+        file: ./Dockerfile
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}

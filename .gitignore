@@ -188,16 +188,25 @@ cython_debug/
 node_modules/
 frontend/node_modules/
 
-# No longer ignoring person-initializer.js as it's needed in production
+# Frontend build files
+frontend/build/
+frontend/build/*
 
-# Ignore static files in backend (built during deployment)
+# Generated static files
+**/*.js.map
+**/*.css.map
+**/main.[a-z0-9]*.js
+**/main.[a-z0-9]*.css
+**/main.[a-z0-9]*.js.LICENSE.txt
+**/asset-manifest.json
+
+# Preserve source files in public
+!frontend/public/static/js/person-initializer.js
+
+# Ignore all static files in backend (built during deployment)
+backend/app/static/
 backend/app/static/*
 !backend/app/static/.gitkeep
-!backend/app/static/static/
-backend/app/static/static/*
-!backend/app/static/static/js/
-backend/app/static/static/js/*
-!backend/app/static/static/js/person-initializer.js
 
 # Fix scripts that are not part of the core application
 server_health_fix.sh
