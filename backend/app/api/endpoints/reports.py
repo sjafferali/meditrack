@@ -184,7 +184,6 @@ def create_medication_tracking_pdf(
         y_position = page_height - 1.0 * inch
 
     # Initialize position
-    y_position = 0
     start_new_page()
     current_page = 1  # Reset page counter since start_new_page increments it
 
