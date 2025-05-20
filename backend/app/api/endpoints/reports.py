@@ -147,7 +147,7 @@ def create_medication_tracking_pdf(
     pdf.setAuthor("MediTrack")
     pdf.setSubject("Medication Tracking")
 
-    # Set margins - 0.5 inch on left/right, reduced bottom margin to improve space utilization
+    # Set margins - optimized for better space utilization
     margin_lr = 0.5 * inch  # Left/right margins
     margin_top = 0.75 * inch  # Top margin
     margin_bottom = 0.5 * inch  # Reduced bottom margin
