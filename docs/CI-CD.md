@@ -52,6 +52,7 @@ Runs on every push to main/develop and pull requests.
    - Builds and pushes images
    - Only runs on main/develop push
    - Requires all other jobs to pass
+   - Sends webhook notification on successful build/push
 
 ### Security Workflow (`security.yml`)
 
@@ -162,6 +163,8 @@ Add these secrets to GitHub repository:
 - `DOCKER_USERNAME`: Docker Hub username
 - `DOCKER_PASSWORD`: Docker Hub password
 - `CODECOV_TOKEN`: Codecov upload token
+- `WEBHOOK_URL`: URL of the webhook to notify after Docker build/push
+- `WEBHOOK_SECRET`: Secret for authenticating with the webhook
 
 ## Future Enhancements
 
@@ -169,7 +172,7 @@ Add these secrets to GitHub repository:
 2. Implement smoke tests
 3. Add deployment automation
 4. Set up staging environment
-5. Add notification system
+5. Enhance notification system with more detailed status reports
 
 ## Troubleshooting
 

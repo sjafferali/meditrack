@@ -132,7 +132,7 @@ meditrack/
 │   ├── public/          # Static assets
 │   └── package.json     # Node dependencies
 │
-├── .github/workflows/   # CI/CD configurations
+├── .github/workflows/   # CI/CD configurations with webhook notification
 └── docs/               # Documentation
 ```
 
