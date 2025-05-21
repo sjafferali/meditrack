@@ -147,9 +147,9 @@ def create_medication_tracking_pdf(
     pdf.setAuthor("MediTrack")
     pdf.setSubject("Medication Tracking")
 
-    # Set minimal margins for maximum space utilization
-    margin_lr = 0.5 * inch  # Left/right margins
-    margin_top = 0.5 * inch  # Minimal top margin to maximize vertical space
+    # Set margins to exactly 0.75 inches as required
+    margin_lr = 0.75 * inch  # Left/right margins
+    margin_top = 0.75 * inch  # Top margin
     content_width = page_width - 2 * margin_lr
 
     # Track current page number
@@ -241,9 +241,9 @@ def create_medication_tracking_pdf(
         required_height += instruction_height
 
         # Check if there's enough space on the current page
-        # Use absolute minimal reserved space at the bottom to maximize page usage
-        # Allow content to fill almost the entire page, leaving minimal footer space
-        min_required_margin = 0.1 * inch  # Minimal footer space needed
+        # Allow proper spacing at bottom of page
+        # Ensure consistent 0.75 inch bottom margin
+        min_required_margin = 0.75 * inch  # Match bottom margin requirement
         if y_position - required_height < min_required_margin:
             start_new_page()
 
@@ -314,12 +314,12 @@ def create_medication_tracking_pdf(
 
                 # Blank line for time - start further to the right to avoid overlap
                 line_length = 0.95 * inch  # Slightly shorter line
-                # Add a millimeter of space above each blank line
+                # Add 2mm of space above each blank line for easier writing
                 pdf.line(
                     slot_x + 0.25 * inch,  # Increased indent
-                    y_position - 4,  # Add space above the line (1mm ≈ 2.8 points)
+                    y_position - 6,  # Add space above the line (2mm ≈ 5.6 points)
                     slot_x + 0.25 * inch + line_length,
-                    y_position - 4,
+                    y_position - 6,
                 )
 
                 # AM/PM indicator - significantly increased spacing to prevent overlap
@@ -335,16 +335,16 @@ def create_medication_tracking_pdf(
                 slot_x += slot_width
                 slot_count += 1
 
-            # Move to next line
-            y_position -= 0.3 * inch  # Further reduced spacing between dose lines
+            # Move to next line with more space for easier writing
+            y_position -= (
+                0.4 * inch
+            )  # Increased spacing between dose lines for better writing room
 
-        # Minimal space between medications to maximize page utilization
-        y_position -= 0.05 * inch  # Minimal spacing between medications
+        # Add more space between medications for better visual separation
+        y_position -= 0.2 * inch  # Increased spacing between medications
 
-    # Move footer to absolute bottom to maximize space utilization
-    footer_margin = (
-        0.05 * inch
-    )  # Absolute minimal margin for footer to use all available space
+    # Set bottom margin to 0.75 inches as required
+    footer_margin = 0.75 * inch  # Bottom margin at 0.75 inches
 
     # Add instructions at the bottom of the last page
     pdf.setFont("Helvetica", 9)
