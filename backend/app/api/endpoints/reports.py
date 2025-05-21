@@ -147,9 +147,9 @@ def create_medication_tracking_pdf(
     pdf.setAuthor("MediTrack")
     pdf.setSubject("Medication Tracking")
 
-    # Set margins - further optimized for better space utilization
+    # Set minimal margins for maximum space utilization
     margin_lr = 0.5 * inch  # Left/right margins
-    margin_top = 0.6 * inch  # Reduced top margin to use more vertical space
+    margin_top = 0.5 * inch  # Minimal top margin to maximize vertical space
     content_width = page_width - 2 * margin_lr
 
     # Track current page number
@@ -241,9 +241,9 @@ def create_medication_tracking_pdf(
         required_height += instruction_height
 
         # Check if there's enough space on the current page
-        # Use minimal reserved space at the bottom to maximize page usage
-        # Allow content to fill almost the entire page, leaving minimal space for footer
-        min_required_margin = 0.2 * inch  # Further reduced minimum footer space
+        # Use absolute minimal reserved space at the bottom to maximize page usage
+        # Allow content to fill almost the entire page, leaving only necessary space for footer
+        min_required_margin = 0.1 * inch  # Minimal footer space needed
         if y_position - required_height < min_required_margin:
             start_new_page()
 
@@ -338,13 +338,13 @@ def create_medication_tracking_pdf(
             # Move to next line
             y_position -= 0.3 * inch  # Further reduced spacing between dose lines
 
-        # Add smaller space between medications
-        y_position -= 0.1 * inch  # Further reduced spacing between medications
+        # Minimal space between medications to maximize page utilization
+        y_position -= 0.05 * inch  # Minimal spacing between medications
 
-    # Move footer closer to bottom for better space utilization
+    # Move footer to absolute bottom to maximize space utilization
     footer_margin = (
-        0.1 * inch
-    )  # Further reduced margin for footer to use more page space
+        0.05 * inch
+    )  # Absolute minimal margin for footer to use all available space
 
     # Add instructions at the bottom of the last page
     pdf.setFont("Helvetica", 9)
