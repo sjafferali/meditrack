@@ -16,6 +16,7 @@ def seed_database():
     existing = db.query(Medication).first()
     if existing:
         print("Database already contains data. Skipping seed.")
+        db.close()
         return
 
     medications = [
@@ -56,6 +57,15 @@ def seed_database():
     db.commit()
     print(f"Added {len(medications)} medications to the database.")
     db.close()
+
+
+def seed_data_if_needed():
+    """Seed the database only if it's empty (for use in Docker entrypoint)"""
+    try:
+        seed_database()
+    except Exception as e:
+        print(f"Warning: Could not seed database: {e}")
+        # Don't fail the startup if seeding fails
 
 
 if __name__ == "__main__":

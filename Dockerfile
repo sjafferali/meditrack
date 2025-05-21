@@ -26,6 +26,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy backend code
 COPY backend/ .
 
+# Make entrypoint script executable
+RUN chmod +x docker-entrypoint.sh
+
 # Create simplified directory structure
 RUN mkdir -p ./app/static/js ./app/static/css ./app/static/assets
 
@@ -51,4 +54,7 @@ RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 USER appuser
 
 EXPOSE 8000
+
+# Set the entrypoint script
+ENTRYPOINT ["./docker-entrypoint.sh"]
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
