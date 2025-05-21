@@ -62,6 +62,39 @@ Starting application server...
 - **Database Connection Failures**: Retries up to 30 times with 2-second intervals
 - **Migration Failures**: Container will exit with error code if migrations fail
 - **Seeding Failures**: Warns but doesn't fail container startup
+- **Existing Database**: Automatically detects and stamps pre-Alembic databases
+
+## Fixing Existing Database Issues
+
+If you see errors like `relation "medications" already exists`, this means your database was created before Alembic migration tracking was set up. The entrypoint script now handles this automatically, but you can also fix it manually:
+
+### Option 1: Let Docker Handle It (Recommended)
+The updated entrypoint script automatically detects this situation and stamps your database appropriately.
+
+### Option 2: Manual Fix
+If you need to fix this manually:
+
+```bash
+# Connect to your backend container or environment
+docker exec -it <container_name> bash
+
+# Run the stamp script
+python scripts/stamp_existing_db.py
+
+# Or manually stamp with Alembic
+alembic stamp head
+```
+
+### Option 3: Fresh Start (Development Only)
+For development environments, you can reset everything:
+
+```bash
+# Stop container and remove database
+docker-compose down -v
+
+# Start fresh - migrations will run cleanly
+docker-compose up
+```
 
 ## Manual Migration Override
 

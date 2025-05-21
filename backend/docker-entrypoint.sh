@@ -38,6 +38,84 @@ while attempt < max_attempts:
 run_migrations() {
     echo "Running database migrations..."
     
+    # Check if alembic_version table exists
+    echo "Checking migration infrastructure..."
+    
+    python -c "
+import sys
+from sqlalchemy import create_engine, text
+from app.core.config import settings
+
+try:
+    engine = create_engine(settings.DATABASE_URL)
+    with engine.connect() as conn:
+        # Check if alembic_version table exists
+        result = conn.execute(text(\"\"\"
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_name = 'alembic_version'
+            );
+        \"\"\"))
+        has_alembic_table = result.scalar()
+        
+        if not has_alembic_table:
+            print('Migration tracking table missing - will initialize')
+            sys.exit(1)
+        else:
+            print('Migration tracking table exists')
+            sys.exit(0)
+except Exception as e:
+    print(f'Error checking migration status: {e}')
+    sys.exit(2)
+"
+    
+    migration_check_result=$?
+    
+    if [ $migration_check_result -eq 1 ]; then
+        echo "Setting up migration tracking for existing database..."
+        
+        # Check if we have existing tables (indicating a pre-Alembic database)
+        python -c "
+import sys
+from sqlalchemy import create_engine, text
+from app.core.config import settings
+
+try:
+    engine = create_engine(settings.DATABASE_URL)
+    with engine.connect() as conn:
+        # Check if main tables exist
+        result = conn.execute(text(\"\"\"
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_name IN ('medications', 'doses', 'persons')
+            );
+        \"\"\"))
+        has_tables = result.scalar()
+        
+        if has_tables:
+            print('Existing tables found - will stamp current revision')
+            sys.exit(0)
+        else:
+            print('No existing tables - fresh database')
+            sys.exit(1)
+except Exception as e:
+    print(f'Error checking existing tables: {e}')
+    sys.exit(2)
+"
+        
+        tables_check_result=$?
+        
+        if [ $tables_check_result -eq 0 ]; then
+            echo "Stamping existing database with current migration state..."
+            # Mark the database as up-to-date with the latest migration
+            alembic stamp head
+        else
+            echo "Fresh database detected - will run all migrations"
+        fi
+    elif [ $migration_check_result -eq 2 ]; then
+        echo "Error checking migration status - proceeding with caution..."
+    fi
+    
     # Check current migration status
     echo "Current migration status:"
     alembic current || echo "No migrations applied yet"
