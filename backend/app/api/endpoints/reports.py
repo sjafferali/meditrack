@@ -289,12 +289,12 @@ def create_medication_tracking_pdf(
         # Create time slots
         max_doses = medication.max_doses_per_day
 
-        # Calculate time slots with efficient spacing to use full page width
-        slot_width = 1.8 * inch  # Slightly reduced width to fit more slots per line
+        # Calculate time slots with more generous spacing to avoid overlap
+        slot_width = 2.0 * inch  # Increased width to prevent overlap between slots
         slots_per_line = max(1, int(content_width / slot_width))
-        # Use at least 4 slots per line when possible for letter-size paper
+        # Limit to 3 slots per line to ensure adequate spacing between slots
         slots_per_line = min(
-            4, max(slots_per_line, 4 if content_width > 7.2 * inch else 3)
+            3, max(slots_per_line, 3 if content_width > 7.2 * inch else 2)
         )
 
         # Draw the time slots
