@@ -23,5 +23,5 @@ class Medication(Base):
     # Relationships
     person = relationship("Person", back_populates="medications")
     doses = relationship(
-        "Dose", back_populates="medication", cascade="all, delete-orphan"
+        "Dose", back_populates="medication", cascade="all", passive_deletes=False
     )

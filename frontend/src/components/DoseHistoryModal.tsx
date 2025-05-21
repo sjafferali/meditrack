@@ -3,8 +3,9 @@ import { doseApi } from '../services/api';
 
 interface DoseHistoryModalProps {
   medication: {
-    id: number;
+    id?: number | null;  // ID can be null for deleted medications
     name: string;
+    isDeleted?: boolean;
   };
   isOpen: boolean;
   onClose: () => void;
@@ -12,7 +13,8 @@ interface DoseHistoryModalProps {
 
 interface Dose {
   id: number;
-  medication_id: number;
+  medication_id?: number | null;
+  medication_name?: string;
   taken_at: string;
 }
 
@@ -25,14 +27,26 @@ const DoseHistoryModal: React.FC<DoseHistoryModalProps> = ({ medication, isOpen,
     try {
       setLoading(true);
       setError(null);
-      const data = await doseApi.getDoses(medication.id);
+      
+      let data;
+      if (medication.isDeleted) {
+        // For deleted medications, use the name to fetch history
+        const medicationName = medication.name.replace(' (deleted)', ''); // Remove the suffix if present
+        data = await doseApi.getDeletedMedicationDoses(medicationName);
+      } else if (medication.id) {
+        // For active medications, use the ID
+        data = await doseApi.getDoses(medication.id);
+      } else {
+        throw new Error('Invalid medication data');
+      }
+      
       setDoses(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load dose history');
     } finally {
       setLoading(false);
     }
-  }, [medication.id]);
+  }, [medication.id, medication.name, medication.isDeleted]);
 
   useEffect(() => {
     if (isOpen && medication) {

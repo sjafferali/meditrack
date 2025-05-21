@@ -207,6 +207,7 @@ def get_daily_summary(
     medications = db.query(Medication).all()
     summary: dict = {"date": today_start.date().isoformat(), "medications": []}
 
+    # First add current medications
     for medication in medications:
         doses_today = (
             db.query(Dose)
@@ -223,6 +224,40 @@ def get_daily_summary(
                 "doses_taken": len(doses_today),
                 "max_doses": medication.max_doses_per_day,
                 "dose_times": [dose.taken_at.isoformat() for dose in doses_today],
+            }
+        )
+    
+    # Now add doses from deleted medications (those with null medication_id but valid medication_name)
+    orphaned_doses = (
+        db.query(Dose)
+        .filter(
+            and_(
+                Dose.medication_id.is_(None),
+                Dose.medication_name.isnot(None),
+                Dose.taken_at >= today_start
+            )
+        )
+        .all()
+    )
+    
+    # Group orphaned doses by medication_name
+    orphaned_by_name = {}
+    for dose in orphaned_doses:
+        name = dose.medication_name
+        if name not in orphaned_by_name:
+            orphaned_by_name[name] = []
+        orphaned_by_name[name].append(dose)
+    
+    # Add orphaned doses to the summary
+    for name, doses in orphaned_by_name.items():
+        summary["medications"].append(
+            {
+                "medication_id": None,  # No ID for deleted medications
+                "medication_name": f"{name} (deleted)",
+                "doses_taken": len(doses),
+                "max_doses": 0,  # No max doses for deleted medications
+                "dose_times": [dose.taken_at.isoformat() for dose in doses],
+                "is_deleted": True,  # Mark as deleted in the API response
             }
         )
 
@@ -296,6 +331,7 @@ def get_daily_summary_by_date(
     medications = db.query(Medication).all()
     summary: dict = {"date": date.isoformat(), "medications": []}
 
+    # First add current medications
     for medication in medications:
         doses_on_date = (
             db.query(Dose)
@@ -321,6 +357,44 @@ def get_daily_summary_by_date(
                 "doses_taken": len(doses_on_date),
                 "max_doses": medication.max_doses_per_day,
                 "dose_times": [dose.taken_at.isoformat() for dose in doses_on_date],
+            }
+        )
+    
+    # Now add doses from deleted medications (those with null medication_id but valid medication_name)
+    orphaned_doses = (
+        db.query(Dose)
+        .filter(
+            and_(
+                Dose.medication_id.is_(None),
+                Dose.medication_name.isnot(None),
+                Dose.taken_at >= start_of_day,
+                Dose.taken_at <= end_of_day,
+            )
+        )
+        .all()
+    )
+    
+    if len(orphaned_doses) > 0:
+        print(f"Found {len(orphaned_doses)} orphaned doses from deleted medications")
+    
+    # Group orphaned doses by medication_name
+    orphaned_by_name = {}
+    for dose in orphaned_doses:
+        name = dose.medication_name
+        if name not in orphaned_by_name:
+            orphaned_by_name[name] = []
+        orphaned_by_name[name].append(dose)
+    
+    # Add orphaned doses to the summary
+    for name, doses in orphaned_by_name.items():
+        summary["medications"].append(
+            {
+                "medication_id": None,  # No ID for deleted medications
+                "medication_name": f"{name} (deleted)",
+                "doses_taken": len(doses),
+                "max_doses": 0,  # No max doses for deleted medications
+                "dose_times": [dose.taken_at.isoformat() for dose in doses],
+                "is_deleted": True,  # Mark as deleted in the API response
             }
         )
 
@@ -374,6 +448,51 @@ def get_doses_by_date(
         .order_by(Dose.taken_at.asc())
         .all()
     )
+
+    return doses
+
+
+@router.get(
+    "/deleted-medications/by-name/{medication_name}/doses",
+    response_model=List[DoseInDB],
+    summary="Get dose history for deleted medication",
+    description="Retrieve the dose history for a specific deleted medication by name",
+    response_description="List of doses for the deleted medication",
+)
+def get_deleted_medication_doses(
+    medication_name: str = Path(..., description="The name of the deleted medication"),
+    skip: int = Query(0, ge=0, description="Number of doses to skip"),
+    limit: int = Query(
+        100, ge=1, le=1000, description="Maximum number of doses to return"
+    ),
+    db: Session = Depends(get_db),
+):
+    """
+    Get dose history for a deleted medication by name.
+
+    - **medication_name**: The name of the deleted medication
+    - **skip**: Number of doses to skip (for pagination)
+    - **limit**: Maximum number of doses to return
+
+    Doses are returned in descending order by timestamp (newest first).
+    """
+    # Find doses with the matching medication_name and null medication_id (orphaned doses)
+    doses = (
+        db.query(Dose)
+        .filter(
+            and_(
+                Dose.medication_id.is_(None),
+                Dose.medication_name == medication_name
+            )
+        )
+        .order_by(Dose.taken_at.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+
+    if not doses:
+        raise HTTPException(status_code=404, detail="No doses found for deleted medication")
 
     return doses
 

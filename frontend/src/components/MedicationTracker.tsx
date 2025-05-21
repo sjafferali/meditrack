@@ -3,6 +3,7 @@ import { medicationApi, doseApi, personApi } from '../services/api';
 import DailyDoseLog from './DailyDoseLog';
 import PersonSelector from './PersonSelector';
 import PersonManager from './PersonManager';
+import DoseHistoryModal from './DoseHistoryModal';
 
 const MedicationTracker = () => {
   const [medications, setMedications] = useState<any[]>([]);
@@ -14,6 +15,10 @@ const MedicationTracker = () => {
   const [expandedHistoryId, setExpandedHistoryId] = useState<number | null>(null);
   const [doseHistories, setDoseHistories] = useState<{ [key: number]: any[] }>({});
   const [loadingHistory, setLoadingHistory] = useState<{ [key: number]: boolean }>({});
+  
+  // For handling deleted medications
+  const [deletedMedications, setDeletedMedications] = useState<Array<{name: string, isDeleted: true}>>([]);
+  const [selectedMedicationForHistory, setSelectedMedicationForHistory] = useState<any>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [showDailyLog, setShowDailyLog] = useState(false);
   const [printMedicationTracking, setPrintMedicationTracking] = useState(false);
@@ -46,12 +51,27 @@ const MedicationTracker = () => {
       setError(null);
       const dateStr = formatDateForInput(selectedDate); // Use local timezone date string
       const timezoneOffset = new Date().getTimezoneOffset();
+      
+      // Get active medications
       const data = await medicationApi.getAll({ 
         date: dateStr,
         timezone_offset: timezoneOffset,
         person_id: currentPersonId 
       });
       setMedications(data);
+      
+      // Also get the daily summary to find any deleted medications with doses
+      const dailySummary = await doseApi.getDailySummaryByDate(dateStr, timezoneOffset);
+      
+      // Extract deleted medications that have doses for this date
+      const deleted = dailySummary.medications
+        .filter((med: any) => med.is_deleted && med.doses_taken > 0)
+        .map((med: any) => ({
+          name: med.medication_name,
+          isDeleted: true
+        }));
+      
+      setDeletedMedications(deleted);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -171,6 +191,19 @@ const MedicationTracker = () => {
       setShowTimeModal({ medicationId: null, show: false });
       setCustomTime('');
     }
+  };
+  
+  const viewDoseHistory = (medication: any) => {
+    setSelectedMedicationForHistory(medication);
+  };
+  
+  const viewDeletedMedicationHistory = (medication: any) => {
+    // Store the original name without (deleted) suffix for API calls
+    const originalName = medication.name.replace(" (deleted)", "");
+    setSelectedMedicationForHistory({
+      ...medication,
+      originalName
+    });
   };
 
   const handleDeleteDose = async (medicationId: number, doseId: number) => {
@@ -647,6 +680,13 @@ const MedicationTracker = () => {
               >
                 {expandedHistoryId === medication.id ? 'Hide History' : 'Show History'}
               </button>
+              
+              <button
+                onClick={() => viewDoseHistory(medication)}
+                className="px-3 py-2 text-purple-600 hover:bg-purple-50 rounded-md"
+              >
+                Full History
+              </button>
               <button
                 onClick={() => startEdit(medication)}
                 className="px-3 py-2 text-blue-600 hover:bg-blue-50 rounded-md"
@@ -750,6 +790,33 @@ const MedicationTracker = () => {
         ))}
       </div>
 
+      {/* Deleted Medications Section - only display if there are deleted medications with doses */}
+      {deletedMedications.length > 0 && (
+        <div className="mt-6">
+          <h3 className="text-lg font-semibold text-gray-700 mb-3">Previously Recorded Medications</h3>
+          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+            <p className="text-sm text-gray-600 mb-3">
+              These medications have been deleted but have recorded dose history.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-2">
+              {deletedMedications.map((medication, index) => (
+                <div key={index} className="flex items-center justify-between bg-white p-3 rounded border border-gray-200">
+                  <div>
+                    <span className="font-medium">{medication.name}</span>
+                  </div>
+                  <button
+                    onClick={() => viewDeletedMedicationHistory(medication)}
+                    className="px-3 py-1 text-purple-600 hover:bg-purple-50 rounded-md text-sm"
+                  >
+                    View History
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Add Medication and Daily Log Buttons */}
       <div className="mt-6 text-center">
         <button 
@@ -841,6 +908,15 @@ const MedicationTracker = () => {
       )}
       
       {/* Person Manager Modal moved to date section */}
+      
+      {/* Dose History Modal */}
+      {selectedMedicationForHistory && (
+        <DoseHistoryModal
+          medication={selectedMedicationForHistory}
+          isOpen={!!selectedMedicationForHistory}
+          onClose={() => setSelectedMedicationForHistory(null)}
+        />
+      )}
     </div>
   );
 };

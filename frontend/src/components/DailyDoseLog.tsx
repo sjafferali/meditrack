@@ -121,14 +121,15 @@ const DailyDoseLog: React.FC<DailyDoseLogProps> = ({ selectedDate, isOpen, onClo
     text += '═'.repeat(40) + '\n\n';
 
     // Collect all doses with medication names
-    const allDoses: Array<{ time: string; medication: string; dosage?: string }> = [];
+    const allDoses: Array<{ time: string; medication: string; dosage?: string; isDeleted?: boolean }> = [];
     
     summary.medications.forEach(medication => {
       if (medication.doses_taken > 0) {
         medication.dose_times.forEach(time => {
           allDoses.push({
             time,
-            medication: medication.medication_name
+            medication: medication.medication_name,
+            isDeleted: medication.is_deleted || false
           });
         });
       }
@@ -141,7 +142,12 @@ const DailyDoseLog: React.FC<DailyDoseLogProps> = ({ selectedDate, isOpen, onClo
       text += 'No medications taken on this date.\n';
     } else {
       allDoses.forEach(dose => {
-        text += `${formatTimeFromISO(dose.time)} - ${dose.medication}\n`;
+        // Add appropriate formatting for deleted medications
+        const medicationText = dose.isDeleted 
+          ? `${dose.medication}` // The (deleted) suffix is already added by the backend
+          : dose.medication;
+        
+        text += `${formatTimeFromISO(dose.time)} - ${medicationText}\n`;
       });
     }
 

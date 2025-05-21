@@ -125,6 +125,16 @@ const doseApi = {
       throw error;
     }
   },
+  
+  // Get dose history for a deleted medication by name
+  getDeletedMedicationDoses: async (medicationName) => {
+    try {
+      const response = await api.get(`/doses/deleted-medications/by-name/${encodeURIComponent(medicationName)}/doses`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
 
   // Get doses for a medication on a specific date
   getDosesByDate: async (medicationId, date) => {

@@ -294,7 +294,7 @@ def update_medication(
     "/{medication_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete a medication",
-    description="Delete a medication and all its dose history",
+    description="Delete a medication while preserving its dose history",
     responses={
         204: {"description": "Medication deleted successfully"},
         404: {"description": "Medication not found"},
@@ -309,11 +309,23 @@ def delete_medication(
     """
     Delete a medication.
 
-    **Warning**: This will also delete all dose history for this medication.
+    Dose history for this medication will be preserved, but the medication itself will be removed.
     """
     medication = db.query(Medication).filter(Medication.id == medication_id).first()
     if not medication:
         raise HTTPException(status_code=404, detail="Medication not found")
 
+    # Ensure medication_name is stored in all associated doses
+    # This way we can still display dose history for deleted medications
+    db.query(Dose).filter(
+        Dose.medication_id == medication_id,
+        Dose.medication_name.is_(None)  # Only update doses that don't have a name yet
+    ).update(
+        {"medication_name": medication.name},
+        synchronize_session=False
+    )
+    
+    # Now delete the medication
+    # Due to our SET NULL constraint, this will not cascade delete doses
     db.delete(medication)
     db.commit()
