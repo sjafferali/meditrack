@@ -242,7 +242,7 @@ def create_medication_tracking_pdf(
 
         # Check if there's enough space on the current page
         # Use absolute minimal reserved space at the bottom to maximize page usage
-        # Allow content to fill almost the entire page, leaving only necessary space for footer
+        # Allow content to fill almost the entire page, leaving minimal footer space
         min_required_margin = 0.1 * inch  # Minimal footer space needed
         if y_position - required_height < min_required_margin:
             start_new_page()
