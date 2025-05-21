@@ -150,7 +150,6 @@ def create_medication_tracking_pdf(
     # Set margins - optimized for better space utilization
     margin_lr = 0.5 * inch  # Left/right margins
     margin_top = 0.75 * inch  # Top margin
-    margin_bottom = 0.5 * inch  # Reduced bottom margin
     content_width = page_width - 2 * margin_lr
 
     # Track current page number
@@ -199,11 +198,15 @@ def create_medication_tracking_pdf(
 
         # Check if we need a new page
         # Base height for medication entry (title, instructions)
-        required_height = 0.8 * inch  # Reduced height requirement
-        # Height for time slots - optimized to use more time slots per line
+        required_height = 0.7 * inch  # Further reduced to fit more on page
+        # Height for time slots - calculated more precisely to avoid wasted space
+        slots_per_line = min(4, int(content_width / (1.9 * inch)))
+        lines_needed = (
+            medication.max_doses_per_day + slots_per_line - 1
+        ) // slots_per_line
         required_height += (
-            (medication.max_doses_per_day / 4 + 0.5) * 0.3 * inch
-        )  # Reduced
+            lines_needed * 0.25 * inch
+        )  # Exact height based on lines needed
 
         # Get the instructions and calculate how many lines they'll require
         instructions = get_medication_instructions(medication.name)
@@ -238,10 +241,10 @@ def create_medication_tracking_pdf(
         required_height += instruction_height
 
         # Check if there's enough space on the current page
-        # Use less reserved space at the bottom to maximize page usage
-        if (
-            y_position - required_height < margin_bottom
-        ):  # Only need space for the footer within bottom margin
+        # Use minimal reserved space at the bottom to maximize page usage
+        # Allow content to fill almost the entire page, leaving minimal space for footer
+        min_required_margin = 0.3 * inch  # Minimum footer space needed
+        if y_position - required_height < min_required_margin:
             start_new_page()
 
         # Medication name and dosage
@@ -286,13 +289,13 @@ def create_medication_tracking_pdf(
         # Create time slots
         max_doses = medication.max_doses_per_day
 
-        # Calculate time slots with proper spacing
-        slot_width = 1.9 * inch  # Wider slots to prevent overlap
+        # Calculate time slots with efficient spacing to use full page width
+        slot_width = 1.8 * inch  # Slightly reduced width to fit more slots per line
         slots_per_line = max(1, int(content_width / slot_width))
-        # Adjust slots per line based on available width to prevent overlap
+        # Use at least 4 slots per line when possible for letter-size paper
         slots_per_line = min(
-            3, slots_per_line
-        )  # Limit to 3 slots per line to ensure plenty of space
+            4, max(slots_per_line, 4 if content_width > 7.2 * inch else 3)
+        )
 
         # Draw the time slots
         pdf.setFont("Helvetica", 10)
@@ -335,24 +338,27 @@ def create_medication_tracking_pdf(
         # Add smaller space between medications
         y_position -= 0.1 * inch  # Further reduced spacing between medications
 
+    # Move footer closer to bottom for better space utilization
+    footer_margin = 0.25 * inch  # Reduced margin for footer
+
     # Add instructions at the bottom of the last page
     pdf.setFont("Helvetica", 9)
     instructions = (
         "Instructions: Record the time when each dose is taken "
         "in the blank spaces provided."
     )
-    pdf.drawString(margin_lr, margin_bottom + 0.15 * inch, instructions)
+    pdf.drawString(margin_lr, footer_margin + 0.15 * inch, instructions)
 
     # Add generation timestamp
     timestamp = datetime.now(current_tz).strftime("%Y-%m-%d %H:%M:%S")
     pdf.drawRightString(
-        page_width - margin_lr, margin_bottom + 0.15 * inch, f"Generated: {timestamp}"
+        page_width - margin_lr, footer_margin + 0.15 * inch, f"Generated: {timestamp}"
     )
 
     # Add page info
     pdf.setFont("Helvetica", 8)
     pdf.drawCentredString(
-        page_width / 2, margin_bottom, f"Page {current_page} of {current_page}"
+        page_width / 2, footer_margin, f"Page {current_page} of {current_page}"
     )
 
     # Finalize PDF
