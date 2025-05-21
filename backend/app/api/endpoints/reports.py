@@ -286,13 +286,15 @@ def create_medication_tracking_pdf(
         # Create time slots
         max_doses = medication.max_doses_per_day
 
-        # Calculate how many time slots can fit per line - increase slots per line
+        # Calculate time slots with proper spacing
         slot_width = (
-            1.7 * inch
-        )  # Further reduced width to fit more slots per line while preventing overlap
+            1.9 * inch
+        )  # Wider slots to prevent overlap
         slots_per_line = max(1, int(content_width / slot_width))
-        # Force at least 4 slots per line on standard letter paper
-        slots_per_line = max(4, slots_per_line)
+        # Adjust slots per line based on available width to prevent overlap
+        slots_per_line = min(
+            3, slots_per_line
+        )  # Limit to 3 slots per line to ensure plenty of space
 
         # Draw the time slots
         pdf.setFont("Helvetica", 10)
@@ -306,21 +308,21 @@ def create_medication_tracking_pdf(
                 if slot_count > max_doses:
                     break
 
-                # Time label
+                # Time label - moved slightly to the left
                 pdf.drawString(slot_x, y_position, f"{slot_count}:")
 
-                # Blank line for time
-                line_length = 1.0 * inch
+                # Blank line for time - start further to the right to avoid overlap
+                line_length = 0.95 * inch  # Slightly shorter line
                 pdf.line(
-                    slot_x + 0.2 * inch,
+                    slot_x + 0.25 * inch,  # Increased indent
                     y_position - 2,
-                    slot_x + 0.2 * inch + line_length,
+                    slot_x + 0.25 * inch + line_length,
                     y_position - 2,
                 )
 
-                # AM/PM indicator - increased spacing to prevent overlap
+                # AM/PM indicator - significantly increased spacing to prevent overlap
                 pdf.drawString(
-                    slot_x + 0.25 * inch + line_length,  # Increased spacing
+                    slot_x + 0.35 * inch + line_length,  # Much more spacing
                     y_position,
                     "(AM/PM)",
                 )
