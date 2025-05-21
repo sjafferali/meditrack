@@ -17,7 +17,7 @@ const MedicationTracker = () => {
   const [loadingHistory, setLoadingHistory] = useState<{ [key: number]: boolean }>({});
   
   // For handling deleted medications
-  const [deletedMedications, setDeletedMedications] = useState<Array<{name: string, isDeleted: true}>>([]);
+  const [deletedMedications, setDeletedMedications] = useState<Array<{name: string, isDeleted: boolean}>>([]);
   const [selectedMedicationForHistory, setSelectedMedicationForHistory] = useState<any>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [showDailyLog, setShowDailyLog] = useState(false);

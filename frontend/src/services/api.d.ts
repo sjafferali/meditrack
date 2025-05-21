@@ -26,11 +26,12 @@ export interface Person {
 }
 
 export interface DailySummaryMedication {
-  medication_id: number;
+  medication_id: number | null;
   medication_name: string;
   doses_taken: number;
   max_doses: number;
   dose_times: string[];
+  is_deleted?: boolean;
 }
 
 export interface DailySummary {
@@ -56,6 +57,7 @@ export interface DoseApi {
   getDailySummary: () => Promise<DailySummary>;
   getDailySummaryByDate: (date: string, timezoneOffset?: number | null) => Promise<DailySummary>;
   deleteDose: (doseId: number) => Promise<boolean>;
+  getDeletedMedicationDoses: (medicationName: string) => Promise<Dose[]>;
   downloadMedicationTrackingPDF: (date: string, options?: {
     timezoneOffset?: number | null;
     personId?: number;

@@ -24,11 +24,12 @@ interface DailyDoseLogProps {
 interface DailySummary {
   date: string;
   medications: Array<{
-    medication_id: number;
+    medication_id: number | null;
     medication_name: string;
     doses_taken: number;
     max_doses: number;
     dose_times: string[];
+    is_deleted?: boolean;
   }>;
 }
 
