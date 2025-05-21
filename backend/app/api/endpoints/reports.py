@@ -240,9 +240,9 @@ def create_medication_tracking_pdf(
         # Add instruction height to required height
         required_height += instruction_height
 
-        # Check if we need to start a new page for this medication
-        # Real bottom limit accounting for footer space
-        bottom_limit = 1.0 * inch  # Absolute minimum position for content
+        # Use a more aggressive bottom limit to fit more content per page
+        # This ensures we fully utilize the page height
+        bottom_limit = 0.75 * inch + 0.5 * inch  # Bottom margin plus footer height
 
         # Check if this medication will fit in the remaining space
         if y_position - required_height < bottom_limit:
@@ -344,41 +344,38 @@ def create_medication_tracking_pdf(
         # Add more space between medications for better visual separation
         y_position -= 0.2 * inch  # Increased spacing between medications
 
-    # Calculate absolute position for footer
-    # Drawing from the current y position, but ensuring it's on the current page
-    # This is critical - we calculate remaining space in absolute terms
-    absolute_bottom = 0.75 * inch  # Minimum bottom margin
+    # CRITICAL FIX: Place footer at exact bottom margin
+    # This ensures all PDFs have consistent footer positioning
+    # and eliminates empty space at the bottom of the page
 
-    # Add a fixed amount of space after the last medication
-    y_position -= 0.25 * inch
+    # DEBUG: Draw margin line to visualize actual bottom margin
+    pdf.setStrokeColorRGB(0.8, 0.8, 0.8)  # Light gray
+    pdf.line(
+        margin_lr - 0.1 * inch,  # Extend past margin for visibility
+        0.75 * inch,  # Bottom margin line
+        page_width - margin_lr + 0.1 * inch,
+        0.75 * inch,
+    )
 
-    # If we're very close to the bottom, or in an awkward position,
-    # start a new page to better position the footer
-    if y_position < (absolute_bottom + 1.0 * inch):
-        # Restart on a new page only if we have little content on this page
-        if y_position > (page_height * 0.6):
-            # End the current page and start a new one for footer
-            pdf.showPage()
-            current_page += 1
-            y_position = page_height - margin_top - 0.3 * inch
+    # Draw footer at exact bottom margin position
+    footer_y = 0.75 * inch + 0.15 * inch  # Position footer just above bottom margin
 
-    # Add the footer directly at the current content position
+    # Add the footer at bottom margin
     pdf.setFont("Helvetica", 9)
     instructions = (
         "Instructions: Record the time when each dose is taken "
         "in the blank spaces provided."
     )
-    pdf.drawString(margin_lr, y_position, instructions)
+    pdf.drawString(margin_lr, footer_y, instructions)
 
     # Add generation timestamp
     timestamp = datetime.now(current_tz).strftime("%Y-%m-%d %H:%M:%S")
-    pdf.drawRightString(page_width - margin_lr, y_position, f"Generated: {timestamp}")
+    pdf.drawRightString(page_width - margin_lr, footer_y, f"Generated: {timestamp}")
 
     # Add page info below instructions
-    y_position -= 0.15 * inch
     pdf.setFont("Helvetica", 8)
     pdf.drawCentredString(
-        page_width / 2, y_position, f"Page {current_page} of {current_page}"
+        page_width / 2, footer_y - 0.15 * inch, f"Page {current_page} of {current_page}"
     )
 
     # Finalize PDF
