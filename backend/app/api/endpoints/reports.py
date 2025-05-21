@@ -240,10 +240,9 @@ def create_medication_tracking_pdf(
         # Add instruction height to required height
         required_height += instruction_height
 
-        # Check if there's enough space on the current page
-        # Allow proper spacing at bottom of page
-        # Ensure consistent 0.75 inch bottom margin
-        min_required_margin = 0.75 * inch  # Match bottom margin requirement
+        # Check if there's enough space on the current page for this medication
+        # Reserve minimal space for footer and section spacing
+        min_required_margin = 0.5 * inch  # Just enough for footer
         if y_position - required_height < min_required_margin:
             start_new_page()
 
@@ -343,27 +342,33 @@ def create_medication_tracking_pdf(
         # Add more space between medications for better visual separation
         y_position -= 0.2 * inch  # Increased spacing between medications
 
-    # Set bottom margin to 0.75 inches as required
-    footer_margin = 0.75 * inch  # Bottom margin at 0.75 inches
+    # Add slight space between last medication and footer
+    y_position -= 0.3 * inch
 
-    # Add instructions at the bottom of the last page
+    # Ensure there's at least 0.75 inch from the bottom for the footer
+    # But if we're already low on the page, just use the current position
+    footer_position = max(y_position, 0.75 * inch)
+
+    # Add instructions at the bottom of the current content
     pdf.setFont("Helvetica", 9)
     instructions = (
         "Instructions: Record the time when each dose is taken "
         "in the blank spaces provided."
     )
-    pdf.drawString(margin_lr, footer_margin + 0.15 * inch, instructions)
+    pdf.drawString(margin_lr, footer_position, instructions)
 
     # Add generation timestamp
     timestamp = datetime.now(current_tz).strftime("%Y-%m-%d %H:%M:%S")
     pdf.drawRightString(
-        page_width - margin_lr, footer_margin + 0.15 * inch, f"Generated: {timestamp}"
+        page_width - margin_lr, footer_position, f"Generated: {timestamp}"
     )
 
     # Add page info
     pdf.setFont("Helvetica", 8)
     pdf.drawCentredString(
-        page_width / 2, footer_margin, f"Page {current_page} of {current_page}"
+        page_width / 2,
+        footer_position - 0.15 * inch,
+        f"Page {current_page} of {current_page}",
     )
 
     # Finalize PDF
