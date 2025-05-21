@@ -309,7 +309,8 @@ def delete_medication(
     """
     Delete a medication.
 
-    Dose history for this medication will be preserved, but the medication itself will be removed.
+    Dose history for this medication will be preserved, but the medication
+    itself will be removed.
     """
     medication = db.query(Medication).filter(Medication.id == medication_id).first()
     if not medication:
@@ -319,12 +320,9 @@ def delete_medication(
     # This way we can still display dose history for deleted medications
     db.query(Dose).filter(
         Dose.medication_id == medication_id,
-        Dose.medication_name.is_(None)  # Only update doses that don't have a name yet
-    ).update(
-        {"medication_name": medication.name},
-        synchronize_session=False
-    )
-    
+        Dose.medication_name.is_(None),  # Only update doses that don't have a name yet
+    ).update({"medication_name": medication.name}, synchronize_session=False)
+
     # Now delete the medication
     # Due to our SET NULL constraint, this will not cascade delete doses
     db.delete(medication)

@@ -226,28 +226,30 @@ def get_daily_summary(
                 "dose_times": [dose.taken_at.isoformat() for dose in doses_today],
             }
         )
-    
-    # Now add doses from deleted medications (those with null medication_id but valid medication_name)
+
+    # Now add doses from deleted medications (those with null medication_id
+    # but valid medication_name)
     orphaned_doses = (
         db.query(Dose)
         .filter(
             and_(
                 Dose.medication_id.is_(None),
                 Dose.medication_name.isnot(None),
-                Dose.taken_at >= today_start
+                Dose.taken_at >= today_start,
             )
         )
         .all()
     )
-    
+
     # Group orphaned doses by medication_name
-    orphaned_by_name = {}
+    orphaned_by_name: dict[str, list[Dose]] = {}
     for dose in orphaned_doses:
-        name = dose.medication_name
-        if name not in orphaned_by_name:
-            orphaned_by_name[name] = []
-        orphaned_by_name[name].append(dose)
-    
+        if dose.medication_name is not None:
+            name: str = str(dose.medication_name)
+            if name not in orphaned_by_name:
+                orphaned_by_name[name] = []
+            orphaned_by_name[name].append(dose)
+
     # Add orphaned doses to the summary
     for name, doses in orphaned_by_name.items():
         summary["medications"].append(
@@ -359,8 +361,9 @@ def get_daily_summary_by_date(
                 "dose_times": [dose.taken_at.isoformat() for dose in doses_on_date],
             }
         )
-    
-    # Now add doses from deleted medications (those with null medication_id but valid medication_name)
+
+    # Now add doses from deleted medications (those with null medication_id
+    # but valid medication_name)
     orphaned_doses = (
         db.query(Dose)
         .filter(
@@ -373,18 +376,19 @@ def get_daily_summary_by_date(
         )
         .all()
     )
-    
+
     if len(orphaned_doses) > 0:
         print(f"Found {len(orphaned_doses)} orphaned doses from deleted medications")
-    
+
     # Group orphaned doses by medication_name
-    orphaned_by_name = {}
+    orphaned_by_name: dict[str, list[Dose]] = {}
     for dose in orphaned_doses:
-        name = dose.medication_name
-        if name not in orphaned_by_name:
-            orphaned_by_name[name] = []
-        orphaned_by_name[name].append(dose)
-    
+        if dose.medication_name is not None:
+            name: str = str(dose.medication_name)
+            if name not in orphaned_by_name:
+                orphaned_by_name[name] = []
+            orphaned_by_name[name].append(dose)
+
     # Add orphaned doses to the summary
     for name, doses in orphaned_by_name.items():
         summary["medications"].append(
@@ -476,14 +480,12 @@ def get_deleted_medication_doses(
 
     Doses are returned in descending order by timestamp (newest first).
     """
-    # Find doses with the matching medication_name and null medication_id (orphaned doses)
+    # Find doses with the matching medication_name and null medication_id
+    # (orphaned doses)
     doses = (
         db.query(Dose)
         .filter(
-            and_(
-                Dose.medication_id.is_(None),
-                Dose.medication_name == medication_name
-            )
+            and_(Dose.medication_id.is_(None), Dose.medication_name == medication_name)
         )
         .order_by(Dose.taken_at.desc())
         .offset(skip)
@@ -492,7 +494,9 @@ def get_deleted_medication_doses(
     )
 
     if not doses:
-        raise HTTPException(status_code=404, detail="No doses found for deleted medication")
+        raise HTTPException(
+            status_code=404, detail="No doses found for deleted medication"
+        )
 
     return doses
 
