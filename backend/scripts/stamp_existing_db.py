@@ -90,8 +90,7 @@ def main():
                 print("⚠️  No current migration found")
 
         elif any(
-            table in existing_tables 
-            for table in ["medications", "doses", "persons"]
+            table in existing_tables for table in ["medications", "doses", "persons"]
         ):
             print("📋 Found existing application tables without migration tracking")
             print("This indicates a pre-Alembic database that needs to be stamped")
