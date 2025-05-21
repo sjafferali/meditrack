@@ -343,17 +343,6 @@ jobs:
       env:
         webhook_url: ${{ secrets.WEBHOOK_URL }}
         webhook_secret: ${{ secrets.WEBHOOK_SECRET }}
-      with:
-        webhook_type: 'json'
-        data: |
-          {
-            "repository": "${{ github.repository }}",
-            "ref": "${{ github.ref }}",
-            "commit": "${{ github.sha }}",
-            "build_status": "success",
-            "docker_tags": "${{ steps.meta.outputs.tags }}",
-            "triggered_by": "${{ github.actor }}"
-          }
 
   # All checks passed
   ci-success:
