@@ -147,9 +147,9 @@ def create_medication_tracking_pdf(
     pdf.setAuthor("MediTrack")
     pdf.setSubject("Medication Tracking")
 
-    # Set margins - optimized for better space utilization
+    # Set margins - further optimized for better space utilization
     margin_lr = 0.5 * inch  # Left/right margins
-    margin_top = 0.75 * inch  # Top margin
+    margin_top = 0.6 * inch  # Reduced top margin to use more vertical space
     content_width = page_width - 2 * margin_lr
 
     # Track current page number
@@ -243,7 +243,7 @@ def create_medication_tracking_pdf(
         # Check if there's enough space on the current page
         # Use minimal reserved space at the bottom to maximize page usage
         # Allow content to fill almost the entire page, leaving minimal space for footer
-        min_required_margin = 0.3 * inch  # Minimum footer space needed
+        min_required_margin = 0.2 * inch  # Further reduced minimum footer space
         if y_position - required_height < min_required_margin:
             start_new_page()
 
@@ -314,16 +314,19 @@ def create_medication_tracking_pdf(
 
                 # Blank line for time - start further to the right to avoid overlap
                 line_length = 0.95 * inch  # Slightly shorter line
+                # Add a millimeter of space above each blank line
                 pdf.line(
                     slot_x + 0.25 * inch,  # Increased indent
-                    y_position - 2,
+                    y_position - 4,  # Add space above the line (1mm ≈ 2.8 points)
                     slot_x + 0.25 * inch + line_length,
-                    y_position - 2,
+                    y_position - 4,
                 )
 
                 # AM/PM indicator - significantly increased spacing to prevent overlap
                 pdf.drawString(
-                    slot_x + 0.35 * inch + line_length,  # Much more spacing
+                    slot_x
+                    + 0.40 * inch
+                    + line_length,  # More spacing to prevent overlap
                     y_position,
                     "(AM/PM)",
                 )
@@ -339,7 +342,9 @@ def create_medication_tracking_pdf(
         y_position -= 0.1 * inch  # Further reduced spacing between medications
 
     # Move footer closer to bottom for better space utilization
-    footer_margin = 0.25 * inch  # Reduced margin for footer
+    footer_margin = (
+        0.1 * inch
+    )  # Further reduced margin for footer to use more page space
 
     # Add instructions at the bottom of the last page
     pdf.setFont("Helvetica", 9)
