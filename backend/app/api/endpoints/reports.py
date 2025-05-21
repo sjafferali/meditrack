@@ -5,8 +5,9 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from fastapi.responses import StreamingResponse
 from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import inch
-from reportlab.pdfgen import canvas
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.database import get_db
@@ -45,25 +46,6 @@ def generate_medication_pdf(
     ),
     db: Session = Depends(get_db),
 ):
-    """
-    Generate a printable medication tracking form in PDF format.
-
-    This endpoint will:
-    - Get medication data for the specified date
-    - Generate a PDF document with a tracking form
-    - Return the PDF as a streaming response for download
-
-    The form includes:
-    - Date(s) covered by the form
-    - Medication names and dosage information
-    - Grid for tracking doses over multiple days
-    - Space for marking when doses are taken
-
-    Optional parameters:
-    - timezone_offset: Adjust for user's local timezone
-    - person_id: Filter medications for a specific person
-    - days: Number of days to include in the form (1-7 days)
-    """
     # Handle timezone for the date range
     if timezone_offset is not None:
         # Convert timezone offset from minutes to timedelta
@@ -124,300 +106,162 @@ def generate_medication_pdf(
 def create_medication_tracking_pdf(
     buffer, medications, dates, person_name, current_tz, db
 ):
-    """
-    Create a medication tracking PDF document with a grid for recording doses.
+    # Configure document with exact 0.75 inch margins
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=letter,
+        leftMargin=0.75 * inch,
+        rightMargin=0.75 * inch,
+        topMargin=0.75 * inch,
+        bottomMargin=0.75 * inch,
+    )
 
-    Args:
-        buffer: BytesIO object to write the PDF to
-        medications: List of medication objects
-        dates: List of dates to include in the form
-        person_name: Name of the person (optional)
-        current_tz: Timezone for date calculations
-        db: Database session
-    """
-    # Calculate page dimensions - using portrait orientation
-    page_width, page_height = letter
+    # Create document content
+    styles = getSampleStyleSheet()
 
-    # Create PDF canvas
-    pdf = canvas.Canvas(buffer, pagesize=letter)
-
-    # Set title and metadata
     title = f"{person_name} Medication Log" if person_name else "Medication Log"
-    pdf.setTitle(title)
-    pdf.setAuthor("MediTrack")
-    pdf.setSubject("Medication Tracking")
 
-    # Set margins to exactly 0.75 inches as required
-    margin_lr = 0.75 * inch  # Left/right margins
-    margin_top = 0.75 * inch  # Top margin
-    content_width = page_width - 2 * margin_lr
-
-    # Track current page number
-    current_page = 0
-    medications_processed = 0
-
-    # Start a new page
-    def start_new_page():
-        nonlocal y_position, current_page
-        if current_page > 0:  # For any page after initialization
-            pdf.showPage()
-        current_page += 1
-
-        # Add header
-        pdf.setFont("Helvetica-Bold", 16)
-        pdf.drawString(margin_lr, page_height - margin_top, title)
+    # Define function to create page header on each page
+    def header_footer(canvas, doc):
+        canvas.saveState()
+        # Draw the title on each page
+        canvas.setFont("Helvetica-Bold", 16)
+        canvas.drawString(
+            doc.leftMargin, doc.height + doc.topMargin - 0.3 * inch, title
+        )
 
         # Add date field
-        pdf.setFont("Helvetica", 12)
+        canvas.setFont("Helvetica", 12)
         date_text = "Date: "
-        date_text_width = pdf.stringWidth(date_text, "Helvetica", 12)
-        pdf.drawString(page_width - 3 * inch, page_height - margin_top, date_text)
-
-        # Add a blank line for the date
-        pdf.setLineWidth(0.5)
-        pdf.line(
-            page_width - 3 * inch + date_text_width,
-            page_height - margin_top - 2,
-            page_width - margin_lr,
-            page_height - margin_top - 2,
+        canvas.drawString(
+            doc.width - 2.5 * inch, doc.height + doc.topMargin - 0.3 * inch, date_text
         )
 
-        # Start position just below the header with less spacing
-        # This better utilizes the full page height
-        y_position = page_height - margin_top - 0.3 * inch
+        # Add line for date
+        canvas.line(
+            doc.width - 2 * inch,
+            doc.height + doc.topMargin - 0.35 * inch,
+            doc.width - doc.rightMargin,
+            doc.height + doc.topMargin - 0.35 * inch,
+        )
 
-    # Initialize position - first page (page 0)
-    # Set current_page to 0 before calling start_new_page to ensure
-    # we don't get duplication on the first page
-    current_page = 0
-    start_new_page()  # This will increment current_page to 1
+        # Add page number
+        page_num = canvas.getPageNumber()
+        text = f"Page {page_num}"
+        canvas.setFont("Helvetica", 9)
+        canvas.drawRightString(
+            doc.width + doc.rightMargin - 1 * inch, doc.bottomMargin - 0.25 * inch, text
+        )
 
-    # Create each medication section
+        canvas.restoreState()
+
+    content = []
+
+    # Add spacer at top to account for header in first page
+    content.append(Spacer(1, 0.3 * inch))
+
+    # Process each medication
     for medication in medications:
-        medications_processed += 1
-
-        # Check if we need a new page
-        # Base height for medication entry (title, instructions)
-        required_height = 0.7 * inch  # Further reduced to fit more on page
-        # Height for time slots - calculated more precisely to avoid wasted space
-        slots_per_line = min(4, int(content_width / (1.9 * inch)))
-        lines_needed = (
-            medication.max_doses_per_day + slots_per_line - 1
-        ) // slots_per_line
-        required_height += (
-            lines_needed * 0.25 * inch
-        )  # Exact height based on lines needed
-
-        # Get the instructions and calculate how many lines they'll require
-        instructions = get_medication_instructions(medication.name)
-        max_text_width = content_width - 0.5 * inch  # Allow for slightly longer lines
-
-        # Calculate instruction height
-        instruction_height = 0.3 * inch  # Default for short instructions
-        if pdf.stringWidth(instructions, "Helvetica-Oblique", 10) > max_text_width:
-            # Split instructions into lines
-            words = instructions.split()
-            lines = []
-            current_line = []
-
-            for word in words:
-                test_line = " ".join(current_line + [word])
-                if (
-                    pdf.stringWidth(test_line, "Helvetica-Oblique", 10)
-                    <= max_text_width
-                ):
-                    current_line.append(word)
-                else:
-                    lines.append(" ".join(current_line))
-                    current_line = [word]
-
-            if current_line:
-                lines.append(" ".join(current_line))
-
-            # Calculate height needed for all instruction lines
-            instruction_height = len(lines) * 0.2 * inch
-
-        # Add instruction height to required height
-        required_height += instruction_height
-
-        # Use a more aggressive bottom limit to fit more content per page
-        # This ensures we fully utilize the page height
-        bottom_limit = 0.75 * inch + 0.5 * inch  # Bottom margin plus footer height
-
-        # Check if this medication will fit in the remaining space
-        if y_position - required_height < bottom_limit:
-            start_new_page()
-
         # Medication name and dosage
-        pdf.setFont("Helvetica-Bold", 12)
-        pdf.drawString(margin_lr, y_position, f"{medication.name} {medication.dosage}")
-
-        # Move down (reduced spacing)
-        y_position -= 0.25 * inch
-
-        # Add usage instructions in italics
-        pdf.setFont("Helvetica-Oblique", 10)
-
-        # Handle long instructions by wrapping text
-        if pdf.stringWidth(instructions, "Helvetica-Oblique", 10) > max_text_width:
-            words = instructions.split()
-            lines = []
-            current_line = []
-
-            for word in words:
-                test_line = " ".join(current_line + [word])
-                if (
-                    pdf.stringWidth(test_line, "Helvetica-Oblique", 10)
-                    <= max_text_width
-                ):
-                    current_line.append(word)
-                else:
-                    lines.append(" ".join(current_line))
-                    current_line = [word]
-
-            if current_line:
-                lines.append(" ".join(current_line))
-
-            for line in lines:
-                pdf.drawString(margin_lr, y_position, line)
-                y_position -= (
-                    0.15 * inch
-                )  # Further reduced spacing between instruction lines
-        else:
-            pdf.drawString(margin_lr, y_position, instructions)
-            y_position -= 0.2 * inch  # Further reduced spacing after instructions
-
-        # Create time slots
-        max_doses = medication.max_doses_per_day
-
-        # Calculate time slots with more generous spacing to avoid overlap
-        slot_width = 2.0 * inch  # Increased width to prevent overlap between slots
-        slots_per_line = max(1, int(content_width / slot_width))
-        # Limit to 3 slots per line to ensure adequate spacing between slots
-        slots_per_line = min(
-            3, max(slots_per_line, 3 if content_width > 7.2 * inch else 2)
+        content.append(
+            Paragraph(f"{medication.name} {medication.dosage}", styles["Heading2"])
         )
 
-        # Draw the time slots
-        pdf.setFont("Helvetica", 10)
-        slot_count = 1
+        # Add usage instructions
+        instructions = get_medication_instructions(medication.name)
+        content.append(Paragraph(instructions, styles["Italic"]))
 
-        while slot_count <= max_doses:
-            slot_x = margin_lr
+        # Create time slots table
+        max_doses = medication.max_doses_per_day
+        time_slots = []
+        row = []
+        slots_per_row = 3
 
-            # Add slots for this line
-            for i in range(slots_per_line):
-                if slot_count > max_doses:
-                    break
+        for slot in range(1, max_doses + 1):
+            slot_cell = f"{slot}: _______________ (AM/PM)"
+            row.append(slot_cell)
 
-                # Time label - moved slightly to the left
-                pdf.drawString(slot_x, y_position, f"{slot_count}:")
+            if len(row) == slots_per_row or slot == max_doses:
+                while len(row) < slots_per_row:
+                    row.append("")
+                time_slots.append(row)
+                row = []
 
-                # Blank line for time - start further to the right to avoid overlap
-                line_length = 0.95 * inch  # Slightly shorter line
-                # Add 2mm of space above each blank line for easier writing
-                pdf.line(
-                    slot_x + 0.25 * inch,  # Increased indent
-                    y_position - 6,  # Add space above the line (2mm ≈ 5.6 points)
-                    slot_x + 0.25 * inch + line_length,
-                    y_position - 6,
+        if time_slots:
+            col_width = (letter[0] - 1.5 * inch) / slots_per_row
+            time_table = Table(
+                time_slots,
+                colWidths=[col_width] * slots_per_row,
+                rowHeights=0.4 * inch,
+            )
+
+            time_table.setStyle(
+                TableStyle(
+                    [
+                        ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+                        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                        ("FONT", (0, 0), (-1, -1), "Helvetica", 10),
+                        ("BOTTOMPADDING", (0, 0), (-1, -1), 15),
+                        ("TOPPADDING", (0, 0), (-1, -1), 15),
+                    ]
                 )
+            )
 
-                # AM/PM indicator - significantly increased spacing to prevent overlap
-                pdf.drawString(
-                    slot_x
-                    + 0.40 * inch
-                    + line_length,  # More spacing to prevent overlap
-                    y_position,
-                    "(AM/PM)",
-                )
+            content.append(time_table)
+            content.append(Spacer(1, 0.1 * inch))
 
-                # Move to next slot position horizontally
-                slot_x += slot_width
-                slot_count += 1
-
-            # Move to next line with more space for easier writing
-            y_position -= (
-                0.4 * inch
-            )  # Increased spacing between dose lines for better writing room
-
-        # Add more space between medications for better visual separation
-        y_position -= 0.2 * inch  # Increased spacing between medications
-
-    # CRITICAL FIX: Place footer at exact bottom margin
-    # This ensures all PDFs have consistent footer positioning
-    # and eliminates empty space at the bottom of the page
-
-    # DEBUG: Draw margin line to visualize actual bottom margin
-    pdf.setStrokeColorRGB(0.8, 0.8, 0.8)  # Light gray
-    pdf.line(
-        margin_lr - 0.1 * inch,  # Extend past margin for visibility
-        0.75 * inch,  # Bottom margin line
-        page_width - margin_lr + 0.1 * inch,
-        0.75 * inch,
-    )
-
-    # Draw footer at exact bottom margin position
-    footer_y = 0.75 * inch + 0.15 * inch  # Position footer just above bottom margin
-
-    # Add the footer at bottom margin
-    pdf.setFont("Helvetica", 9)
-    instructions = (
-        "Instructions: Record the time when each dose is taken "
-        "in the blank spaces provided."
-    )
-    pdf.drawString(margin_lr, footer_y, instructions)
-
-    # Add generation timestamp
+    # Add footer
     timestamp = datetime.now(current_tz).strftime("%Y-%m-%d %H:%M:%S")
-    pdf.drawRightString(page_width - margin_lr, footer_y, f"Generated: {timestamp}")
-
-    # Add page info below instructions
-    pdf.setFont("Helvetica", 8)
-    pdf.drawCentredString(
-        page_width / 2, footer_y - 0.15 * inch, f"Page {current_page} of {current_page}"
+    footer_style = ParagraphStyle(
+        "Footer",
+        parent=styles["Normal"],
+        fontSize=9,
+        alignment=1,  # Center
+        spaceBefore=0.5 * inch,
     )
+    footer_text = (
+        "Instructions: Record the time when each dose is taken in the blank spaces "
+        f"provided. Generated: {timestamp}"
+    )
+    content.append(Paragraph(footer_text, footer_style))
 
-    # Finalize PDF
-    pdf.save()
+    # Build the PDF with the header/footer function
+    doc.build(content, onFirstPage=header_footer, onLaterPages=header_footer)
 
 
 def get_medication_instructions(medication_name):
-    """
-    Get instructions for a medication based on name.
-    This is a helper function that provides sample instructions.
-    In a real implementation, these would come from the database.
-
-    Args:
-        medication_name: Name of the medication
-
-    Returns:
-        String with usage instructions
-    """
     # Map of sample instructions based on common medication names
-    # This would typically come from the database in a real implementation
     instructions_map = {
-        "Pred Acetate": "Apply 1 drop to right eye only. Steroid for inflammation. "
-        "Stop if pain or squinting. (Pink cap)",
+        "Pred Acetate": (
+            "Apply 1 drop to right eye only. Steroid for inflammation. "
+            "Stop if pain or squinting. (Pink cap)"
+        ),
         "Ofloxacin": "Antibiotic to prevent infection. (Beige cap)",
         "Dorzolamide": "Reduces eye pressure. (Orange cap)",
-        "Gabapentin": "Give 1 tablet every 8-24 hours for pain and sedation. "
-        "(Pill bottle)",
-        "I-Drop": "Apply a small dot to the left eye 3x daily for lubrication. "
-        "Apply before bedtime. (White bottle)",
-        "Tacrolimus": "Tear stimulant for dry eye. Long-term use. "
-        "(Bottle in pill bottle)",
+        "Gabapentin": (
+            "Give 1 tablet every 8-24 hours for pain and sedation. " "(Pill bottle)"
+        ),
+        "I-Drop": (
+            "Apply a small dot to the left eye 3x daily for lubrication. "
+            "Apply before bedtime. (White bottle)"
+        ),
+        "Tacrolimus": (
+            "Tear stimulant for dry eye. Long-term use. " "(Bottle in pill bottle)"
+        ),
         "Diclofenac": "NSAID for pain/inflammation. Stop if squinting. (Grey cap)",
         "Clavacillin": "Antibiotic. Give with food. (Single use packets)",
-        "Prednisone": "Steroid for inflammation. Give with food. "
-        "May cause upset stomach or bloody stools. (Pill bottle)",
+        "Prednisone": (
+            "Steroid for inflammation. Give with food. "
+            "May cause upset stomach or bloody stools. (Pill bottle)"
+        ),
         "Artificial Tears": "Lubricates eyes. Use 1-2 times daily. (OTC)",
-        "Trazodone": "Give 1/2 tab twice a day with food to relieve anxiety. (Tablet)",
+        "Trazodone": (
+            "Give 1/2 tab twice a day with food to relieve anxiety. " "(Tablet)"
+        ),
     }
 
     # Return instructions if found, otherwise a generic message
     for key, value in instructions_map.items():
         if key.lower() in medication_name.lower():
             return value
-
     return "Follow prescription instructions as directed."
