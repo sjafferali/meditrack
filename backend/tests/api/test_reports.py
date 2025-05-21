@@ -278,7 +278,9 @@ def test_multipage_pdf_generation(client, db_session):
 
     # Check content on second page
     second_page_text = pdf.pages[1].extract_text()
-    assert "Test Person Medication Log" in second_page_text
+    assert "Page 2" in second_page_text
+    # No medication log title on second page (intentionally removed)
+    assert "Test Person Medication Log" not in second_page_text
 
 
 def test_person_not_found(client):

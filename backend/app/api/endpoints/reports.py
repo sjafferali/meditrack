@@ -121,10 +121,10 @@ def create_medication_tracking_pdf(
 
     title = f"{person_name} Medication Log" if person_name else "Medication Log"
 
-    # Define function to create page header on each page
-    def header_footer(canvas, doc):
+    # Define function to create first page header with title and date
+    def first_page_header(canvas, doc):
         canvas.saveState()
-        # Draw the title on each page
+        # Draw the title on first page
         canvas.setFont("Helvetica-Bold", 16)
         canvas.drawString(
             doc.leftMargin, doc.height + doc.topMargin - 0.3 * inch, title
@@ -146,6 +146,20 @@ def create_medication_tracking_pdf(
         )
 
         # Add page number
+        page_num = canvas.getPageNumber()
+        text = f"Page {page_num}"
+        canvas.setFont("Helvetica", 9)
+        canvas.drawRightString(
+            doc.width + doc.rightMargin - 1 * inch, doc.bottomMargin - 0.25 * inch, text
+        )
+
+        canvas.restoreState()
+
+    # Define function for later pages with only page numbers
+    def later_pages_header(canvas, doc):
+        canvas.saveState()
+
+        # Add only page number
         page_num = canvas.getPageNumber()
         text = f"Page {page_num}"
         canvas.setFont("Helvetica", 9)
@@ -225,8 +239,8 @@ def create_medication_tracking_pdf(
     )
     content.append(Paragraph(footer_text, footer_style))
 
-    # Build the PDF with the header/footer function
-    doc.build(content, onFirstPage=header_footer, onLaterPages=header_footer)
+    # Build the PDF with different functions for first and later pages
+    doc.build(content, onFirstPage=first_page_header, onLaterPages=later_pages_header)
 
 
 def get_medication_instructions(medication_name):
