@@ -301,7 +301,10 @@ def test_pdf_generation_with_very_long_instructions(client, db_session):
         dosage="10mg",
         frequency="Twice daily",
         max_doses_per_day=2,
-        instructions="Apply 1 drop to right eye only. Steroid for inflammation. Stop if pain or squinting. (Pink cap)",
+        instructions=(
+            "Apply 1 drop to right eye only. Steroid for inflammation. "
+            "Stop if pain or squinting. (Pink cap)"
+        ),
         person_id=person.id,
     )
 
