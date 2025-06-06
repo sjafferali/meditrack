@@ -3,7 +3,6 @@ from datetime import date
 
 from pypdf import PdfReader
 
-from app.api.endpoints.reports import get_medication_instructions
 from app.models.medication import Medication
 from app.models.person import Person
 
@@ -167,15 +166,7 @@ def test_generate_medication_pdf_with_timezone(client, sample_medication):
     assert "Test Medication" in page_text
 
 
-def test_get_medication_instructions():
-    # Test instructions for known medications
-    assert "Steroid for inflammation" in get_medication_instructions("Pred Acetate")
-    assert "Antibiotic" in get_medication_instructions("Ofloxacin")
-
-    # Test instructions for unknown medication
-    assert "Follow prescription instructions" in get_medication_instructions(
-        "Unknown Medication"
-    )
+# test_get_medication_instructions removed as function no longer exists
 
 
 def test_medication_with_long_instructions(client, db_session):
@@ -304,13 +295,13 @@ def test_pdf_generation_with_very_long_instructions(client, db_session):
     db_session.commit()
     db_session.refresh(person)
 
-    # Create a medication that matches a known medication in get_medication_instructions
+    # Create a medication with instructions stored in database
     med = Medication(
-        # This will get special instructions from get_medication_instructions
         name="Pred Acetate",
         dosage="10mg",
         frequency="Twice daily",
         max_doses_per_day=2,
+        instructions="Apply 1 drop to right eye only. Steroid for inflammation. Stop if pain or squinting. (Pink cap)",
         person_id=person.id,
     )
 
@@ -335,5 +326,5 @@ def test_pdf_generation_with_very_long_instructions(client, db_session):
 
     # Verify the PDF contains the medication name
     assert "Pred Acetate" in page_text
-    # Verify special instructions from get_medication_instructions function
+    # Verify instructions from database are in the PDF
     assert "Steroid for inflammation" in page_text

@@ -182,7 +182,11 @@ def create_medication_tracking_pdf(
         )
 
         # Add usage instructions
-        instructions = get_medication_instructions(medication.name)
+        instructions = (
+            medication.instructions
+            if medication.instructions
+            else "No specific instructions provided"
+        )
         content.append(Paragraph(instructions, styles["Italic"]))
 
         # Create time slots table
@@ -241,41 +245,3 @@ def create_medication_tracking_pdf(
 
     # Build the PDF with different functions for first and later pages
     doc.build(content, onFirstPage=first_page_header, onLaterPages=later_pages_header)
-
-
-def get_medication_instructions(medication_name):
-    # Map of sample instructions based on common medication names
-    instructions_map = {
-        "Pred Acetate": (
-            "Apply 1 drop to right eye only. Steroid for inflammation. "
-            "Stop if pain or squinting. (Pink cap)"
-        ),
-        "Ofloxacin": "Antibiotic to prevent infection. (Beige cap)",
-        "Dorzolamide": "Reduces eye pressure. (Orange cap)",
-        "Gabapentin": (
-            "Give 1 tablet every 8-24 hours for pain and sedation. " "(Pill bottle)"
-        ),
-        "I-Drop": (
-            "Apply a small dot to the left eye 3x daily for lubrication. "
-            "Apply before bedtime. (White bottle)"
-        ),
-        "Tacrolimus": (
-            "Tear stimulant for dry eye. Long-term use. " "(Bottle in pill bottle)"
-        ),
-        "Diclofenac": "NSAID for pain/inflammation. Stop if squinting. (Grey cap)",
-        "Clavacillin": "Antibiotic. Give with food. (Single use packets)",
-        "Prednisone": (
-            "Steroid for inflammation. Give with food. "
-            "May cause upset stomach or bloody stools. (Pill bottle)"
-        ),
-        "Artificial Tears": "Lubricates eyes. Use 1-2 times daily. (OTC)",
-        "Trazodone": (
-            "Give 1/2 tab twice a day with food to relieve anxiety. " "(Tablet)"
-        ),
-    }
-
-    # Return instructions if found, otherwise a generic message
-    for key, value in instructions_map.items():
-        if key.lower() in medication_name.lower():
-            return value
-    return "Follow prescription instructions as directed."
