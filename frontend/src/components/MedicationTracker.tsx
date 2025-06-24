@@ -192,14 +192,6 @@ const MedicationTracker = () => {
   };
   
   
-  const viewDeletedMedicationHistory = (medication: any) => {
-    // Store the original name without (deleted) suffix for API calls
-    const originalName = medication.name.replace(" (deleted)", "");
-    setSelectedMedicationForHistory({
-      ...medication,
-      originalName
-    });
-  };
 
   const handleDeleteDose = async (medicationId: number, doseId: number) => {
     try {
@@ -793,12 +785,6 @@ const MedicationTracker = () => {
                   <div>
                     <span className="font-medium">{medication.name}</span>
                   </div>
-                  <button
-                    onClick={() => viewDeletedMedicationHistory(medication)}
-                    className="px-3 py-1 text-purple-600 hover:bg-purple-50 rounded-md text-sm"
-                  >
-                    View History
-                  </button>
                 </div>
               ))}
             </div>
