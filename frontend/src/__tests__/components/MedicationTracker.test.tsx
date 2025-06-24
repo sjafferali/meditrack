@@ -587,14 +587,34 @@ describe('MedicationTracker', () => {
       const historyButtons = screen.getAllByText('Show History');
       fireEvent.click(historyButtons[0]);
       
+      // Wait for dose history API call to be made
+      await waitFor(() => {
+        expect(doseApi.getDoses).toHaveBeenCalledWith(1);
+      });
+      
       // Wait for dose history to load and appear
       await waitFor(() => {
         expect(screen.getByText('Dose History')).toBeInTheDocument();
       });
+      
+      // Wait for dose entries to appear in the DOM
+      await waitFor(() => {
+        expect(screen.getByText('1/15/2023')).toBeInTheDocument();
+      });
 
+      // Find and click the dose delete button
       await waitFor(() => {
         const deleteButtons = screen.getAllByText('Delete');
-        fireEvent.click(deleteButtons[0]);
+        const doseDeleteButton = deleteButtons.find(button => {
+          const parent = button.closest('.text-sm.text-gray-600');
+          return parent !== null;
+        });
+        if (doseDeleteButton) {
+          fireEvent.click(doseDeleteButton);
+        } else {
+          // Fallback: click the last delete button (should be the dose delete)
+          fireEvent.click(deleteButtons[deleteButtons.length - 1]);
+        }
       });
 
       // Check if we're in delete confirmation state by looking for Confirm button
