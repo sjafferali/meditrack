@@ -1,681 +1,498 @@
-# MediTrack Deployment Guide
+# MediTrack Production Deployment Guide
 
-This guide covers various deployment options for MediTrack, from simple Docker deployments to cloud platform deployments.
+## Overview
 
-## Table of Contents
+This guide covers deploying MediTrack to production environments using Docker.
 
-1. [Prerequisites](#prerequisites)
-2. [Docker Deployment](#docker-deployment)
-3. [AWS Deployment](#aws-deployment)
-4. [Google Cloud Platform](#google-cloud-platform)
-5. [Azure Deployment](#azure-deployment)
-6. [Heroku Deployment](#heroku-deployment)
-7. [DigitalOcean Deployment](#digitalocean-deployment)
-8. [Kubernetes Deployment](#kubernetes-deployment)
-9. [Production Considerations](#production-considerations)
+## Deployment Options
 
-## Prerequisites
+### Option 1: Single Server (VPS/Cloud VM)
 
-Before deploying MediTrack, ensure you have:
+Suitable for small to medium deployments.
 
+#### Requirements
+- Ubuntu 20.04+ or similar Linux distribution
+- 2 CPU cores minimum
+- 2GB RAM minimum
+- 10GB disk space
 - Docker and Docker Compose installed
-- Git installed
-- Access to your cloud platform of choice
-- Domain name (optional, for custom domain)
-- SSL certificate (or use Let's Encrypt)
 
-## Docker Deployment
+#### Steps
 
-### Local Docker Deployment
-
+1. **Prepare the server**
 ```bash
-# Clone the repository
-git clone https://github.com/sjafferali/meditrack.git
+# Update system
+sudo apt update && sudo apt upgrade -y
+
+# Install Docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+
+# Install Docker Compose
+sudo apt install docker-compose-plugin
+
+# Add your user to docker group
+sudo usermod -aG docker $USER
+```
+
+2. **Clone the repository**
+```bash
+git clone https://github.com/yourusername/meditrack.git
 cd meditrack
-
-# Build and run with Docker Compose
-# Option 1: Simple deployment with SQLite
-docker compose -f docker-compose.simple.yml up -d
-
-# Option 2: Deployment with PostgreSQL
-docker compose -f docker-compose.postgres.yml up -d
-
-# Check status
-docker compose -f docker-compose.simple.yml ps
-
-# View logs
-docker compose -f docker-compose.simple.yml logs -f
 ```
 
-### Production Docker Deployment
-
-1. Create production environment file:
-
+3. **Configure environment**
 ```bash
-cp .env.example .env.production
-```
-
-2. Edit `.env.production`:
-
-```env
-# Backend Configuration
-DATABASE_URL=postgresql://user:password@db/meditrack
-SECRET_KEY=your-secure-secret-key
+# Create .env file
+cat > .env << EOF
+SECRET_KEY=your-generated-secret-key
+DATABASE_URL=sqlite:///./data/meditrack.db
 ENVIRONMENT=production
-DEBUG=false
-
-# Frontend Configuration
-REACT_APP_API_URL=https://api.yourdomain.com
+EOF
 ```
 
-3. Deploy using the available Docker Compose configurations:
-
-```bash
-# For SQLite deployment
-docker compose -f docker-compose.simple.yml up -d
-
-# For PostgreSQL deployment
-docker compose -f docker-compose.postgres.yml up -d
-```
-
-## AWS Deployment
-
-### Using AWS ECS (Elastic Container Service)
-
-1. Install AWS CLI and configure:
-
-```bash
-aws configure
-```
-
-2. Create ECR repositories:
-
-```bash
-# Create repositories
-aws ecr create-repository --repository-name meditrack-backend
-aws ecr create-repository --repository-name meditrack-frontend
-
-# Get login token
-aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin [your-account-id].dkr.ecr.us-east-1.amazonaws.com
-```
-
-3. Build and push images:
-
+4. **Build and deploy**
 ```bash
 # Build the single-container image
 docker build -t meditrack:latest .
 
-# Tag image
-docker tag meditrack:latest [your-account-id].dkr.ecr.us-east-1.amazonaws.com/meditrack:latest
-
-# Push image
-docker push [your-account-id].dkr.ecr.us-east-1.amazonaws.com/meditrack:latest
-```
-
-4. Create ECS task definition (`task-definition.json`):
-
-```json
-{
-  "family": "meditrack",
-  "taskRoleArn": "arn:aws:iam::YOUR_ACCOUNT_ID:role/ecsTaskRole",
-  "executionRoleArn": "arn:aws:iam::YOUR_ACCOUNT_ID:role/ecsTaskExecutionRole",
-  "networkMode": "awsvpc",
-  "containerDefinitions": [
-    {
-      "name": "backend",
-      "image": "YOUR_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/meditrack-backend:latest",
-      "portMappings": [
-        {
-          "containerPort": 8000,
-          "protocol": "tcp"
-        }
-      ],
-      "environment": [
-        {
-          "name": "DATABASE_URL",
-          "value": "postgresql://user:password@rds-endpoint/meditrack"
-        }
-      ],
-      "logConfiguration": {
-        "logDriver": "awslogs",
-        "options": {
-          "awslogs-group": "/ecs/meditrack",
-          "awslogs-region": "us-east-1",
-          "awslogs-stream-prefix": "backend"
-        }
-      }
-    },
-    {
-      "name": "frontend",
-      "image": "YOUR_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/meditrack-frontend:latest",
-      "portMappings": [
-        {
-          "containerPort": 3000,
-          "protocol": "tcp"
-        }
-      ],
-      "logConfiguration": {
-        "logDriver": "awslogs",
-        "options": {
-          "awslogs-group": "/ecs/meditrack",
-          "awslogs-region": "us-east-1",
-          "awslogs-stream-prefix": "frontend"
-        }
-      }
-    }
-  ],
-  "requiresCompatibilities": ["FARGATE"],
-  "cpu": "512",
-  "memory": "1024"
-}
-```
-
-5. Create ECS cluster and service:
-
-```bash
-# Create cluster
-aws ecs create-cluster --cluster-name meditrack-cluster
-
-# Register task definition
-aws ecs register-task-definition --cli-input-json file://task-definition.json
-
-# Create service
-aws ecs create-service \
-  --cluster meditrack-cluster \
-  --service-name meditrack-service \
-  --task-definition meditrack:1 \
-  --desired-count 2 \
-  --launch-type FARGATE \
-  --network-configuration "awsvpcConfiguration={subnets=[subnet-xxx],securityGroups=[sg-xxx],assignPublicIp=ENABLED}"
-```
-
-### Using AWS Elastic Beanstalk
-
-1. Install EB CLI:
-
-```bash
-pip install awsebcli
-```
-
-2. Initialize Elastic Beanstalk:
-
-```bash
-cd meditrack
-eb init -p docker meditrack-app
-```
-
-3. Create environment:
-
-```bash
-eb create meditrack-env
-```
-
-4. Deploy:
-
-```bash
-eb deploy
-```
-
-## Google Cloud Platform
-
-### Using Google Cloud Run
-
-1. Install gcloud CLI and authenticate:
-
-```bash
-gcloud auth login
-gcloud config set project YOUR_PROJECT_ID
-```
-
-2. Enable required APIs:
-
-```bash
-gcloud services enable containerregistry.googleapis.com
-gcloud services enable run.googleapis.com
-```
-
-3. Build and push images:
-
-```bash
-# Configure Docker for GCR
-gcloud auth configure-docker
-
-# Build the single-container image
-docker build -t gcr.io/YOUR_PROJECT_ID/meditrack .
-docker push gcr.io/YOUR_PROJECT_ID/meditrack
-```
-
-4. Deploy to Cloud Run:
-
-```bash
-# Deploy the application
-gcloud run deploy meditrack \
-  --image gcr.io/YOUR_PROJECT_ID/meditrack \
-  --platform managed \
-  --region us-central1 \
-  --allow-unauthenticated \
-  --set-env-vars DATABASE_URL=$DATABASE_URL
-```
-
-### Using Google Kubernetes Engine (GKE)
-
-1. Create GKE cluster:
-
-```bash
-gcloud container clusters create meditrack-cluster \
-  --zone us-central1-a \
-  --num-nodes 3
-```
-
-2. Get cluster credentials:
-
-```bash
-gcloud container clusters get-credentials meditrack-cluster --zone us-central1-a
-```
-
-3. Deploy using Kubernetes manifests (see Kubernetes section)
-
-## Azure Deployment
-
-### Using Azure Container Instances
-
-1. Install Azure CLI and login:
-
-```bash
-az login
-az account set --subscription YOUR_SUBSCRIPTION_ID
-```
-
-2. Create resource group:
-
-```bash
-az group create --name meditrack-rg --location eastus
-```
-
-3. Create container registry:
-
-```bash
-az acr create --resource-group meditrack-rg --name meditrackcr --sku Basic
-az acr login --name meditrackcr
-```
-
-4. Build and push image:
-
-```bash
-# Build and push the combined image
-docker build -t meditrackcr.azurecr.io/meditrack:latest .
-docker push meditrackcr.azurecr.io/meditrack:latest
-```
-
-5. Deploy container:
-
-```bash
-# Deploy the application
-az container create \
-  --resource-group meditrack-rg \
-  --name meditrack \
-  --image meditrackcr.azurecr.io/meditrack:latest \
-  --ports 8000 \
-  --environment-variables DATABASE_URL=$DATABASE_URL SECRET_KEY=$SECRET_KEY
-```
-
-## Heroku Deployment
-
-1. Install Heroku CLI and login:
-
-```bash
-heroku login
-```
-
-2. Create Heroku app:
-
-```bash
-heroku create meditrack
-```
-
-3. Add Heroku PostgreSQL:
-
-```bash
-heroku addons:create heroku-postgresql:hobby-dev --app meditrack
-```
-
-4. Deploy application:
-
-```bash
-git init
-heroku git:remote -a meditrack
-git add .
-git commit -m "Initial commit"
-git push heroku main
-```
-
-## DigitalOcean Deployment
-
-### Using App Platform
-
-1. Fork the repository to your GitHub account
-
-2. Go to DigitalOcean App Platform
-
-3. Create new app and select your repository
-
-4. Configure components:
-   - Backend: Python/FastAPI
-   - Frontend: Static Site
-   - Database: PostgreSQL
-
-5. Set environment variables:
-   - `DATABASE_URL`
-   - `SECRET_KEY`
-   - `REACT_APP_API_URL`
-
-6. Deploy
-
-### Using Droplets
-
-1. Create a droplet with Docker pre-installed
-
-2. SSH into the droplet:
-
-```bash
-ssh root@your-droplet-ip
-```
-
-3. Clone repository and deploy:
-
-```bash
-git clone https://github.com/sjafferali/meditrack.git
-cd meditrack
-# Choose your deployment option
+# Start services using appropriate compose file
+# For SQLite deployment
 docker compose -f docker-compose.simple.yml up -d
-# OR
+
+# OR for PostgreSQL deployment
 docker compose -f docker-compose.postgres.yml up -d
+
+# Check status (example with simple deployment)
+docker compose -f docker-compose.simple.yml ps
 ```
 
-## Kubernetes Deployment
-
-1. Create namespace:
-
+5. **Set up reverse proxy (Nginx)**
 ```bash
-kubectl create namespace meditrack
+# Install Nginx
+sudo apt install nginx
+
+# Create site configuration
+sudo tee /etc/nginx/sites-available/meditrack << EOF
+server {
+    listen 80;
+    server_name your-domain.com;
+
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+    }
+
+    location /api {
+        proxy_pass http://localhost:8000;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+    }
+}
+EOF
+
+# Enable site
+sudo ln -s /etc/nginx/sites-available/meditrack /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl restart nginx
 ```
 
-2. Create deployment manifest:
+6. **Set up SSL with Let's Encrypt**
+```bash
+# Install Certbot
+sudo apt install certbot python3-certbot-nginx
+
+# Get certificate
+sudo certbot --nginx -d your-domain.com
+```
+
+### Option 2: Docker Swarm Cluster
+
+For high availability and horizontal scaling.
+
+#### Setup
+
+1. **Initialize Swarm**
+```bash
+# On manager node
+docker swarm init
+
+# Join worker nodes
+docker swarm join --token <token> <manager-ip>:2377
+```
+
+2. **Create secrets**
+```bash
+echo "your-secret-key" | docker secret create meditrack_secret_key -
+```
+
+3. **Deploy stack**
+```bash
+# Deploy with SQLite
+docker stack deploy -c docker-compose.simple.yml meditrack
+
+# OR deploy with PostgreSQL
+docker stack deploy -c docker-compose.postgres.yml meditrack
+```
+
+### Option 3: Kubernetes Deployment
+
+For enterprise deployments with advanced orchestration.
+
+#### Kubernetes Manifests
 
 ```yaml
-# meditrack-deployment.yaml
+# namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: meditrack
+
+---
+# backend-deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: meditrack
+  name: backend
   namespace: meditrack
 spec:
-  replicas: 3
+  replicas: 2
   selector:
     matchLabels:
-      app: meditrack
+      app: backend
   template:
     metadata:
       labels:
-        app: meditrack
+        app: backend
     spec:
       containers:
-      - name: meditrack
-        image: your-registry/meditrack:latest
+      - name: backend
+        image: meditrack-backend:latest
         ports:
         - containerPort: 8000
         env:
         - name: DATABASE_URL
-          valueFrom:
-            secretKeyRef:
-              name: meditrack-secrets
-              key: database-url
-        - name: SECRET_KEY
-          valueFrom:
-            secretKeyRef:
-              name: meditrack-secrets
-              key: secret-key
+          value: "sqlite:///./data/meditrack.db"
+        volumeMounts:
+        - name: data
+          mountPath: /app/data
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: backend-data
+
+---
+# frontend-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: meditrack
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: meditrack-frontend:latest
+        ports:
+        - containerPort: 80
+
+---
+# services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: meditrack
+spec:
+  selector:
+    app: backend
+  ports:
+  - port: 8000
+    targetPort: 8000
+
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: meditrack-service
+  name: frontend
   namespace: meditrack
 spec:
   selector:
-    app: meditrack
+    app: frontend
   ports:
-    - protocol: TCP
-      port: 8000
-      targetPort: 8000
-  type: ClusterIP
+  - port: 80
+    targetPort: 80
+  type: LoadBalancer
 ```
 
-3. Create secrets:
+## Cloud Platform Deployments
+
+### AWS ECS
+
+1. **Build and push to ECR**
+```bash
+# Authenticate with ECR
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin <account-id>.dkr.ecr.us-east-1.amazonaws.com
+
+# Tag and push
+docker tag meditrack-backend:latest <account-id>.dkr.ecr.us-east-1.amazonaws.com/meditrack-backend:latest
+docker push <account-id>.dkr.ecr.us-east-1.amazonaws.com/meditrack-backend:latest
+```
+
+2. **Create task definitions and services via AWS Console or Terraform**
+
+### Google Cloud Run
 
 ```bash
-kubectl create secret generic meditrack-secrets \
-  --from-literal=database-url=postgresql://user:password@host/db \
-  --from-literal=secret-key=your-secure-secret-key \
-  -n meditrack
+# Build and push to GCR
+gcloud builds submit --tag gcr.io/PROJECT-ID/meditrack-backend
+gcloud builds submit --tag gcr.io/PROJECT-ID/meditrack-frontend
+
+# Deploy
+gcloud run deploy meditrack-backend --image gcr.io/PROJECT-ID/meditrack-backend --platform managed
+gcloud run deploy meditrack-frontend --image gcr.io/PROJECT-ID/meditrack-frontend --platform managed
 ```
 
-4. Deploy:
+### Azure Container Instances
 
 ```bash
-kubectl apply -f meditrack-deployment.yaml
+# Create resource group
+az group create --name meditrack-rg --location eastus
+
+# Create container registry
+az acr create --resource-group meditrack-rg --name meditrackacr --sku Basic
+
+# Build and push
+az acr build --registry meditrackacr --image meditrack-backend:latest ./backend
+az acr build --registry meditrackacr --image meditrack-frontend:latest ./frontend
+
+# Deploy
+az container create --resource-group meditrack-rg --name meditrack-backend --image meditrackacr.azurecr.io/meditrack-backend:latest
 ```
 
-5. Create ingress:
+## Monitoring and Logging
+
+### Prometheus + Grafana
+
+1. **Add metrics endpoint to FastAPI**
+```python
+from prometheus_client import make_asgi_app
+
+# Add to main.py
+metrics_app = make_asgi_app()
+app.mount("/metrics", metrics_app)
+```
+
+2. **Deploy monitoring stack**
+```yaml
+# Configure in your chosen docker-compose file
+# Add these services to docker-compose.simple.yml or docker-compose.postgres.yml
+
+services:
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+```
+
+### ELK Stack
 
 ```yaml
-# ingress.yaml
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: meditrack-ingress
-  namespace: meditrack
-  annotations:
-    kubernetes.io/ingress.class: nginx
-    cert-manager.io/cluster-issuer: letsencrypt-prod
-spec:
-  tls:
-  - hosts:
-    - meditrack.yourdomain.com
-    secretName: meditrack-tls
-  rules:
-  - host: meditrack.yourdomain.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: meditrack-service
-            port:
-              number: 8000
+# Add these services to your chosen docker-compose file
+# docker-compose.simple.yml or docker-compose.postgres.yml
+
+services:
+  elasticsearch:
+    image: elasticsearch:7.17.0
+    environment:
+      - discovery.type=single-node
+    ports:
+      - "9200:9200"
+
+  logstash:
+    image: logstash:7.17.0
+    volumes:
+      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+
+  kibana:
+    image: kibana:7.17.0
+    ports:
+      - "5601:5601"
 ```
 
-## GitHub Actions CI/CD
+## Backup Strategy
 
-MediTrack uses GitHub Actions for continuous integration and deployment. When code is pushed to the main branch, GitHub Actions will:
-
-1. Run all backend and frontend tests
-2. Perform code linting and type checking
-3. Run security scans and dependency checks
-4. Build a Docker image with both backend and frontend
-5. Push the image to Docker Hub
-
-The GitHub Actions workflow is defined in `.github/workflows/main.yml` and handles:
-
-- Building the frontend and copying static files to the backend
-- Building a single container image using the root Dockerfile
-- Tagging and pushing the image to Docker registries
-
-This means that manual building of Docker images is only necessary for local development. For production, simply push to the main branch and let GitHub Actions handle the build and deployment process.
-
-## Production Considerations
-
-### Environment Variables
-
-Create a `.env.production` file:
-
-```env
-# Backend
-DATABASE_URL=postgresql://user:password@host:5432/meditrack
-SECRET_KEY=your-very-secure-secret-key
-ALLOWED_HOSTS=api.yourdomain.com
-CORS_ORIGINS=https://yourdomain.com
-ENVIRONMENT=production
-DEBUG=false
-
-# Frontend
-REACT_APP_API_URL=https://api.yourdomain.com
-REACT_APP_ENVIRONMENT=production
-```
-
-### Database Configuration
-
-1. Use PostgreSQL for production
-2. Enable SSL/TLS for database connections
-3. Set up regular backups
-4. Configure connection pooling
-
-### Security
-
-1. **SSL/TLS Certificates**:
-   ```bash
-   # Using Let's Encrypt
-   certbot --nginx -d yourdomain.com -d api.yourdomain.com
-   ```
-
-2. **Security Headers**:
-   ```nginx
-   # nginx.conf
-   add_header X-Content-Type-Options nosniff;
-   add_header X-Frame-Options DENY;
-   add_header X-XSS-Protection "1; mode=block";
-   add_header Strict-Transport-Security "max-age=31536000; includeSubDomains";
-   ```
-
-3. **Rate Limiting**:
-   ```nginx
-   limit_req_zone $binary_remote_addr zone=api:10m rate=10r/s;
-   limit_req zone=api burst=20 nodelay;
-   ```
-
-### Monitoring
-
-1. **Application Monitoring**:
-   - Use APM tools (New Relic, DataDog, etc.)
-   - Set up error tracking (Sentry, Rollbar)
-   - Configure structured logging
-
-2. **Infrastructure Monitoring**:
-   - CPU and memory usage
-   - Disk space
-   - Network traffic
-   - Database performance
-
-3. **Health Checks**:
-   ```python
-   # Add to FastAPI app
-   @app.get("/health")
-   def health_check():
-       return {"status": "healthy", "timestamp": datetime.utcnow()}
-   ```
-
-### Backup Strategy
-
-1. **Database Backups**:
-   ```bash
-   # PostgreSQL backup script
-   pg_dump -h localhost -U postgres meditrack > backup_$(date +%Y%m%d).sql
-   ```
-
-2. **Automated Backups**:
-   - Configure cloud provider's backup service
-   - Set up cron jobs for regular backups
-   - Store backups in different region
-
-### Scaling
-
-1. **Horizontal Scaling**:
-   - Use load balancer
-   - Deploy multiple instances
-   - Configure auto-scaling
-
-2. **Caching**:
-   - Add Redis for session storage
-   - Implement API response caching
-   - Use CDN for static assets
-
-### Performance Optimization
-
-1. **Frontend**:
-   - Enable gzip compression
-   - Minify JavaScript and CSS
-   - Optimize images
-   - Use CDN for static assets
-
-2. **Backend**:
-   - Enable query optimization
-   - Use database indexing
-   - Implement connection pooling
-   - Add caching layer
-
-### Disaster Recovery
-
-1. Create disaster recovery plan
-2. Test restore procedures regularly
-3. Document recovery processes
-4. Set up monitoring alerts
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Database Connection Failed**:
-   - Check DATABASE_URL format
-   - Verify network connectivity
-   - Check database credentials
-   - Ensure database is running
-
-2. **CORS Errors**:
-   - Verify CORS_ORIGINS setting
-   - Check API URL in frontend
-   - Ensure protocol matches (http/https)
-
-3. **Container Won't Start**:
-   - Check logs: `docker logs container-name`
-   - Verify environment variables
-   - Check port conflicts
-   - Ensure images are built correctly
-
-### Debugging Commands
+### Automated Daily Backups
 
 ```bash
-# Check container logs
-docker logs meditrack-backend
-docker logs meditrack-frontend
+#!/bin/bash
+# backup.sh
 
-# Check container status
-docker ps -a
+DATE=$(date +%Y%m%d_%H%M%S)
+BACKUP_DIR="/backups/meditrack"
 
-# Enter container shell
-docker exec -it meditrack-backend /bin/bash
+# Create backup directory
+mkdir -p $BACKUP_DIR
 
-# Check environment variables
-docker exec meditrack-backend env
+# Backup database
+docker exec meditrack-backend-1 cp /app/data/meditrack.db /app/data/meditrack_${DATE}.db
+docker cp meditrack-backend-1:/app/data/meditrack_${DATE}.db $BACKUP_DIR/
 
-# Test database connection
-docker exec meditrack-backend python -c "from app.db.session import engine; print(engine.url)"
+# Upload to S3 (optional)
+aws s3 cp $BACKUP_DIR/meditrack_${DATE}.db s3://your-backup-bucket/meditrack/
+
+# Clean old backups (keep last 7 days)
+find $BACKUP_DIR -type f -mtime +7 -delete
 ```
 
-## Support
+### Restore Procedure
 
-For deployment issues:
-1. Check the [GitHub Issues](https://github.com/sjafferali/meditrack/issues)
-2. Review logs and error messages
-3. Consult cloud provider documentation
-4. Open a new issue with details
+```bash
+# Stop services (example with simple deployment)
+docker compose -f docker-compose.simple.yml down
+
+# Restore database
+docker cp /backups/meditrack/meditrack_20240116_120000.db meditrack-backend-1:/app/data/meditrack.db
+
+# Start services
+docker compose -f docker-compose.simple.yml up -d
+```
+
+## Security Checklist
+
+- [ ] Use strong SECRET_KEY
+- [ ] Enable HTTPS/TLS
+- [ ] Set up firewall rules
+- [ ] Regular security updates
+- [ ] Implement rate limiting
+- [ ] Add request logging
+- [ ] Set up intrusion detection
+- [ ] Regular backup testing
+- [ ] Monitor for vulnerabilities
+- [ ] Implement CSP headers
+
+## Performance Optimization
+
+### Caching
+
+1. **Add Redis for caching**
+```yaml
+services:
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+```
+
+2. **Implement caching in FastAPI**
+```python
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.redis import RedisBackend
+
+@app.on_event("startup")
+async def startup():
+    redis = aioredis.from_url("redis://redis")
+    FastAPICache.init(RedisBackend(redis), prefix="meditrack-cache:")
+```
+
+### CDN for Static Assets
+
+```nginx
+# Add CDN configuration
+location /static {
+    proxy_pass https://cdn.your-domain.com;
+    proxy_cache_valid 200 1y;
+    add_header Cache-Control "public, immutable";
+}
+```
+
+## Troubleshooting Production Issues
+
+### High Memory Usage
+```bash
+# Check memory usage
+docker stats
+
+# Limit container memory
+docker run -m 512m meditrack-backend
+```
+
+### Slow Response Times
+```bash
+# Check logs
+docker logs meditrack-backend-1 --tail 100
+
+# Profile application
+python -m cProfile -o profile.out app/main.py
+```
+
+### Database Locked
+```bash
+# Check connections
+docker exec meditrack-backend-1 fuser /app/data/meditrack.db
+
+# Restart backend (example with simple deployment)
+docker compose -f docker-compose.simple.yml restart backend
+```
+
+## Maintenance
+
+### Rolling Updates
+```bash
+# Update one container at a time (example with simple deployment)
+docker compose -f docker-compose.simple.yml up -d --no-deps --build backend
+docker compose -f docker-compose.simple.yml up -d --no-deps --build frontend
+```
+
+### Health Monitoring
+```bash
+#!/bin/bash
+# health-check.sh
+
+BACKEND_HEALTH=$(curl -s http://localhost:8000/health | jq -r .status)
+FRONTEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000)
+
+if [ "$BACKEND_HEALTH" != "healthy" ] || [ "$FRONTEND_STATUS" != "200" ]; then
+    echo "Health check failed!"
+    # Send alert
+    curl -X POST https://hooks.slack.com/services/YOUR/WEBHOOK/URL \
+         -H 'Content-type: application/json' \
+         --data '{"text":"MediTrack health check failed!"}'
+fi
+```
+
+## Cost Optimization
+
+1. **Use spot instances** for non-critical workloads
+2. **Implement auto-scaling** based on metrics
+3. **Schedule non-production environments** to shut down after hours
+4. **Use ARM-based instances** where supported
+5. **Optimize Docker images** for smaller size
+
+## Compliance and Regulations
+
+If handling health data:
+1. Implement audit logging
+2. Enable encryption at rest
+3. Set up data retention policies
+4. Implement access controls
+5. Regular security audits
+6. HIPAA compliance measures
