@@ -16,4 +16,4 @@ isort==6.0.1
 flake8==7.2.0
 mypy==1.16.0
 reportlab==4.4.1
-pypdf==5.6.0
+pypdf==5.6.1
