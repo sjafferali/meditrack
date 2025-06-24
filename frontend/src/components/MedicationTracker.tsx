@@ -898,6 +898,7 @@ const MedicationTracker = () => {
       {selectedMedicationForHistory && (
         <DoseHistoryModal
           medication={selectedMedicationForHistory}
+          isOpen={true}
           onClose={() => setSelectedMedicationForHistory(null)}
         />
       )}
