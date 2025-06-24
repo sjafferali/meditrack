@@ -3,7 +3,6 @@ import { medicationApi, doseApi, personApi } from '../services/api';
 import DailyDoseLog from './DailyDoseLog';
 import PersonSelector from './PersonSelector';
 import PersonManager from './PersonManager';
-import DoseHistoryModal from './DoseHistoryModal';
 
 const MedicationTracker = () => {
   const [medications, setMedications] = useState<any[]>([]);
@@ -18,7 +17,6 @@ const MedicationTracker = () => {
   
   // For handling deleted medications
   const [deletedMedications, setDeletedMedications] = useState<Array<{name: string, isDeleted: boolean}>>([]);
-  const [selectedMedicationForHistory, setSelectedMedicationForHistory] = useState<any>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [showDailyLog, setShowDailyLog] = useState(false);
   const [printMedicationTracking, setPrintMedicationTracking] = useState(false);
@@ -193,9 +191,6 @@ const MedicationTracker = () => {
     }
   };
   
-  const viewDoseHistory = (medication: any) => {
-    setSelectedMedicationForHistory(medication);
-  };
   
   const viewDeletedMedicationHistory = (medication: any) => {
     // Store the original name without (deleted) suffix for API calls
@@ -682,12 +677,6 @@ const MedicationTracker = () => {
               </button>
               
               <button
-                onClick={() => viewDoseHistory(medication)}
-                className="px-3 py-2 text-purple-600 hover:bg-purple-50 rounded-md"
-              >
-                Full History
-              </button>
-              <button
                 onClick={() => startEdit(medication)}
                 className="px-3 py-2 text-blue-600 hover:bg-blue-50 rounded-md"
               >
@@ -909,14 +898,6 @@ const MedicationTracker = () => {
       
       {/* Person Manager Modal moved to date section */}
       
-      {/* Dose History Modal */}
-      {selectedMedicationForHistory && (
-        <DoseHistoryModal
-          medication={selectedMedicationForHistory}
-          isOpen={!!selectedMedicationForHistory}
-          onClose={() => setSelectedMedicationForHistory(null)}
-        />
-      )}
     </div>
   );
 };

@@ -38,7 +38,6 @@ const DailyDoseLog: React.FC<DailyDoseLogProps> = ({ selectedDate, isOpen, onClo
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   
   // Get the current person ID from the URL if available, or from props
   const { personId: urlPersonId } = useParams();
@@ -187,8 +186,7 @@ const DailyDoseLog: React.FC<DailyDoseLogProps> = ({ selectedDate, isOpen, onClo
   
   const handlePrintTracking = async () => {
     try {
-      setIsGeneratingPDF(true);
-      setError(null);
+        setError(null);
       
       // Format date for the API call - YYYY-MM-DD format
       const year = selectedDate.getFullYear();
@@ -221,8 +219,7 @@ const DailyDoseLog: React.FC<DailyDoseLogProps> = ({ selectedDate, isOpen, onClo
       console.error('Failed to generate PDF:', err);
       setError(err instanceof Error ? err.message : 'Failed to generate PDF tracking form');
     } finally {
-      setIsGeneratingPDF(false);
-    }
+      }
   };
 
   if (!isOpen) return null;
@@ -310,14 +307,6 @@ const DailyDoseLog: React.FC<DailyDoseLogProps> = ({ selectedDate, isOpen, onClo
                 }`}
               >
                 {copied ? 'Copied!' : 'Copy to Clipboard'}
-              </button>
-              <button
-                onClick={handlePrintTracking}
-                className={`px-6 py-2 ${isGeneratingPDF ? 'bg-green-500' : 'bg-green-600 hover:bg-green-700'} text-white rounded-md flex items-center justify-center`}
-                title="Generate a printable PDF tracking form"
-                disabled={isGeneratingPDF}
-              >
-                {isGeneratingPDF ? 'Generating PDF...' : 'Print Tracking Form'}
               </button>
               <button
                 onClick={onClose}
