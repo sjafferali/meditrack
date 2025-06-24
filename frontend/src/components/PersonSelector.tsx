@@ -92,7 +92,7 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
   }
 
   return (
-    <div className="relative inline-block" ref={dropdownRef}>
+    <div className="relative inline-block" ref={dropdownRef} style={{ isolation: 'isolate' }}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="w-[240px] flex items-center justify-between px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -109,7 +109,7 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 mt-2 w-[240px] right-0 bg-white rounded-lg shadow-lg border border-gray-200">
+        <div className="absolute z-50 mt-2 min-w-[240px] right-0 bg-white rounded-lg shadow-lg border border-gray-200">
           <div className="py-2">
             {persons.map((person) => (
               <button
