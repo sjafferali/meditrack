@@ -3,6 +3,7 @@ import { medicationApi, doseApi, personApi } from '../services/api';
 import DailyDoseLog from './DailyDoseLog';
 import PersonSelector from './PersonSelector';
 import PersonManager from './PersonManager';
+import DoseHistoryModal from './DoseHistoryModal';
 
 const MedicationTracker = () => {
   const [medications, setMedications] = useState<any[]>([]);
@@ -28,6 +29,7 @@ const MedicationTracker = () => {
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [currentPersonId, setCurrentPersonId] = useState<number | null>(null);
   const [showPersonManager, setShowPersonManager] = useState(false);
+  const [selectedMedicationForHistory, setSelectedMedicationForHistory] = useState<any>(null);
 
   // Form state for adding/editing medications
   const [formData, setFormData] = useState({
@@ -472,8 +474,9 @@ const MedicationTracker = () => {
           <form onSubmit={editingMedication ? handleUpdateMedication : handleAddMedication}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Name</label>
+                <label htmlFor="medication-name" className="block text-sm font-medium mb-1">Name</label>
                 <input
+                  id="medication-name"
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -482,8 +485,9 @@ const MedicationTracker = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Dosage</label>
+                <label htmlFor="medication-dosage" className="block text-sm font-medium mb-1">Dosage</label>
                 <input
+                  id="medication-dosage"
                   type="text"
                   value={formData.dosage}
                   onChange={(e) => setFormData({ ...formData, dosage: e.target.value })}
@@ -492,8 +496,9 @@ const MedicationTracker = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Frequency</label>
+                <label htmlFor="medication-frequency" className="block text-sm font-medium mb-1">Frequency</label>
                 <input
+                  id="medication-frequency"
                   type="text"
                   value={formData.frequency}
                   onChange={(e) => setFormData({ ...formData, frequency: e.target.value })}
@@ -502,8 +507,9 @@ const MedicationTracker = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Max Doses Per Day</label>
+                <label htmlFor="medication-max-doses" className="block text-sm font-medium mb-1">Max Doses Per Day</label>
                 <input
+                  id="medication-max-doses"
                   type="number"
                   value={formData.max_doses_per_day}
                   onChange={(e) => setFormData({ ...formData, max_doses_per_day: parseInt(e.target.value) })}
@@ -514,8 +520,9 @@ const MedicationTracker = () => {
               </div>
             </div>
             <div className="mt-4">
-              <label className="block text-sm font-medium mb-1">Instructions</label>
+              <label htmlFor="medication-instructions" className="block text-sm font-medium mb-1">Instructions</label>
               <textarea
+                id="medication-instructions"
                 value={formData.instructions}
                 onChange={(e) => setFormData({ ...formData, instructions: e.target.value })}
                 className="w-full px-3 py-2 border rounded-md"
@@ -527,7 +534,7 @@ const MedicationTracker = () => {
                 type="submit"
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
               >
-                {editingMedication ? 'Update' : 'Add'}
+                {editingMedication ? 'Update' : 'Save'}
               </button>
               <button
                 type="button"
@@ -550,7 +557,12 @@ const MedicationTracker = () => {
         {medications.map((medication: Medication) => (
           <div key={medication.id} className="bg-white shadow rounded-lg p-4">
             <div className="mb-4">
-              <h3 className="text-lg font-semibold">{medication.name}</h3>
+              <h3 
+                className="text-lg font-semibold cursor-pointer text-blue-600 hover:text-blue-800"
+                onClick={() => setSelectedMedicationForHistory(medication)}
+              >
+                {medication.name}
+              </h3>
               <p className="text-gray-600">{medication.dosage}</p>
               <p className="text-sm text-gray-500">{medication.frequency}</p>
               {medication.instructions && (
@@ -882,7 +894,13 @@ const MedicationTracker = () => {
         </>
       )}
       
-      {/* Person Manager Modal moved to date section */}
+      {/* Dose History Modal */}
+      {selectedMedicationForHistory && (
+        <DoseHistoryModal
+          medication={selectedMedicationForHistory}
+          onClose={() => setSelectedMedicationForHistory(null)}
+        />
+      )}
       
     </div>
   );

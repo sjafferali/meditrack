@@ -291,4 +291,35 @@ const personApi = {
   },
 };
 
-export { medicationApi, doseApi, personApi };
+const reportApi = {
+  // Generate a general PDF report
+  generatePDF: async (options = {}) => {
+    try {
+      const response = await api.get('/reports/medication-summary', {
+        params: options,
+        responseType: 'blob'
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Generate a medication tracking form
+  generateMedicationTrackingForm: async (personId = null) => {
+    try {
+      const url = personId 
+        ? `/reports/medication-tracking-form?person_id=${personId}`
+        : '/reports/medication-tracking-form';
+      
+      const response = await api.get(url, {
+        responseType: 'blob'
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+};
+
+export { medicationApi, doseApi, personApi, reportApi };

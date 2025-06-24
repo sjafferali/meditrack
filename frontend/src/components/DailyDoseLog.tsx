@@ -309,6 +309,12 @@ const DailyDoseLog: React.FC<DailyDoseLogProps> = ({ selectedDate, isOpen, onClo
                 {copied ? 'Copied!' : 'Copy to Clipboard'}
               </button>
               <button
+                onClick={handlePrintTracking}
+                className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md"
+              >
+                Print Tracking Form
+              </button>
+              <button
                 onClick={onClose}
                 className="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md"
               >
