@@ -135,6 +135,7 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
           ref={buttonRef}
           onClick={handleToggleDropdown}
           className="w-80 h-12 flex items-center justify-between px-4 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          style={{ transition: 'none' }}
         >
           <span className="font-medium truncate mr-3">{currentPerson?.name || 'Select Person'}</span>
           <svg 
