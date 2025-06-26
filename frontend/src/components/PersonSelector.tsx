@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { personApi } from '../services/api';
 
 interface Person {
@@ -23,7 +24,9 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadPersons();
@@ -32,7 +35,7 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
@@ -40,6 +43,24 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const calculateDropdownPosition = () => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + 8,
+        left: rect.left,
+        width: rect.width
+      });
+    }
+  };
+
+  const handleToggleDropdown = () => {
+    if (!isOpen) {
+      calculateDropdownPosition();
+    }
+    setIsOpen(!isOpen);
+  };
 
   const loadPersons = async () => {
     try {
@@ -92,34 +113,33 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
   }
 
   return (
-    <div 
-      className="flex-shrink-0 w-[380px] min-w-[380px] max-w-[380px] h-[48px] min-h-[48px] max-h-[48px] overflow-visible" 
-      ref={dropdownRef} 
-      style={{ isolation: 'isolate', boxSizing: 'border-box', position: 'relative' }}
-    >
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="absolute top-0 left-0 w-[380px] h-[48px] flex items-center justify-between px-4 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 overflow-hidden"
-        style={{ boxSizing: 'border-box' }}
-      >
-        <span className="font-medium truncate mr-3 flex-1 min-w-0">{currentPerson?.name || 'Select Person'}</span>
-        <svg 
-          className={`w-5 h-5 flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} 
-          fill="none" 
-          stroke="currentColor" 
-          viewBox="0 0 24 24"
+    <>
+      <div ref={containerRef} className="relative">
+        <button
+          ref={buttonRef}
+          onClick={handleToggleDropdown}
+          className="w-80 h-12 flex items-center justify-between px-4 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
+          <span className="font-medium truncate mr-3">{currentPerson?.name || 'Select Person'}</span>
+          <svg 
+            className={`w-5 h-5 flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+      </div>
 
-      {isOpen && (
+      {isOpen && createPortal(
         <div 
-          className="absolute z-50 w-[380px] bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden"
+          className="fixed z-50 bg-white rounded-lg shadow-lg border border-gray-200"
           style={{ 
-            top: '56px',
-            right: '0px',
-            boxSizing: 'border-box'
+            top: dropdownPosition.top,
+            left: dropdownPosition.left,
+            width: dropdownPosition.width,
+            minWidth: '320px'
           }}
         >
           <div className="py-2">
@@ -127,12 +147,11 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
               <button
                 key={person.id}
                 onClick={() => handlePersonSelect(person.id)}
-                className={`w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center justify-between min-w-0 overflow-hidden ${
+                className={`w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center justify-between ${
                   person.id === currentPersonId ? 'bg-blue-50' : ''
                 }`}
-                style={{ boxSizing: 'border-box' }}
               >
-                <div className="min-w-0 flex-1 overflow-hidden">
+                <div className="flex-1 min-w-0">
                   <div className="font-medium truncate">{person.name}</div>
                   {person.medication_count !== undefined && (
                     <div className="text-sm text-gray-500 truncate">
@@ -154,15 +173,15 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
                 setIsOpen(false);
                 onManagePersons();
               }}
-              className="w-full px-4 py-3 text-left text-blue-600 hover:bg-gray-50 font-medium truncate overflow-hidden"
-              style={{ boxSizing: 'border-box' }}
+              className="w-full px-4 py-3 text-left text-blue-600 hover:bg-gray-50 font-medium"
             >
               Manage People
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
-    </div>
+    </>
   );
 };
 
