@@ -92,14 +92,14 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
   }
 
   return (
-    <div className="relative inline-block w-[240px]" ref={dropdownRef} style={{ isolation: 'isolate' }}>
+    <div className="relative inline-block w-[280px]" ref={dropdownRef} style={{ isolation: 'isolate' }}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-full h-[42px] flex items-center justify-between px-4 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
       >
-        <span className="font-medium">{currentPerson?.name || 'Select Person'}</span>
+        <span className="font-medium truncate mr-2">{currentPerson?.name || 'Select Person'}</span>
         <svg 
-          className={`w-5 h-5 transition-transform ${isOpen ? 'rotate-180' : ''}`} 
+          className={`w-5 h-5 flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} 
           fill="none" 
           stroke="currentColor" 
           viewBox="0 0 24 24"
@@ -109,7 +109,7 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 mt-2 w-[240px] right-0 bg-white rounded-lg shadow-lg border border-gray-200">
+        <div className="absolute z-50 mt-2 w-[280px] right-0 bg-white rounded-lg shadow-lg border border-gray-200">
           <div className="py-2">
             {persons.map((person) => (
               <button
