@@ -93,13 +93,13 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
 
   return (
     <div 
-      className="relative w-[320px] min-w-[320px] max-w-[320px] overflow-hidden" 
+      className="relative w-[380px] min-w-[380px] max-w-[380px] overflow-hidden" 
       ref={dropdownRef} 
       style={{ isolation: 'isolate', boxSizing: 'border-box' }}
     >
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-[320px] h-[48px] min-w-[320px] max-w-[320px] min-h-[48px] max-h-[48px] flex items-center justify-between px-4 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 overflow-hidden"
+        className="w-[380px] h-[48px] min-w-[380px] max-w-[380px] min-h-[48px] max-h-[48px] flex items-center justify-between px-4 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 overflow-hidden"
         style={{ boxSizing: 'border-box' }}
       >
         <span className="font-medium truncate mr-3 flex-1 min-w-0">{currentPerson?.name || 'Select Person'}</span>
@@ -115,10 +115,10 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
 
       {isOpen && (
         <div 
-          className="fixed z-50 w-[320px] bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden"
+          className="fixed z-50 w-[380px] bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden"
           style={{ 
             top: dropdownRef.current ? dropdownRef.current.getBoundingClientRect().bottom + 8 : 0,
-            left: dropdownRef.current ? dropdownRef.current.getBoundingClientRect().left : 0,
+            right: dropdownRef.current ? window.innerWidth - dropdownRef.current.getBoundingClientRect().right : 0,
             boxSizing: 'border-box'
           }}
         >
