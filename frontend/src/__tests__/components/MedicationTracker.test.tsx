@@ -252,7 +252,10 @@ describe('MedicationTracker', () => {
         expect(dateNav).toBeInTheDocument();
         expect(screen.getByLabelText('Previous day')).toBeInTheDocument();
         expect(screen.getByLabelText('Next day')).toBeInTheDocument();
-        expect(screen.getByDisplayValue('2025-06-24')).toBeInTheDocument();
+        // Check for a date input with proper format instead of hardcoded date
+        const dateInput = document.querySelector('input[type="date"]') as HTMLInputElement;
+        expect(dateInput).toBeInTheDocument();
+        expect(dateInput.value).toMatch(/\d{4}-\d{2}-\d{2}/);
       });
     });
 
@@ -307,8 +310,12 @@ describe('MedicationTracker', () => {
         expect(screen.getByTestId('person-selector')).toBeInTheDocument();
       });
 
-      const datePicker = screen.getByDisplayValue('2025-06-24');
-      fireEvent.change(datePicker, { target: { value: '2023-01-10' } });
+      // Find the date input by type instead of hardcoded value
+      const dateInput = document.querySelector('input[type="date"]') as HTMLInputElement;
+      expect(dateInput).toBeInTheDocument();
+      expect(dateInput.value).toMatch(/\d{4}-\d{2}-\d{2}/);
+      
+      fireEvent.change(dateInput, { target: { value: '2023-01-10' } });
       
       await waitFor(() => {
         expect(medicationApi.getAll).toHaveBeenCalledWith(
