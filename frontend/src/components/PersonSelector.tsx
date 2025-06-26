@@ -109,7 +109,7 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 mt-2 min-w-[240px] right-0 bg-white rounded-lg shadow-lg border border-gray-200">
+        <div className="absolute z-50 mt-2 w-[240px] right-0 bg-white rounded-lg shadow-lg border border-gray-200">
           <div className="py-2">
             {persons.map((person) => (
               <button
