@@ -48,9 +48,9 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
     if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
       setDropdownPosition({
-        top: rect.bottom + 8,
-        left: rect.left,
-        width: rect.width
+        top: rect.bottom + window.scrollY + 8,
+        left: rect.left + window.scrollX,
+        width: Math.max(rect.width, 320)
       });
     }
   };
@@ -61,6 +61,22 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
     }
     setIsOpen(!isOpen);
   };
+
+  // Recalculate position when window resizes
+  useEffect(() => {
+    const handleResize = () => {
+      if (isOpen) {
+        calculateDropdownPosition();
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('scroll', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('scroll', handleResize);
+    };
+  }, [isOpen]);
 
   const loadPersons = async () => {
     try {
