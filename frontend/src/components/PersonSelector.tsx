@@ -92,12 +92,12 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
   }
 
   return (
-    <div className="relative inline-block w-[280px]" ref={dropdownRef} style={{ isolation: 'isolate' }}>
+    <div className="relative w-[320px] min-w-0" ref={dropdownRef} style={{ isolation: 'isolate' }}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full h-[42px] flex items-center justify-between px-4 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-full h-[48px] flex items-center justify-between px-4 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-0"
       >
-        <span className="font-medium truncate mr-2">{currentPerson?.name || 'Select Person'}</span>
+        <span className="font-medium truncate mr-3 min-w-0">{currentPerson?.name || 'Select Person'}</span>
         <svg 
           className={`w-5 h-5 flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} 
           fill="none" 
@@ -109,26 +109,26 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 mt-2 w-[280px] right-0 bg-white rounded-lg shadow-lg border border-gray-200">
+        <div className="absolute z-50 mt-2 w-full right-0 bg-white rounded-lg shadow-lg border border-gray-200 max-w-[320px] overflow-hidden">
           <div className="py-2">
             {persons.map((person) => (
               <button
                 key={person.id}
                 onClick={() => handlePersonSelect(person.id)}
-                className={`w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center justify-between ${
+                className={`w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center justify-between min-w-0 ${
                   person.id === currentPersonId ? 'bg-blue-50' : ''
                 }`}
               >
-                <div>
-                  <div className="font-medium">{person.name}</div>
+                <div className="min-w-0 flex-1">
+                  <div className="font-medium truncate">{person.name}</div>
                   {person.medication_count !== undefined && (
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-gray-500 truncate">
                       {person.medication_count} medication{person.medication_count !== 1 ? 's' : ''}
                     </div>
                   )}
                 </div>
                 {person.is_default && (
-                  <span className="ml-3 text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                  <span className="ml-3 text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded flex-shrink-0">
                     Default
                   </span>
                 )}
@@ -141,7 +141,7 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
                 setIsOpen(false);
                 onManagePersons();
               }}
-              className="w-full px-4 py-3 text-left text-blue-600 hover:bg-gray-50 font-medium"
+              className="w-full px-4 py-3 text-left text-blue-600 hover:bg-gray-50 font-medium truncate"
             >
               Manage People
             </button>
