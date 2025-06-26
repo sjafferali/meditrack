@@ -92,12 +92,17 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
   }
 
   return (
-    <div className="relative w-[320px] min-w-0" ref={dropdownRef} style={{ isolation: 'isolate' }}>
+    <div 
+      className="relative w-[320px] min-w-[320px] max-w-[320px] overflow-hidden" 
+      ref={dropdownRef} 
+      style={{ isolation: 'isolate', boxSizing: 'border-box' }}
+    >
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full h-[48px] flex items-center justify-between px-4 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-0"
+        className="w-[320px] h-[48px] min-w-[320px] max-w-[320px] min-h-[48px] max-h-[48px] flex items-center justify-between px-4 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 overflow-hidden"
+        style={{ boxSizing: 'border-box' }}
       >
-        <span className="font-medium truncate mr-3 min-w-0">{currentPerson?.name || 'Select Person'}</span>
+        <span className="font-medium truncate mr-3 flex-1 min-w-0">{currentPerson?.name || 'Select Person'}</span>
         <svg 
           className={`w-5 h-5 flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} 
           fill="none" 
@@ -109,17 +114,25 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 mt-2 w-full right-0 bg-white rounded-lg shadow-lg border border-gray-200 max-w-[320px] overflow-hidden">
+        <div 
+          className="fixed z-50 w-[320px] bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden"
+          style={{ 
+            top: dropdownRef.current ? dropdownRef.current.getBoundingClientRect().bottom + 8 : 0,
+            left: dropdownRef.current ? dropdownRef.current.getBoundingClientRect().left : 0,
+            boxSizing: 'border-box'
+          }}
+        >
           <div className="py-2">
             {persons.map((person) => (
               <button
                 key={person.id}
                 onClick={() => handlePersonSelect(person.id)}
-                className={`w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center justify-between min-w-0 ${
+                className={`w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center justify-between min-w-0 overflow-hidden ${
                   person.id === currentPersonId ? 'bg-blue-50' : ''
                 }`}
+                style={{ boxSizing: 'border-box' }}
               >
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0 flex-1 overflow-hidden">
                   <div className="font-medium truncate">{person.name}</div>
                   {person.medication_count !== undefined && (
                     <div className="text-sm text-gray-500 truncate">
@@ -141,7 +154,8 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
                 setIsOpen(false);
                 onManagePersons();
               }}
-              className="w-full px-4 py-3 text-left text-blue-600 hover:bg-gray-50 font-medium truncate"
+              className="w-full px-4 py-3 text-left text-blue-600 hover:bg-gray-50 font-medium truncate overflow-hidden"
+              style={{ boxSizing: 'border-box' }}
             >
               Manage People
             </button>
