@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { medicationApi, doseApi, personApi } from '../services/api';
 import DailyDoseLog from './DailyDoseLog';
-import PersonSelector from './PersonSelector';
+import AppHeader from './AppHeader';
 import PersonManager from './PersonManager';
 import DoseHistoryModal from './DoseHistoryModal';
 
@@ -380,18 +380,16 @@ const MedicationTracker = () => {
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold">Medication Tracker</h1>
-        <PersonSelector 
-          currentPersonId={currentPersonId}
-          onPersonChange={setCurrentPersonId}
-          onManagePersons={() => setShowPersonManager(true)}
-        />
-      </div>
+    <>
+      <AppHeader
+        currentPersonId={currentPersonId}
+        onPersonChange={setCurrentPersonId}
+        onManagePersons={() => setShowPersonManager(true)}
+      />
+      <main className="container mx-auto p-4 pt-6">
 
       {/* Date Navigation */}
-      <div id="date-navigation" className="bg-white shadow rounded-lg p-4 mb-6 relative">
+      <div id="date-navigation" data-testid="date-navigation" className="bg-white shadow rounded-lg p-4 mb-6 relative">
         <div className="flex items-center justify-between">
           <button
             onClick={() => navigateDate('prev')}
@@ -746,6 +744,7 @@ const MedicationTracker = () => {
                                       <button
                                         onClick={() => handleDeleteDose(medication.id, dose.id)}
                                         className="px-2 py-1 text-xs text-white bg-red-600 hover:bg-red-700 rounded"
+                                        data-testid={`dose-confirm-delete-${dose.id}`}
                                       >
                                         Confirm
                                       </button>
@@ -760,6 +759,7 @@ const MedicationTracker = () => {
                                     <button
                                       onClick={() => setDeleteDoseConfirmId(dose.id)}
                                       className="px-2 py-1 text-xs text-red-600 hover:bg-red-50 rounded"
+                                      data-testid={`dose-delete-${dose.id}`}
                                     >
                                       Delete
                                     </button>
@@ -901,7 +901,8 @@ const MedicationTracker = () => {
         />
       )}
       
-    </div>
+      </main>
+    </>
   );
 };
 

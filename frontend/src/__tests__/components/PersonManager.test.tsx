@@ -14,6 +14,8 @@ describe('PersonManager', () => {
   const mockPersons = [
     { 
       id: 1, 
+      first_name: 'John',
+      last_name: 'Doe',
       name: 'John Doe', 
       date_of_birth: '1990-01-01', 
       notes: 'Primary person', 
@@ -22,6 +24,8 @@ describe('PersonManager', () => {
     },
     { 
       id: 2, 
+      first_name: 'Jane',
+      last_name: 'Smith',
       name: 'Jane Smith', 
       date_of_birth: '1985-05-15', 
       notes: 'Family member', 
@@ -40,12 +44,16 @@ describe('PersonManager', () => {
     (personApi.getAll as jest.Mock).mockResolvedValue(mockPersons);
     (personApi.create as jest.Mock).mockResolvedValue({
       id: 3,
+      first_name: 'New',
+      last_name: 'Person',
       name: 'New Person',
       is_default: false,
       medication_count: 0
     });
     (personApi.update as jest.Mock).mockResolvedValue({
       ...mockPersons[0],
+      first_name: 'Updated',
+      last_name: 'Name',
       name: 'Updated Name'
     });
     (personApi.delete as jest.Mock).mockResolvedValue({});
@@ -69,16 +77,14 @@ describe('PersonManager', () => {
   });
 
   test('renders modal when open', async () => {
-    await act(async () => {
-      render(
-        <PersonManager
-          isOpen={true}
-          onClose={mockOnClose}
-          currentPersonId={1}
-          onPersonChange={mockOnPersonChange}
-        />
-      );
-    });
+    render(
+      <PersonManager
+        isOpen={true}
+        onClose={mockOnClose}
+        currentPersonId={1}
+        onPersonChange={mockOnPersonChange}
+      />
+    );
 
     expect(screen.getByText('Select a Person')).toBeInTheDocument();
     // Wait for async loading to complete to avoid act() warnings
@@ -97,16 +103,14 @@ describe('PersonManager', () => {
       new Promise(resolve => setTimeout(() => resolve(mockPersons), 500))
     );
     
-    await act(async () => {
-      render(
-        <PersonManager
-          isOpen={true}
-          onClose={mockOnClose}
-          currentPersonId={1}
-          onPersonChange={mockOnPersonChange}
-        />
-      );
-    });
+    render(
+      <PersonManager
+        isOpen={true}
+        onClose={mockOnClose}
+        currentPersonId={1}
+        onPersonChange={mockOnPersonChange}
+      />
+    );
 
     // With the delayed API response, we can now catch the loading state
     expect(screen.getByText('Loading...')).toBeInTheDocument();
@@ -118,32 +122,28 @@ describe('PersonManager', () => {
   });
 
   test('displays persons after loading', async () => {
-    await act(async () => {
-      render(
-        <PersonManager
-          isOpen={true}
-          onClose={mockOnClose}
-          currentPersonId={1}
-          onPersonChange={mockOnPersonChange}
-        />
-      );
-    });
+    render(
+      <PersonManager
+        isOpen={true}
+        onClose={mockOnClose}
+        currentPersonId={1}
+        onPersonChange={mockOnPersonChange}
+      />
+    );
 
     await screen.findByText('John Doe');
     expect(screen.getByText('Jane Smith')).toBeInTheDocument();
   });
 
   test('displays person details', async () => {
-    await act(async () => {
-      render(
-        <PersonManager
-          isOpen={true}
-          onClose={mockOnClose}
-          currentPersonId={1}
-          onPersonChange={mockOnPersonChange}
-        />
-      );
-    });
+    render(
+      <PersonManager
+        isOpen={true}
+        onClose={mockOnClose}
+        currentPersonId={1}
+        onPersonChange={mockOnPersonChange}
+      />
+    );
 
     // Check for the born text but be flexible about date format - use getAllByText since there are multiple persons
     const bornElements = await screen.findAllByText((content, element) => {
@@ -159,33 +159,30 @@ describe('PersonManager', () => {
     const errorMessage = 'Failed to load persons';
     (personApi.getAll as jest.Mock).mockRejectedValue(new Error(errorMessage));
 
-    await act(async () => {
-      render(
-        <PersonManager
-          isOpen={true}
-          onClose={mockOnClose}
-          currentPersonId={1}
-          onPersonChange={mockOnPersonChange}
-        />
-      );
-    });
+    render(
+      <PersonManager
+        isOpen={true}
+        onClose={mockOnClose}
+        currentPersonId={1}
+        onPersonChange={mockOnPersonChange}
+      />
+    );
 
+    // Wait for error to be handled
     await waitFor(() => {
       expect(screen.getByText(errorMessage)).toBeInTheDocument();
     });
   });
 
   test('closes modal when close button clicked', async () => {
-    await act(async () => {
-      render(
-        <PersonManager
-          isOpen={true}
-          onClose={mockOnClose}
-          currentPersonId={1}
-          onPersonChange={mockOnPersonChange}
-        />
-      );
-    });
+    render(
+      <PersonManager
+        isOpen={true}
+        onClose={mockOnClose}
+        currentPersonId={1}
+        onPersonChange={mockOnPersonChange}
+      />
+    );
 
     // Find the close button by its position in the header
     const headerButtons = screen.getAllByRole('button');
@@ -197,16 +194,14 @@ describe('PersonManager', () => {
   });
 
   test('closes modal when clicking overlay', async () => {
-    await act(async () => {
-      render(
-        <PersonManager
-          isOpen={true}
-          onClose={mockOnClose}
-          currentPersonId={1}
-          onPersonChange={mockOnPersonChange}
-        />
-      );
-    });
+    render(
+      <PersonManager
+        isOpen={true}
+        onClose={mockOnClose}
+        currentPersonId={1}
+        onPersonChange={mockOnPersonChange}
+      />
+    );
 
     // Wait for the modal to render
     await screen.findByText('Select a Person');
@@ -220,16 +215,14 @@ describe('PersonManager', () => {
   });
 
   test('shows add person form when Add New Person clicked', async () => {
-    await act(async () => {
-      render(
-        <PersonManager
-          isOpen={true}
-          onClose={mockOnClose}
-          currentPersonId={1}
-          onPersonChange={mockOnPersonChange}
-        />
-      );
-    });
+    render(
+      <PersonManager
+        isOpen={true}
+        onClose={mockOnClose}
+        currentPersonId={1}
+        onPersonChange={mockOnPersonChange}
+      />
+    );
 
     await waitFor(() => {
       expect(screen.getByText('Add New Person')).toBeInTheDocument();
@@ -240,28 +233,30 @@ describe('PersonManager', () => {
     fireEvent.click(addButton);
 
     expect(screen.getByText('Add New Person')).toBeInTheDocument();
-    expect(screen.getByLabelText('Name')).toBeInTheDocument();
+    expect(screen.getByLabelText('First Name')).toBeInTheDocument();
+    expect(screen.getByLabelText('Last Name (optional)')).toBeInTheDocument();
   });
 
   test('adds new person when form submitted', async () => {
-    await act(async () => {
-      render(
-        <PersonManager
-          isOpen={true}
-          onClose={mockOnClose}
-          currentPersonId={1}
-          onPersonChange={mockOnPersonChange}
-        />
-      );
-    });
+    render(
+      <PersonManager
+        isOpen={true}
+        onClose={mockOnClose}
+        currentPersonId={1}
+        onPersonChange={mockOnPersonChange}
+      />
+    );
 
     // Click Add Person button
     const addButton = await screen.findByText('Add New Person');
     fireEvent.click(addButton);
 
     // Fill in the form
-    const nameInput = screen.getByLabelText('Name');
-    fireEvent.change(nameInput, { target: { value: 'New Person' } });
+    const firstNameInput = screen.getByLabelText('First Name');
+    fireEvent.change(firstNameInput, { target: { value: 'New' } });
+    
+    const lastNameInput = screen.getByLabelText('Last Name (optional)');
+    fireEvent.change(lastNameInput, { target: { value: 'Person' } });
 
     const dobInput = screen.getByLabelText('Date of Birth');
     fireEvent.change(dobInput, { target: { value: '2000-01-01' } });
@@ -275,7 +270,8 @@ describe('PersonManager', () => {
 
     await waitFor(() => {
       expect(personApi.create).toHaveBeenCalledWith({
-        name: 'New Person',
+        first_name: 'New',
+        last_name: 'Person',
         date_of_birth: '2000-01-01',
         notes: 'Test notes'
       });
@@ -284,16 +280,14 @@ describe('PersonManager', () => {
   });
 
   test('shows edit form when Edit clicked', async () => {
-    await act(async () => {
-      render(
-        <PersonManager
-          isOpen={true}
-          onClose={mockOnClose}
-          currentPersonId={1}
-          onPersonChange={mockOnPersonChange}
-        />
-      );
-    });
+    render(
+      <PersonManager
+        isOpen={true}
+        onClose={mockOnClose}
+        currentPersonId={1}
+        onPersonChange={mockOnPersonChange}
+      />
+    );
 
     await waitFor(() => {
       expect(screen.getByText('John Doe')).toBeInTheDocument();
@@ -303,20 +297,19 @@ describe('PersonManager', () => {
     fireEvent.click(editButtons[0]);
 
     expect(screen.getByText('Edit Person')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('John Doe')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('John')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Doe')).toBeInTheDocument();
   });
 
   test('updates person when edit form submitted', async () => {
-    await act(async () => {
-      render(
-        <PersonManager
-          isOpen={true}
-          onClose={mockOnClose}
-          currentPersonId={1}
-          onPersonChange={mockOnPersonChange}
-        />
-      );
-    });
+    render(
+      <PersonManager
+        isOpen={true}
+        onClose={mockOnClose}
+        currentPersonId={1}
+        onPersonChange={mockOnPersonChange}
+      />
+    );
 
     await waitFor(() => {
       expect(screen.getByText('John Doe')).toBeInTheDocument();
@@ -325,9 +318,12 @@ describe('PersonManager', () => {
     const editButtons = screen.getAllByText('Edit');
     fireEvent.click(editButtons[0]);
 
-    // Update the name
-    const nameInput = screen.getByDisplayValue('John Doe');
-    fireEvent.change(nameInput, { target: { value: 'Updated Name' } });
+    // Update the names
+    const firstNameInput = screen.getByDisplayValue('John');
+    fireEvent.change(firstNameInput, { target: { value: 'Updated' } });
+    
+    const lastNameInput = screen.getByDisplayValue('Doe');
+    fireEvent.change(lastNameInput, { target: { value: 'Name' } });
 
     // Submit the form
     const updateButton = screen.getByText('Update');
@@ -335,7 +331,8 @@ describe('PersonManager', () => {
 
     await waitFor(() => {
       expect(personApi.update).toHaveBeenCalledWith(1, {
-        name: 'Updated Name',
+        first_name: 'Updated',
+        last_name: 'Name',
         date_of_birth: '1990-01-01',
         notes: 'Primary person'
       });
@@ -343,16 +340,14 @@ describe('PersonManager', () => {
   });
 
   test('shows delete confirmation when Delete clicked', async () => {
-    await act(async () => {
-      render(
-        <PersonManager
-          isOpen={true}
-          onClose={mockOnClose}
-          currentPersonId={1}
-          onPersonChange={mockOnPersonChange}
-        />
-      );
-    });
+    render(
+      <PersonManager
+        isOpen={true}
+        onClose={mockOnClose}
+        currentPersonId={1}
+        onPersonChange={mockOnPersonChange}
+      />
+    );
 
     await waitFor(() => {
       expect(screen.getByText('Jane Smith')).toBeInTheDocument();
@@ -366,16 +361,14 @@ describe('PersonManager', () => {
   });
 
   test('deletes person when confirmed', async () => {
-    await act(async () => {
-      render(
-        <PersonManager
-          isOpen={true}
-          onClose={mockOnClose}
-          currentPersonId={1}
-          onPersonChange={mockOnPersonChange}
-        />
-      );
-    });
+    render(
+      <PersonManager
+        isOpen={true}
+        onClose={mockOnClose}
+        currentPersonId={1}
+        onPersonChange={mockOnPersonChange}
+      />
+    );
 
     await waitFor(() => {
       expect(screen.getByText('Jane Smith')).toBeInTheDocument();
@@ -393,16 +386,14 @@ describe('PersonManager', () => {
   });
 
   test('cancels delete when Cancel clicked', async () => {
-    await act(async () => {
-      render(
-        <PersonManager
-          isOpen={true}
-          onClose={mockOnClose}
-          currentPersonId={1}
-          onPersonChange={mockOnPersonChange}
-        />
-      );
-    });
+    render(
+      <PersonManager
+        isOpen={true}
+        onClose={mockOnClose}
+        currentPersonId={1}
+        onPersonChange={mockOnPersonChange}
+      />
+    );
 
     await waitFor(() => {
       expect(screen.getByText('Jane Smith')).toBeInTheDocument();
@@ -421,16 +412,14 @@ describe('PersonManager', () => {
   });
 
   test('sets person as default when Set as Default clicked', async () => {
-    await act(async () => {
-      render(
-        <PersonManager
-          isOpen={true}
-          onClose={mockOnClose}
-          currentPersonId={1}
-          onPersonChange={mockOnPersonChange}
-        />
-      );
-    });
+    render(
+      <PersonManager
+        isOpen={true}
+        onClose={mockOnClose}
+        currentPersonId={1}
+        onPersonChange={mockOnPersonChange}
+      />
+    );
 
     await waitFor(() => {
       expect(screen.getByText('Jane Smith')).toBeInTheDocument();
@@ -448,16 +437,14 @@ describe('PersonManager', () => {
     // Mock only one person
     (personApi.getAll as jest.Mock).mockResolvedValue([mockPersons[0]]);
 
-    await act(async () => {
-      render(
-        <PersonManager
-          isOpen={true}
-          onClose={mockOnClose}
-          currentPersonId={1}
-          onPersonChange={mockOnPersonChange}
-        />
-      );
-    });
+    render(
+      <PersonManager
+        isOpen={true}
+        onClose={mockOnClose}
+        currentPersonId={1}
+        onPersonChange={mockOnPersonChange}
+      />
+    );
 
     await waitFor(() => {
       expect(screen.getByText('John Doe')).toBeInTheDocument();
@@ -469,16 +456,14 @@ describe('PersonManager', () => {
   });
 
   test('switches to another person after deleting current', async () => {
-    await act(async () => {
-      render(
-        <PersonManager
-          isOpen={true}
-          onClose={mockOnClose}
-          currentPersonId={2}
-          onPersonChange={mockOnPersonChange}
-        />
-      );
-    });
+    render(
+      <PersonManager
+        isOpen={true}
+        onClose={mockOnClose}
+        currentPersonId={2}
+        onPersonChange={mockOnPersonChange}
+      />
+    );
 
     await waitFor(() => {
       expect(screen.getByText('Jane Smith')).toBeInTheDocument();

@@ -40,7 +40,7 @@ describe('MedicationTracker - Race Condition Fix', () => {
     
     // Mock person API to return a default person
     mockedPersonApi.getAll.mockResolvedValue([
-      { id: 1, name: 'Test Person', is_default: true, medication_count: 1 }
+      { id: 1, first_name: 'Test', last_name: 'Person', name: 'Test Person', is_default: true, medication_count: 1 }
     ]);
     
     // Mock Date object for consistent testing

@@ -29,7 +29,7 @@ describe('API Service', () => {
   describe.skip('Axios Configuration', () => {
     test('creates axios instance with correct config', () => {
       // Import the API module to trigger axios.create call
-      const apiModule = require('../../services/api');
+      require('../../services/api');
       
       expect(axios.create).toHaveBeenCalledWith({
         baseURL: '/api/v1',

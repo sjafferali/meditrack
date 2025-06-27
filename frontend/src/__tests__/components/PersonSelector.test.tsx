@@ -197,8 +197,8 @@ describe('PersonSelector', () => {
       expect(screen.getByText('Jane Smith')).toBeInTheDocument();
     });
 
-    // Click on backdrop to close modal (find by class)
-    const backdrop = document.querySelector('.fixed.inset-0.z-50');
+    // Click on backdrop to close modal (find by test ID)
+    const backdrop = screen.getByTestId('modal-backdrop');
     fireEvent.click(backdrop);
 
     // Modal should close

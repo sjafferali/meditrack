@@ -410,9 +410,11 @@ describe('DailyDoseLog Component', () => {
 
     render(<DailyDoseLog {...mockProps} />);
 
+    const copyButton = screen.getByText('Copy to Clipboard');
+    fireEvent.click(copyButton);
+    
     await waitFor(() => {
-      const copyButton = screen.getByText('Copy to Clipboard');
-      fireEvent.click(copyButton);
+      expect(screen.getByText('Copied!')).toBeInTheDocument();
     });
 
     // Check that the copied text has times in the correct order
@@ -458,7 +460,7 @@ describe('DailyDoseLog Component', () => {
     });
 
     // Try to reload while loading - should not trigger additional API call
-    const component = screen.getByText('Loading daily log...').closest('div');
+    expect(screen.getByText('Loading daily log...')).toBeInTheDocument();
     
     // Resolve the initial promise
     resolvePromise!(mockSummary);
@@ -470,6 +472,7 @@ describe('DailyDoseLog Component', () => {
 
   test.skip('handles timezone offset correctly', async () => {
     const originalGetTimezoneOffset = Date.prototype.getTimezoneOffset;
+    // eslint-disable-next-line no-extend-native
     Date.prototype.getTimezoneOffset = jest.fn().mockReturnValue(-300); // EST
 
     (doseApi.getDailySummaryByDate as jest.Mock).mockResolvedValue(mockSummary);
@@ -480,6 +483,7 @@ describe('DailyDoseLog Component', () => {
       expect(doseApi.getDailySummaryByDate).toHaveBeenCalledWith('2025-05-17', -300);
     });
 
+    // eslint-disable-next-line no-extend-native
     Date.prototype.getTimezoneOffset = originalGetTimezoneOffset;
   });
 

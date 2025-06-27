@@ -18,7 +18,9 @@ export interface Dose {
 
 export interface Person {
   id: number;
-  name: string;
+  first_name: string;
+  last_name?: string;
+  name?: string; // computed: first_name + (last_name ? ' ' + last_name : '')
   is_default: boolean;
   medication_count: number;
   date_of_birth?: string | null;

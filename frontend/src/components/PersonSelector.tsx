@@ -1,12 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { personApi } from '../services/api';
-
-interface Person {
-  id: number;
-  name: string;
-  is_default: boolean;
-  medication_count?: number;
-}
+import { personApi, Person } from '../services/api';
 
 interface PersonSelectorProps {
   currentPersonId: number | null;
@@ -64,7 +57,14 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
       
       // Fallback: Create a local default person if API fails
       if (!currentPersonId) {
-        const fallbackPerson = { id: 1, name: 'Default Person', is_default: true };
+        const fallbackPerson = { 
+          id: 1, 
+          first_name: 'Default', 
+          last_name: 'Person',
+          name: 'Default Person', 
+          is_default: true, 
+          medication_count: 0 
+        };
         setPersons([fallbackPerson]);
         onPersonChange(1);
       }
@@ -111,6 +111,7 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
         <div 
           className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 animate-fade-in"
           onClick={handleBackdropClick}
+          data-testid="modal-backdrop"
         >
           <div className="bg-white rounded-lg shadow-xl max-w-sm w-full mx-4 max-h-96 overflow-hidden animate-scale-in">
             <div className="py-2 max-h-80 overflow-y-auto">

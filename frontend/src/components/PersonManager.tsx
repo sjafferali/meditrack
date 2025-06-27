@@ -3,9 +3,11 @@ import { personApi } from '../services/api';
 
 interface Person {
   id: number;
-  name: string;
+  first_name: string;
+  last_name?: string;
+  name?: string; // computed: first_name + (last_name ? ' ' + last_name : '')
   date_of_birth?: string | null;
-  notes?: string | null;
+  notes?: string;
   is_default: boolean;
   medication_count?: number;
 }
@@ -30,7 +32,8 @@ const PersonManager: React.FC<PersonManagerProps> = ({
   const [editingPerson, setEditingPerson] = useState<Person | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
-    name: '',
+    first_name: '',
+    last_name: '',
     date_of_birth: '',
     notes: ''
   });
@@ -48,10 +51,18 @@ const PersonManager: React.FC<PersonManagerProps> = ({
     try {
       setLoading(true);
       setError(null);
-      
       const data = await withTimeout(personApi.getAll());
-      setPersons(data);
+      // Ensure data is an array
+      if (Array.isArray(data)) {
+        setPersons(data);
+      } else {
+        console.error('API returned non-array data:', data);
+        setPersons([]);
+        setError('Invalid data format received from server');
+      }
     } catch (err) {
+      console.error('Error loading persons:', err);
+      setPersons([]); // Ensure persons is always an array
       setError(err instanceof Error ? err.message : 'Failed to load persons');
     } finally {
       setLoading(false);
@@ -74,8 +85,10 @@ const PersonManager: React.FC<PersonManagerProps> = ({
     try {
       setError(null);
       const newPerson = await withTimeout(personApi.create({
-        ...formData,
-        date_of_birth: formData.date_of_birth || null
+        first_name: formData.first_name,
+        last_name: formData.last_name || undefined,
+        date_of_birth: formData.date_of_birth || null,
+        notes: formData.notes || undefined
       }));
       setPersons([...persons, newPerson]);
       setIsAddingPerson(false);
@@ -95,8 +108,10 @@ const PersonManager: React.FC<PersonManagerProps> = ({
     try {
       setError(null);
       const updatedPerson = await withTimeout(personApi.update(editingPerson.id, {
-        ...formData,
-        date_of_birth: formData.date_of_birth || null
+        first_name: formData.first_name,
+        last_name: formData.last_name || undefined,
+        date_of_birth: formData.date_of_birth || null,
+        notes: formData.notes || undefined
       }));
       
       setPersons(persons.map(p => p.id === updatedPerson.id ? updatedPerson : p));
@@ -142,7 +157,8 @@ const PersonManager: React.FC<PersonManagerProps> = ({
   const startEdit = (person: Person) => {
     setEditingPerson(person);
     setFormData({
-      name: person.name,
+      first_name: person.first_name,
+      last_name: person.last_name || '',
       date_of_birth: person.date_of_birth || '',
       notes: person.notes || ''
     });
@@ -150,7 +166,8 @@ const PersonManager: React.FC<PersonManagerProps> = ({
 
   const resetForm = () => {
     setFormData({
-      name: '',
+      first_name: '',
+      last_name: '',
       date_of_birth: '',
       notes: ''
     });
@@ -215,16 +232,28 @@ const PersonManager: React.FC<PersonManagerProps> = ({
               <form onSubmit={editingPerson ? handleUpdatePerson : handleAddPerson}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="person-name" className="block text-sm font-medium mb-1">Name</label>
+                    <label htmlFor="person-first-name" className="block text-sm font-medium mb-1">First Name</label>
                     <input
-                      id="person-name"
+                      id="person-first-name"
                       type="text"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      value={formData.first_name}
+                      onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
                       className="w-full px-3 py-2 border rounded-md"
                       required
                     />
                   </div>
+                  <div>
+                    <label htmlFor="person-last-name" className="block text-sm font-medium mb-1">Last Name (optional)</label>
+                    <input
+                      id="person-last-name"
+                      type="text"
+                      value={formData.last_name}
+                      onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                      className="w-full px-3 py-2 border rounded-md"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                   <div>
                     <label htmlFor="person-dob" className="block text-sm font-medium mb-1">Date of Birth</label>
                     <input
@@ -274,13 +303,13 @@ const PersonManager: React.FC<PersonManagerProps> = ({
             <div className="text-center py-8">Loading...</div>
           ) : (
             <div className="space-y-4">
-              {persons && persons.map((person) => (
+              {persons && Array.isArray(persons) && persons.map((person) => (
                 <div key={person.id} className="bg-white border rounded-lg p-4 hover:shadow-md transition-shadow">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     {/* Person info */}
                     <div className="flex-grow">
                       <div className="flex items-center gap-2">
-                        <h4 className="text-lg font-medium">{person.name}</h4>
+                        <h4 className="text-lg font-medium">{person.name || `${person.first_name} ${person.last_name || ''}`.trim()}</h4>
                         {person.is_default && (
                           <span className="ml-4 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full border border-green-200">
                             Default

@@ -564,17 +564,16 @@ describe('MedicationTracker', () => {
         expect(screen.getByText('1/15/2023')).toBeInTheDocument();
       });
 
-      // Find and click the dose delete button
-      const deleteButtons = await screen.findAllByText('Delete');
-      // Click the last delete button (should be the dose delete)
-      fireEvent.click(deleteButtons[deleteButtons.length - 1]);
+      // Find and click the specific dose delete button
+      const doseDeleteButton = await screen.findByTestId('dose-delete-1');
+      fireEvent.click(doseDeleteButton);
 
       // Check if we're in delete confirmation state by looking for Confirm button
       await waitFor(() => {
-        expect(screen.getByText('Confirm')).toBeInTheDocument();
+        expect(screen.getByTestId('dose-confirm-delete-1')).toBeInTheDocument();
       });
       
-      const confirmButton = screen.getByText('Confirm');
+      const confirmButton = screen.getByTestId('dose-confirm-delete-1');
       fireEvent.click(confirmButton);
       
       await waitFor(() => {
