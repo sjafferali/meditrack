@@ -197,10 +197,11 @@ describe('PersonSelector', () => {
       expect(screen.getByText('Jane Smith')).toBeInTheDocument();
     });
 
-    // Click outside
-    fireEvent.mouseDown(document.body);
+    // Click on backdrop to close modal (find by class)
+    const backdrop = document.querySelector('.fixed.inset-0.z-50');
+    fireEvent.click(backdrop);
 
-    // Dropdown should close
+    // Modal should close
     await waitFor(() => {
       expect(screen.queryByText('Jane Smith')).not.toBeInTheDocument();
     });

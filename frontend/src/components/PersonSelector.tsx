@@ -30,27 +30,13 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Node;
-      
-      // Check if clicked inside container (button)
-      if (containerRef.current && containerRef.current.contains(target)) {
-        return;
-      }
-      
-      // If modal is open and click is outside, close it
-      if (isOpen) {
-        setIsOpen(false);
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+  // Handle backdrop clicks to close modal
+  const handleBackdropClick = (event: React.MouseEvent) => {
+    // Only close if clicking on the backdrop itself, not the modal content
+    if (event.target === event.currentTarget) {
+      setIsOpen(false);
     }
-    
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isOpen]);
+  };
 
   const handleToggleDropdown = () => {
     setIsOpen(!isOpen);
@@ -104,7 +90,7 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
 
   return (
     <>
-      <div ref={containerRef} className="relative">
+      <div ref={containerRef}>
         <button
           onClick={handleToggleDropdown}
           className="w-80 h-12 flex items-center justify-between px-4 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -122,7 +108,10 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
       </div>
 
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 animate-fade-in">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 animate-fade-in"
+          onClick={handleBackdropClick}
+        >
           <div className="bg-white rounded-lg shadow-xl max-w-sm w-full mx-4 max-h-96 overflow-hidden animate-scale-in">
             <div className="py-2 max-h-80 overflow-y-auto">
               {persons.map((person) => (
