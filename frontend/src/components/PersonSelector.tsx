@@ -27,6 +27,7 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
   const buttonRef = useRef<HTMLButtonElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadPersons();
@@ -35,9 +36,20 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
+      const target = event.target as Node;
+      
+      // Check if clicked inside container (button)
+      if (containerRef.current && containerRef.current.contains(target)) {
+        return;
       }
+      
+      // Check if clicked inside dropdown (if it exists)
+      if (dropdownRef.current && dropdownRef.current.contains(target)) {
+        return;
+      }
+      
+      // Clicked outside both container and dropdown
+      setIsOpen(false);
     };
 
     document.addEventListener('mousedown', handleClickOutside);
@@ -135,7 +147,6 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
           ref={buttonRef}
           onClick={handleToggleDropdown}
           className="w-80 h-12 flex items-center justify-between px-4 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          style={{ transition: 'none' }}
         >
           <span className="font-medium truncate mr-3">{currentPerson?.name || 'Select Person'}</span>
           <svg 
@@ -151,6 +162,7 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
 
       {isOpen && createPortal(
         <div 
+          ref={dropdownRef}
           className="fixed z-50 bg-white rounded-lg shadow-lg border border-gray-200"
           style={{ 
             top: dropdownPosition.top,
