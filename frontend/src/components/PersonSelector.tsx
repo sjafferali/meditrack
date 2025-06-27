@@ -59,10 +59,48 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
   const calculateDropdownPosition = () => {
     if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
+      const dropdownHeight = 300; // Estimated dropdown height
+      const dropdownWidth = Math.max(rect.width, 320);
+      const padding = 8;
+      
+      // Get viewport dimensions
+      const viewportHeight = window.innerHeight;
+      const viewportWidth = window.innerWidth;
+      
+      // Calculate vertical position
+      let top = rect.bottom + padding;
+      let positionedAbove = false;
+      
+      // Check if dropdown would go off bottom of screen
+      if (top + dropdownHeight > viewportHeight) {
+        // Try positioning above the button
+        const topAbove = rect.top - dropdownHeight - padding;
+        if (topAbove >= 0) {
+          top = topAbove;
+          positionedAbove = true;
+        } else {
+          // If neither above nor below fits, position at bottom with max viewport height
+          top = Math.max(0, viewportHeight - dropdownHeight - padding);
+        }
+      }
+      
+      // Calculate horizontal position
+      let left = rect.left;
+      
+      // Check if dropdown would go off right side of screen
+      if (left + dropdownWidth > viewportWidth) {
+        left = Math.max(0, viewportWidth - dropdownWidth - padding);
+      }
+      
+      // Ensure it doesn't go off left side
+      if (left < 0) {
+        left = padding;
+      }
+      
       setDropdownPosition({
-        top: rect.bottom + 8,
-        left: rect.left,
-        width: Math.max(rect.width, 320)
+        top,
+        left,
+        width: dropdownWidth
       });
     }
   };
