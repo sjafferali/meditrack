@@ -10,7 +10,6 @@ try {
   }
 } catch (error) {
   // Silently fail if react-router-dom is not available (in tests)
-  console.log('React Router not available, using mock useParams');
 }
 
 interface DailyDoseLogProps {
@@ -179,7 +178,6 @@ const DailyDoseLog: React.FC<DailyDoseLogProps> = ({ selectedDate, isOpen, onClo
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('Failed to copy to clipboard:', err);
       setError('Failed to copy to clipboard. Please try again.');
     }
   };
@@ -216,7 +214,6 @@ const DailyDoseLog: React.FC<DailyDoseLogProps> = ({ selectedDate, isOpen, onClo
       await doseApi.downloadMedicationTrackingPDF(dateStr, options);
       
     } catch (err) {
-      console.error('Failed to generate PDF:', err);
       setError(err instanceof Error ? err.message : 'Failed to generate PDF tracking form');
     } finally {
       }

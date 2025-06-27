@@ -100,22 +100,18 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
       // If no current person is selected, select the default person
       if (!currentPersonId && data.length > 0) {
         const defaultPerson = data.find((p: Person) => p.is_default) || data[0];
-        console.log('Setting default person:', defaultPerson);
         onPersonChange(defaultPerson.id);
       }
       
       // Force selection of a person if none is selected at this point
       if (data.length > 0 && !currentPersonId) {
-        console.log('Forcing person selection as fallback');
         onPersonChange(data[0].id);
       }
     } catch (err) {
-      console.error('Person loading error:', err);
       setError(err instanceof Error ? err.message : 'Failed to load persons');
       
       // Fallback: Create a local default person if API fails
       if (!currentPersonId) {
-        console.log('Using fallback local person');
         const fallbackPerson = { id: 1, name: 'Default Person', is_default: true };
         setPersons([fallbackPerson]);
         onPersonChange(1);

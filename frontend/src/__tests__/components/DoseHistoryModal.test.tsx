@@ -58,15 +58,13 @@ describe('DoseHistoryModal', () => {
   test('displays dose history grouped by date', async () => {
     (doseApi.getDoses as jest.Mock).mockResolvedValue(mockDoses);
     
-    await act(async () => {
-      render(
-        <DoseHistoryModal
-          medication={mockMedication}
-          isOpen={true}
-          onClose={() => {}}
-        />
-      );
-    });
+    render(
+      <DoseHistoryModal
+        medication={mockMedication}
+        isOpen={true}
+        onClose={() => {}}
+      />
+    );
     
     // Wait for the specific dates to appear
     expect(await screen.findByText('1/1/2023')).toBeInTheDocument();
@@ -80,15 +78,13 @@ describe('DoseHistoryModal', () => {
   test('displays error message when API call fails', async () => {
     (doseApi.getDoses as jest.Mock).mockRejectedValue(new Error('Failed to fetch'));
     
-    await act(async () => {
-      render(
-        <DoseHistoryModal
-          medication={mockMedication}
-          isOpen={true}
-          onClose={() => {}}
-        />
-      );
-    });
+    render(
+      <DoseHistoryModal
+        medication={mockMedication}
+        isOpen={true}
+        onClose={() => {}}
+      />
+    );
     
     await waitFor(() => {
       expect(screen.getByText('Failed to fetch')).toBeInTheDocument();
@@ -98,15 +94,13 @@ describe('DoseHistoryModal', () => {
   test('displays empty state when no doses exist', async () => {
     (doseApi.getDoses as jest.Mock).mockResolvedValue([]);
     
-    await act(async () => {
-      render(
-        <DoseHistoryModal
-          medication={mockMedication}
-          isOpen={true}
-          onClose={() => {}}
-        />
-      );
-    });
+    render(
+      <DoseHistoryModal
+        medication={mockMedication}
+        isOpen={true}
+        onClose={() => {}}
+      />
+    );
     
     await waitFor(() => {
       expect(screen.getByText('No doses recorded yet')).toBeInTheDocument();

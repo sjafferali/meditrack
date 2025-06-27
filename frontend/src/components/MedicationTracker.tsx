@@ -90,12 +90,10 @@ const MedicationTracker = () => {
           if (persons && persons.length > 0) {
             // Find default person or use the first one
             const defaultPerson = persons.find((p: any) => p.is_default) || persons[0];
-            console.log('Auto-selecting default person:', defaultPerson.name);
             setCurrentPersonId(defaultPerson.id);
           }
         }
       } catch (err) {
-        console.error('Error loading default person:', err);
         setError('Failed to load default person. Please select a person manually.');
       } finally {
         setLoading(false);
