@@ -69,7 +69,8 @@ def create_person(person: PersonCreate, db: Session = Depends(get_db)):
     # If this is the first person, make them the default
     is_default = existing_default is None
 
-    db_person = Person(**person.model_dump(), is_default=is_default)
+    person_data = person.model_dump(exclude={"name"})
+    db_person = Person(**person_data, is_default=is_default)
     db.add(db_person)
     db.commit()
     db.refresh(db_person)
@@ -123,7 +124,7 @@ def update_person(
     if not person:
         raise HTTPException(status_code=404, detail="Person not found")
 
-    update_data = person_update.model_dump(exclude_unset=True)
+    update_data = person_update.model_dump(exclude_unset=True, exclude={"name"})
     for field, value in update_data.items():
         setattr(person, field, value)
 

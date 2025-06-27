@@ -132,7 +132,7 @@ describe('API Service', () => {
         const mockData = { id: 1, name: 'Test Med' };
         mockAxiosInstance.get.mockResolvedValue({ data: mockData });
         
-        const result = await api.getById(1);
+        const result = await api.getById(1); // eslint-disable-line testing-library/no-await-sync-query
         
         expect(mockAxiosInstance.get).toHaveBeenCalledWith('/medications/1');
         expect(result).toEqual(mockData);
@@ -350,7 +350,7 @@ describe('API Service', () => {
         const mockData = { id: 1, name: 'John Doe' };
         mockAxiosInstance.get.mockResolvedValue({ data: mockData });
         
-        const result = await api.getById(1);
+        const result = await api.getById(1); // eslint-disable-line testing-library/no-await-sync-query
         
         expect(mockAxiosInstance.get).toHaveBeenCalledWith('/persons/1');
         expect(result).toEqual(mockData);

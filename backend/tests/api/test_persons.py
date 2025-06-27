@@ -25,13 +25,15 @@ class TestPersons:
         """Create multiple persons for testing"""
         persons_data = [
             {
-                "name": "Jane Smith",
+                "first_name": "Jane",
+                "last_name": "Smith",
                 "date_of_birth": date(1985, 5, 15),
                 "notes": "Test person 2",
                 "is_default": False,
             },
             {
-                "name": "Bob Johnson",
+                "first_name": "Bob",
+                "last_name": "Johnson",
                 "date_of_birth": date(1992, 10, 20),
                 "notes": "Test person 3",
                 "is_default": False,
@@ -145,11 +147,15 @@ class TestPersons:
     @pytest.mark.unit
     def test_update_person_success(self, client, sample_person):
         """Test updating a person"""
-        update_data = {"name": "Updated Name", "notes": "Updated notes"}
+        update_data = {
+            "first_name": "Updated",
+            "last_name": "Name",
+            "notes": "Updated notes",
+        }
         response = client.put(f"/api/v1/persons/{sample_person.id}", json=update_data)
         assert response.status_code == 200
         data = response.json()
-        assert data["name"] == update_data["name"]
+        assert data["name"] == "Updated Name"
         assert data["notes"] == update_data["notes"]
         # Handle None case for date_of_birth
         if sample_person.date_of_birth:
@@ -268,7 +274,7 @@ class TestPersons:
         assert get_response.status_code == 200
 
         # Update
-        update_data = {"name": "Updated Name"}
+        update_data = {"first_name": "Updated", "last_name": "Name"}
         update_response = client.put(f"/api/v1/persons/{person_id}", json=update_data)
         assert update_response.status_code == 200
         assert update_response.json()["name"] == "Updated Name"

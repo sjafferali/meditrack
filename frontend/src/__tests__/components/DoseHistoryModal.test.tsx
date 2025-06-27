@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import DoseHistoryModal from '../../components/DoseHistoryModal';
 import { doseApi } from '../../services/api';
 
@@ -28,7 +28,9 @@ describe('DoseHistoryModal', () => {
     expect(screen.queryByText('Dose History - Aspirin')).not.toBeInTheDocument();
   });
 
-  test('renders correctly when isOpen is true', () => {
+  test('renders correctly when isOpen is true', async () => {
+    (doseApi.getDoses as jest.Mock).mockResolvedValue([]);
+    
     render(
       <DoseHistoryModal
         medication={mockMedication}
@@ -56,15 +58,13 @@ describe('DoseHistoryModal', () => {
   test('displays dose history grouped by date', async () => {
     (doseApi.getDoses as jest.Mock).mockResolvedValue(mockDoses);
     
-    await act(async () => {
-      render(
-        <DoseHistoryModal
-          medication={mockMedication}
-          isOpen={true}
-          onClose={() => {}}
-        />
-      );
-    });
+    render(
+      <DoseHistoryModal
+        medication={mockMedication}
+        isOpen={true}
+        onClose={() => {}}
+      />
+    );
     
     // Wait for the specific dates to appear
     expect(await screen.findByText('1/1/2023')).toBeInTheDocument();

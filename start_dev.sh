@@ -8,6 +8,8 @@ echo "Starting MediTrack development servers..."
 echo "Starting backend server..."
 cd backend
 source venv/bin/activate
+# Uncomment to use production db
+# DATABASE_URL=postgresql://meditrackgigi:11AsRHXHYB0f@db.local.samir.systems:5432/meditrackgigi
 uvicorn app.main:app --reload --port 8000 &
 BACKEND_PID=$!
 
@@ -17,7 +19,10 @@ sleep 5
 # Start frontend server
 echo "Starting frontend server..."
 cd ../frontend
-npm start &
+echo "Building and serving frontend with improved UI..."
+npm run build
+echo "Starting frontend with proxy support..."
+npx http-server build -p 3000 --proxy http://localhost:8000 &
 FRONTEND_PID=$!
 
 echo "Servers started!"

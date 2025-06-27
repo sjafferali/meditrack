@@ -56,7 +56,7 @@ def client(db_session: Session) -> Generator[TestClient, None, None]:
 @pytest.fixture
 def sample_person(db_session: Session) -> Person:
     """Create a sample person in the database"""
-    person = Person(name="Test User", is_default=True)
+    person = Person(first_name="Test", last_name="User", is_default=True)
     db_session.add(person)
     db_session.commit()
     db_session.refresh(person)

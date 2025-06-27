@@ -44,8 +44,8 @@ def test_generate_medication_pdf(client, sample_medication):
 
 def test_generate_medication_pdf_with_person_filter(client, db_session):
     # Create two test persons
-    person1 = Person(name="Person One")
-    person2 = Person(name="Person Two")
+    person1 = Person(first_name="Person", last_name="One")
+    person2 = Person(first_name="Person", last_name="Two")
     db_session.add(person1)
     db_session.add(person2)
     db_session.commit()
@@ -121,7 +121,7 @@ def test_generate_medication_pdf_no_medications(client, db_session):
     test_date = date.today().isoformat()
 
     # Create a person but no medications
-    empty_person = Person(name="Empty Person")
+    empty_person = Person(first_name="Empty", last_name="Person")
     db_session.add(empty_person)
     db_session.commit()
     db_session.refresh(empty_person)
@@ -171,7 +171,7 @@ def test_generate_medication_pdf_with_timezone(client, sample_medication):
 
 def test_medication_with_long_instructions(client, db_session):
     # Create test person
-    person = Person(name="Test Person")
+    person = Person(first_name="Test", last_name="Person")
     db_session.add(person)
     db_session.commit()
     db_session.refresh(person)
@@ -221,7 +221,7 @@ def test_medication_with_long_instructions(client, db_session):
 def test_multipage_pdf_generation(client, db_session):
     """Test PDF generation with enough medications to create multiple pages"""
     # Create test person
-    person = Person(name="Test Person")
+    person = Person(first_name="Test", last_name="Person")
     db_session.add(person)
     db_session.commit()
     db_session.refresh(person)
@@ -290,7 +290,7 @@ def test_person_not_found(client):
 def test_pdf_generation_with_very_long_instructions(client, db_session):
     """Test PDF generation with extremely long medication instructions"""
     # Create test person
-    person = Person(name="Test Person")
+    person = Person(first_name="Test", last_name="Person")
     db_session.add(person)
     db_session.commit()
     db_session.refresh(person)
