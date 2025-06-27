@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
 import { personApi } from '../services/api';
 
 interface Person {
@@ -24,10 +23,7 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
-  const buttonRef = useRef<HTMLButtonElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadPersons();
@@ -43,88 +39,22 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
         return;
       }
       
-      // Check if clicked inside dropdown (if it exists)
-      if (dropdownRef.current && dropdownRef.current.contains(target)) {
-        return;
+      // If modal is open and click is outside, close it
+      if (isOpen) {
+        setIsOpen(false);
       }
-      
-      // Clicked outside both container and dropdown
-      setIsOpen(false);
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const calculateDropdownPosition = () => {
-    if (buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      const dropdownHeight = 300; // Estimated dropdown height
-      const dropdownWidth = Math.max(rect.width, 320);
-      const padding = 8;
-      
-      // Get viewport dimensions
-      const viewportHeight = window.innerHeight;
-      const viewportWidth = window.innerWidth;
-      
-      // Calculate vertical position
-      let top = rect.bottom + padding;
-      
-      // Check if dropdown would go off bottom of screen
-      if (top + dropdownHeight > viewportHeight) {
-        // Try positioning above the button
-        const topAbove = rect.top - dropdownHeight - padding;
-        if (topAbove >= 0) {
-          top = topAbove;
-        } else {
-          // If neither above nor below fits, position at bottom with max viewport height
-          top = Math.max(0, viewportHeight - dropdownHeight - padding);
-        }
-      }
-      
-      // Calculate horizontal position
-      let left = rect.left;
-      
-      // Check if dropdown would go off right side of screen
-      if (left + dropdownWidth > viewportWidth) {
-        left = Math.max(0, viewportWidth - dropdownWidth - padding);
-      }
-      
-      // Ensure it doesn't go off left side
-      if (left < 0) {
-        left = padding;
-      }
-      
-      setDropdownPosition({
-        top,
-        left,
-        width: dropdownWidth
-      });
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
     }
-  };
+    
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen]);
 
   const handleToggleDropdown = () => {
-    if (!isOpen) {
-      calculateDropdownPosition();
-    }
     setIsOpen(!isOpen);
   };
-
-  // Recalculate position when window resizes
-  useEffect(() => {
-    const handleResize = () => {
-      if (isOpen) {
-        calculateDropdownPosition();
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('scroll', handleResize);
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('scroll', handleResize);
-    };
-  }, [isOpen]);
 
   const loadPersons = async () => {
     try {
@@ -176,7 +106,6 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
     <>
       <div ref={containerRef} className="relative">
         <button
-          ref={buttonRef}
           onClick={handleToggleDropdown}
           className="w-80 h-12 flex items-center justify-between px-4 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
@@ -192,55 +121,47 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
         </button>
       </div>
 
-      {isOpen && createPortal(
-        <div 
-          ref={dropdownRef}
-          className="fixed z-50 bg-white rounded-lg shadow-lg border border-gray-200"
-          style={{ 
-            top: dropdownPosition.top,
-            left: dropdownPosition.left,
-            width: dropdownPosition.width,
-            minWidth: '320px'
-          }}
-        >
-          <div className="py-2">
-            {persons.map((person) => (
-              <button
-                key={person.id}
-                onClick={() => handlePersonSelect(person.id)}
-                className={`w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center justify-between ${
-                  person.id === currentPersonId ? 'bg-blue-50' : ''
-                }`}
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium truncate">{person.name}</div>
-                  {person.medication_count !== undefined && (
-                    <div className="text-sm text-gray-500 truncate">
-                      {person.medication_count} medication{person.medication_count !== 1 ? 's' : ''}
-                    </div>
+      {isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 animate-fade-in">
+          <div className="bg-white rounded-lg shadow-xl max-w-sm w-full mx-4 max-h-96 overflow-hidden animate-scale-in">
+            <div className="py-2 max-h-80 overflow-y-auto">
+              {persons.map((person) => (
+                <button
+                  key={person.id}
+                  onClick={() => handlePersonSelect(person.id)}
+                  className={`w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center justify-between ${
+                    person.id === currentPersonId ? 'bg-blue-50' : ''
+                  }`}
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium truncate">{person.name}</div>
+                    {person.medication_count !== undefined && (
+                      <div className="text-sm text-gray-500 truncate">
+                        {person.medication_count} medication{person.medication_count !== 1 ? 's' : ''}
+                      </div>
+                    )}
+                  </div>
+                  {person.is_default && (
+                    <span className="ml-3 text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded flex-shrink-0">
+                      Default
+                    </span>
                   )}
-                </div>
-                {person.is_default && (
-                  <span className="ml-3 text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded flex-shrink-0">
-                    Default
-                  </span>
-                )}
+                </button>
+              ))}
+            </div>
+            <div className="border-t border-gray-200">
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  onManagePersons();
+                }}
+                className="w-full px-4 py-3 text-left text-blue-600 hover:bg-gray-50 font-medium"
+              >
+                Manage People
               </button>
-            ))}
+            </div>
           </div>
-          <div className="border-t border-gray-200">
-            <button
-              onClick={() => {
-                setIsOpen(false);
-                onManagePersons();
-              }}
-              className="w-full px-4 py-3 text-left text-blue-600 hover:bg-gray-50 font-medium"
-            >
-              Manage People
-            </button>
-          </div>
-        </div>,
-        document.body
+        </div>
       )}
     </>
   );
