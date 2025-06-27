@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
 import DoseHistoryModal from '../../components/DoseHistoryModal';
 import { doseApi } from '../../services/api';
 
@@ -42,13 +42,15 @@ describe('DoseHistoryModal', () => {
   test('displays loading state initially', async () => {
     (doseApi.getDoses as jest.Mock).mockReturnValue(new Promise(() => {}));
     
-    render(
-      <DoseHistoryModal
-        medication={mockMedication}
-        isOpen={true}
-        onClose={() => {}}
-      />
-    );
+    await act(async () => {
+      render(
+        <DoseHistoryModal
+          medication={mockMedication}
+          isOpen={true}
+          onClose={() => {}}
+        />
+      );
+    });
     
     expect(screen.getByText('Loading dose history...')).toBeInTheDocument();
   });
@@ -56,13 +58,15 @@ describe('DoseHistoryModal', () => {
   test('displays dose history grouped by date', async () => {
     (doseApi.getDoses as jest.Mock).mockResolvedValue(mockDoses);
     
-    render(
-      <DoseHistoryModal
-        medication={mockMedication}
-        isOpen={true}
-        onClose={() => {}}
-      />
-    );
+    await act(async () => {
+      render(
+        <DoseHistoryModal
+          medication={mockMedication}
+          isOpen={true}
+          onClose={() => {}}
+        />
+      );
+    });
     
     // Wait for the specific dates to appear
     expect(await screen.findByText('1/1/2023')).toBeInTheDocument();
@@ -76,13 +80,15 @@ describe('DoseHistoryModal', () => {
   test('displays error message when API call fails', async () => {
     (doseApi.getDoses as jest.Mock).mockRejectedValue(new Error('Failed to fetch'));
     
-    render(
-      <DoseHistoryModal
-        medication={mockMedication}
-        isOpen={true}
-        onClose={() => {}}
-      />
-    );
+    await act(async () => {
+      render(
+        <DoseHistoryModal
+          medication={mockMedication}
+          isOpen={true}
+          onClose={() => {}}
+        />
+      );
+    });
     
     await waitFor(() => {
       expect(screen.getByText('Failed to fetch')).toBeInTheDocument();
@@ -92,46 +98,52 @@ describe('DoseHistoryModal', () => {
   test('displays empty state when no doses exist', async () => {
     (doseApi.getDoses as jest.Mock).mockResolvedValue([]);
     
-    render(
-      <DoseHistoryModal
-        medication={mockMedication}
-        isOpen={true}
-        onClose={() => {}}
-      />
-    );
+    await act(async () => {
+      render(
+        <DoseHistoryModal
+          medication={mockMedication}
+          isOpen={true}
+          onClose={() => {}}
+        />
+      );
+    });
     
     await waitFor(() => {
       expect(screen.getByText('No doses recorded yet')).toBeInTheDocument();
     });
   });
 
-  test('calls onClose when close button is clicked', () => {
+  test('calls onClose when close button is clicked', async () => {
     const mockOnClose = jest.fn();
     (doseApi.getDoses as jest.Mock).mockResolvedValue([]);
     
-    render(
-      <DoseHistoryModal
-        medication={mockMedication}
-        isOpen={true}
-        onClose={mockOnClose}
-      />
-    );
+    await act(async () => {
+      render(
+        <DoseHistoryModal
+          medication={mockMedication}
+          isOpen={true}
+          onClose={mockOnClose}
+        />
+      );
+    });
     
     fireEvent.click(screen.getByLabelText('Close'));
     expect(mockOnClose).toHaveBeenCalled();
   });
 
-  test('calls onClose when Close button is clicked', () => {
+  test('calls onClose when Close button is clicked', async () => {
     const mockOnClose = jest.fn();
     (doseApi.getDoses as jest.Mock).mockResolvedValue([]);
     
-    render(
-      <DoseHistoryModal
-        medication={mockMedication}
-        isOpen={true}
-        onClose={mockOnClose}
-      />
-    );
+    await act(async () => {
+      render(
+        <DoseHistoryModal
+          medication={mockMedication}
+          isOpen={true}
+          onClose={mockOnClose}
+        />
+      );
+    });
     
     fireEvent.click(screen.getByText('Close'));
     expect(mockOnClose).toHaveBeenCalled();
@@ -142,13 +154,15 @@ describe('DoseHistoryModal', () => {
       { id: 1, medication_id: 1, taken_at: '2023-01-01T09:00:00Z' }
     ]);
     
-    render(
-      <DoseHistoryModal
-        medication={mockMedication}
-        isOpen={true}
-        onClose={() => {}}
-      />
-    );
+    await act(async () => {
+      render(
+        <DoseHistoryModal
+          medication={mockMedication}
+          isOpen={true}
+          onClose={() => {}}
+        />
+      );
+    });
     
     await waitFor(() => {
       // The time could be formatted as either 9:00 or 09:00 depending on locale

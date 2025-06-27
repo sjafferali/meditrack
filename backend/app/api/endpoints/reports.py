@@ -106,14 +106,62 @@ def generate_medication_pdf(
 def create_medication_tracking_pdf(
     buffer, medications, dates, person_name, current_tz, db
 ):
-    # Configure document with exact 0.75 inch margins
+    # PDF Layout Configuration - All layout settings in one place
+    # To adjust the PDF layout, simply modify these values
+    layout_config = {
+        # ===== Page Margins =====
+        # Controls the white space around the edges of the page
+        # Increase values for more white space, decrease for tighter margins
+        "left_margin": 0.75 * inch,  # White space on the left side of the page
+        "right_margin": 0.75 * inch,  # White space on the right side of the page
+        "top_margin": 0.75 * inch,  # White space at the top of the page
+        "bottom_margin": 0.75 * inch,  # White space at the bottom of the page
+        # ===== Header Settings =====
+        # Controls the title and date field positioning on the first page
+        "title_font_size": 16,  # Main title text size
+        "title_offset_from_top": 0.3
+        * inch,  # How far down from the top margin the title appears
+        "date_field_offset": 2.5
+        * inch,  # Distance from right edge where "Date:" label appears
+        "date_line_offset": 2
+        * inch,  # Distance from right edge where the date line starts
+        "date_line_drop": 0.35
+        * inch,  # How far below the top margin the date line appears
+        # ===== Page Numbering =====
+        # Controls the "Page X" text that appears on every page
+        "page_num_font_size": 9,  # Size of the page number text
+        "page_num_bottom_offset": 0.25
+        * inch,  # Distance from bottom edge where page number appears
+        "page_num_right_offset": 1
+        * inch,  # Distance from right edge where page number appears
+        # ===== Content Spacing =====
+        # Controls vertical spacing between elements in the document
+        "top_spacer": 0.3
+        * inch,  # Space at the top of content (below header) on first page
+        "medication_spacing": 0.1
+        * inch,  # Vertical space between different medications
+        # ===== Time Slots Table =====
+        # Controls the layout of the medication tracking boxes
+        "slots_per_row": 3,  # Number of time slot boxes per row (e.g., "1: ___ AM/PM")
+        "slot_row_height": 0.4 * inch,  # Height of each row of time slots
+        "slot_font_size": 10,  # Font size for the slot text (e.g., "1: ___ AM/PM")
+        "slot_top_padding": 15,  # Padding above text inside each slot (in points)
+        "slot_bottom_padding": 15,  # Padding below text inside each slot (in points)
+        # ===== Footer Settings =====
+        # Controls the instructions and timestamp at the bottom of the last page
+        "footer_font_size": 9,  # Font size for the footer text
+        "footer_space_before": 0.5
+        * inch,  # Space between the last medication and the footer
+    }
+
+    # Configure document with margins from config
     doc = SimpleDocTemplate(
         buffer,
         pagesize=letter,
-        leftMargin=0.75 * inch,
-        rightMargin=0.75 * inch,
-        topMargin=0.75 * inch,
-        bottomMargin=0.75 * inch,
+        leftMargin=layout_config["left_margin"],
+        rightMargin=layout_config["right_margin"],
+        topMargin=layout_config["top_margin"],
+        bottomMargin=layout_config["bottom_margin"],
     )
 
     # Create document content
@@ -125,32 +173,38 @@ def create_medication_tracking_pdf(
     def first_page_header(canvas, doc):
         canvas.saveState()
         # Draw the title on first page
-        canvas.setFont("Helvetica-Bold", 16)
+        canvas.setFont("Helvetica-Bold", layout_config["title_font_size"])
         canvas.drawString(
-            doc.leftMargin, doc.height + doc.topMargin - 0.3 * inch, title
+            doc.leftMargin,
+            doc.height + doc.topMargin - layout_config["title_offset_from_top"],
+            title,
         )
 
         # Add date field
         canvas.setFont("Helvetica", 12)
         date_text = "Date: "
         canvas.drawString(
-            doc.width - 2.5 * inch, doc.height + doc.topMargin - 0.3 * inch, date_text
+            doc.width - layout_config["date_field_offset"],
+            doc.height + doc.topMargin - layout_config["title_offset_from_top"],
+            date_text,
         )
 
         # Add line for date
         canvas.line(
-            doc.width - 2 * inch,
-            doc.height + doc.topMargin - 0.35 * inch,
+            doc.width - layout_config["date_line_offset"],
+            doc.height + doc.topMargin - layout_config["date_line_drop"],
             doc.width - doc.rightMargin,
-            doc.height + doc.topMargin - 0.35 * inch,
+            doc.height + doc.topMargin - layout_config["date_line_drop"],
         )
 
         # Add page number
         page_num = canvas.getPageNumber()
         text = f"Page {page_num}"
-        canvas.setFont("Helvetica", 9)
+        canvas.setFont("Helvetica", layout_config["page_num_font_size"])
         canvas.drawRightString(
-            doc.width + doc.rightMargin - 1 * inch, doc.bottomMargin - 0.25 * inch, text
+            doc.width + doc.rightMargin - layout_config["page_num_right_offset"],
+            doc.bottomMargin - layout_config["page_num_bottom_offset"],
+            text,
         )
 
         canvas.restoreState()
@@ -162,9 +216,11 @@ def create_medication_tracking_pdf(
         # Add only page number
         page_num = canvas.getPageNumber()
         text = f"Page {page_num}"
-        canvas.setFont("Helvetica", 9)
+        canvas.setFont("Helvetica", layout_config["page_num_font_size"])
         canvas.drawRightString(
-            doc.width + doc.rightMargin - 1 * inch, doc.bottomMargin - 0.25 * inch, text
+            doc.width + doc.rightMargin - layout_config["page_num_right_offset"],
+            doc.bottomMargin - layout_config["page_num_bottom_offset"],
+            text,
         )
 
         canvas.restoreState()
@@ -172,7 +228,7 @@ def create_medication_tracking_pdf(
     content = []
 
     # Add spacer at top to account for header in first page
-    content.append(Spacer(1, 0.3 * inch))
+    content.append(Spacer(1, layout_config["top_spacer"]))
 
     # Process each medication
     for medication in medications:
@@ -193,7 +249,7 @@ def create_medication_tracking_pdf(
         max_doses = medication.max_doses_per_day
         time_slots = []
         row = []
-        slots_per_row = 3
+        slots_per_row = layout_config["slots_per_row"]
 
         for slot in range(1, max_doses + 1):
             slot_cell = f"{slot}: _______________ (AM/PM)"
@@ -206,11 +262,13 @@ def create_medication_tracking_pdf(
                 row = []
 
         if time_slots:
-            col_width = (letter[0] - 1.5 * inch) / slots_per_row
+            col_width = (
+                letter[0] - layout_config["left_margin"] - layout_config["right_margin"]
+            ) / slots_per_row
             time_table = Table(
                 time_slots,
                 colWidths=[col_width] * slots_per_row,
-                rowHeights=0.4 * inch,
+                rowHeights=layout_config["slot_row_height"],
             )
 
             time_table.setStyle(
@@ -218,24 +276,40 @@ def create_medication_tracking_pdf(
                     [
                         ("ALIGN", (0, 0), (-1, -1), "LEFT"),
                         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-                        ("FONT", (0, 0), (-1, -1), "Helvetica", 10),
-                        ("BOTTOMPADDING", (0, 0), (-1, -1), 15),
-                        ("TOPPADDING", (0, 0), (-1, -1), 15),
+                        (
+                            "FONT",
+                            (0, 0),
+                            (-1, -1),
+                            "Helvetica",
+                            layout_config["slot_font_size"],
+                        ),
+                        (
+                            "BOTTOMPADDING",
+                            (0, 0),
+                            (-1, -1),
+                            layout_config["slot_bottom_padding"],
+                        ),
+                        (
+                            "TOPPADDING",
+                            (0, 0),
+                            (-1, -1),
+                            layout_config["slot_top_padding"],
+                        ),
                     ]
                 )
             )
 
             content.append(time_table)
-            content.append(Spacer(1, 0.1 * inch))
+            content.append(Spacer(1, layout_config["medication_spacing"]))
 
     # Add footer
     timestamp = datetime.now(current_tz).strftime("%Y-%m-%d %H:%M:%S")
     footer_style = ParagraphStyle(
         "Footer",
         parent=styles["Normal"],
-        fontSize=9,
+        fontSize=layout_config["footer_font_size"],
         alignment=1,  # Center
-        spaceBefore=0.5 * inch,
+        spaceBefore=layout_config["footer_space_before"],
     )
     footer_text = (
         "Instructions: Record the time when each dose is taken in the blank spaces "

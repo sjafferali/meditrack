@@ -139,15 +139,27 @@ describe('MedicationTracker', () => {
 
   describe('Initial Loading and Person Selection', () => {
     test('shows welcome message on initial render before person selection', async () => {
-      render(<MedicationTracker />);
-      expect(screen.getByText('Welcome to MediTrack! Click the button below to select a person and manage their medications.')).toBeInTheDocument();
+      (personApi.getAll as jest.Mock).mockResolvedValue([]);
+      
+      await act(async () => {
+        render(<MedicationTracker />);
+      });
+      
+      await waitFor(() => {
+        expect(screen.getByText('Welcome to MediTrack! Click the button below to select a person and manage their medications.')).toBeInTheDocument();
+      });
     });
 
     test('auto-selects default person on mount', async () => {
-      render(<MedicationTracker />);
+      await act(async () => {
+        render(<MedicationTracker />);
+      });
       
-      await waitFor(() => {
-        expect(personApi.getAll).toHaveBeenCalled();
+      // Wait for all async operations to complete
+      await act(async () => {
+        await waitFor(() => {
+          expect(personApi.getAll).toHaveBeenCalled();
+        });
       });
 
       await waitFor(() => {
@@ -158,28 +170,45 @@ describe('MedicationTracker', () => {
     test('shows welcome message when no person is selected', async () => {
       (personApi.getAll as jest.Mock).mockResolvedValue([]);
       
-      render(<MedicationTracker />);
+      await act(async () => {
+        render(<MedicationTracker />);
+      });
       
-      await waitFor(() => {
-        expect(screen.getByText(/Welcome to MediTrack!/)).toBeInTheDocument();
-        expect(screen.getByText('Select Person')).toBeInTheDocument();
+      await act(async () => {
+        await waitFor(() => {
+          expect(screen.getByText(/Welcome to MediTrack!/)).toBeInTheDocument();
+          expect(screen.getByText('Select Person')).toBeInTheDocument();
+        });
       });
     });
 
     test('handles person loading error gracefully', async () => {
       (personApi.getAll as jest.Mock).mockRejectedValue(new Error('Failed to load persons'));
       
-      render(<MedicationTracker />);
+      await act(async () => {
+        render(<MedicationTracker />);
+      });
       
-      await waitFor(() => {
-        expect(screen.getByText(/Welcome to MediTrack!/)).toBeInTheDocument();
+      await act(async () => {
+        await waitFor(() => {
+          expect(screen.getByText(/Welcome to MediTrack!/)).toBeInTheDocument();
+        });
       });
     });
   });
 
   describe('Medication Display and Management', () => {
     test('displays medications list after loading', async () => {
-      render(<MedicationTracker />);
+      await act(async () => {
+        render(<MedicationTracker />);
+      });
+      
+      // Wait for initial person loading to complete
+      await act(async () => {
+        await waitFor(() => {
+          expect(personApi.getAll).toHaveBeenCalled();
+        });
+      });
       
       await waitFor(() => {
         expect(screen.getByText('Aspirin')).toBeInTheDocument();
@@ -194,7 +223,9 @@ describe('MedicationTracker', () => {
     test('shows empty medications grid when list is empty', async () => {
       (medicationApi.getAll as jest.Mock).mockResolvedValue([]);
       
-      render(<MedicationTracker />);
+      await act(async () => {
+        render(<MedicationTracker />);
+      });
       
       await waitFor(() => {
         expect(screen.getByText('+ Add Medication')).toBeInTheDocument();
@@ -205,7 +236,9 @@ describe('MedicationTracker', () => {
     test('handles medication loading error', async () => {
       (medicationApi.getAll as jest.Mock).mockRejectedValue(new Error('Network error'));
       
-      render(<MedicationTracker />);
+      await act(async () => {
+        render(<MedicationTracker />);
+      });
       
       await waitFor(() => {
         expect(screen.getByText('Network error')).toBeInTheDocument();
@@ -213,7 +246,9 @@ describe('MedicationTracker', () => {
     });
 
     test('reloads medications when person changes', async () => {
-      render(<MedicationTracker />);
+      await act(async () => {
+        render(<MedicationTracker />);
+      });
       
       // Wait for initial load and person selection
       await waitFor(() => {
@@ -244,7 +279,9 @@ describe('MedicationTracker', () => {
 
   describe('Date Navigation', () => {
     test('displays current date and navigation controls', async () => {
-      render(<MedicationTracker />);
+      await act(async () => {
+        render(<MedicationTracker />);
+      });
       
       await waitFor(() => {
         // Check for date navigation by ID instead of aria-label
@@ -260,7 +297,9 @@ describe('MedicationTracker', () => {
     });
 
     test('navigates to previous day', async () => {
-      render(<MedicationTracker />);
+      await act(async () => {
+        render(<MedicationTracker />);
+      });
       
       // Wait for full initialization and person selection
       await waitFor(() => {
@@ -281,7 +320,9 @@ describe('MedicationTracker', () => {
     });
 
     test('navigates to next day', async () => {
-      render(<MedicationTracker />);
+      await act(async () => {
+        render(<MedicationTracker />);
+      });
       
       // Wait for full initialization and person selection
       await waitFor(() => {
@@ -302,7 +343,9 @@ describe('MedicationTracker', () => {
     });
 
     test('changes date using date picker', async () => {
-      render(<MedicationTracker />);
+      await act(async () => {
+        render(<MedicationTracker />);
+      });
       
       // Wait for full initialization and person selection
       await waitFor(() => {
@@ -329,7 +372,9 @@ describe('MedicationTracker', () => {
 
   describe('Dose Recording', () => {
     test('records dose when Take Dose button is clicked', async () => {
-      render(<MedicationTracker />);
+      await act(async () => {
+        render(<MedicationTracker />);
+      });
       
       await waitFor(() => {
         expect(screen.getByText('Aspirin')).toBeInTheDocument();
@@ -352,7 +397,9 @@ describe('MedicationTracker', () => {
       
       (medicationApi.getAll as jest.Mock).mockResolvedValue(medicationsWithMaxDoses);
       
-      render(<MedicationTracker />);
+      await act(async () => {
+        render(<MedicationTracker />);
+      });
       
       await waitFor(() => {
         const takeDoseButton = screen.getByText('Max Taken');
@@ -361,7 +408,9 @@ describe('MedicationTracker', () => {
     });
 
     test('shows custom time modal for past dates', async () => {
-      render(<MedicationTracker />);
+      await act(async () => {
+        render(<MedicationTracker />);
+      });
       
       await waitFor(() => {
         expect(screen.getByText('Aspirin')).toBeInTheDocument();
@@ -382,7 +431,9 @@ describe('MedicationTracker', () => {
     });
 
     test('records dose with custom time', async () => {
-      render(<MedicationTracker />);
+      await act(async () => {
+        render(<MedicationTracker />);
+      });
       
       await waitFor(() => {
         expect(screen.getByText('Aspirin')).toBeInTheDocument();
@@ -416,7 +467,9 @@ describe('MedicationTracker', () => {
     });
 
     test('prevents recording dose for future dates', async () => {
-      render(<MedicationTracker />);
+      await act(async () => {
+        render(<MedicationTracker />);
+      });
       
       await waitFor(() => {
         expect(screen.getByText('Aspirin')).toBeInTheDocument();
@@ -435,7 +488,9 @@ describe('MedicationTracker', () => {
 
   describe('Medication CRUD Operations', () => {
     test('shows add medication form when button is clicked', async () => {
-      render(<MedicationTracker />);
+      await act(async () => {
+        render(<MedicationTracker />);
+      });
       
       await waitFor(() => {
         const addButton = screen.getByText('+ Add Medication');
@@ -448,7 +503,9 @@ describe('MedicationTracker', () => {
     });
 
     test('creates new medication', async () => {
-      render(<MedicationTracker />);
+      await act(async () => {
+        render(<MedicationTracker />);
+      });
       
       await waitFor(() => {
         const addButton = screen.getByText('+ Add Medication');
@@ -481,7 +538,9 @@ describe('MedicationTracker', () => {
     });
 
     test('shows edit form when Edit button is clicked', async () => {
-      render(<MedicationTracker />);
+      await act(async () => {
+        render(<MedicationTracker />);
+      });
       
       await waitFor(() => {
         const editButtons = screen.getAllByText('Edit');
@@ -494,7 +553,9 @@ describe('MedicationTracker', () => {
     });
 
     test('updates medication', async () => {
-      render(<MedicationTracker />);
+      await act(async () => {
+        render(<MedicationTracker />);
+      });
       
       await waitFor(() => {
         const editButtons = screen.getAllByText('Edit');
@@ -518,7 +579,9 @@ describe('MedicationTracker', () => {
     });
 
     test('shows delete confirmation and deletes medication', async () => {
-      render(<MedicationTracker />);
+      await act(async () => {
+        render(<MedicationTracker />);
+      });
       
       await waitFor(() => {
         const deleteButtons = screen.getAllByText('Delete');
@@ -536,7 +599,9 @@ describe('MedicationTracker', () => {
     });
 
     test('cancels delete when No is clicked', async () => {
-      render(<MedicationTracker />);
+      await act(async () => {
+        render(<MedicationTracker />);
+      });
       
       await waitFor(() => {
         const deleteButtons = screen.getAllByText('Delete');
@@ -553,7 +618,9 @@ describe('MedicationTracker', () => {
 
   describe('Dose History', () => {
     test('shows dose history when Show History is clicked', async () => {
-      render(<MedicationTracker />);
+      await act(async () => {
+        render(<MedicationTracker />);
+      });
       
       await waitFor(() => {
         const historyButtons = screen.getAllByText('Show History');
@@ -567,7 +634,9 @@ describe('MedicationTracker', () => {
     });
 
     test('hides dose history when Hide History is clicked', async () => {
-      render(<MedicationTracker />);
+      await act(async () => {
+        render(<MedicationTracker />);
+      });
       
       await waitFor(() => {
         const historyButtons = screen.getAllByText('Show History');
@@ -583,7 +652,9 @@ describe('MedicationTracker', () => {
     });
 
     test('deletes dose from history', async () => {
-      render(<MedicationTracker />);
+      await act(async () => {
+        render(<MedicationTracker />);
+      });
       
       // Wait for medications to load first
       await waitFor(() => {
@@ -640,7 +711,9 @@ describe('MedicationTracker', () => {
 
   describe('Daily Dose Log', () => {
     test('opens daily dose log when button is clicked', async () => {
-      render(<MedicationTracker />);
+      await act(async () => {
+        render(<MedicationTracker />);
+      });
       
       await waitFor(() => {
         const logButton = screen.getByText('View Daily Log');
@@ -652,7 +725,9 @@ describe('MedicationTracker', () => {
     });
 
     test('closes daily dose log', async () => {
-      render(<MedicationTracker />);
+      await act(async () => {
+        render(<MedicationTracker />);
+      });
       
       await waitFor(() => {
         const logButton = screen.getByText('View Daily Log');
@@ -668,7 +743,9 @@ describe('MedicationTracker', () => {
 
   describe('Person Management', () => {
     test('opens person manager when Manage Persons is clicked', async () => {
-      render(<MedicationTracker />);
+      await act(async () => {
+        render(<MedicationTracker />);
+      });
       
       await waitFor(() => {
         const manageButton = within(screen.getByTestId('person-selector')).getByText('Manage Persons');
@@ -679,7 +756,9 @@ describe('MedicationTracker', () => {
     });
 
     test('closes person manager', async () => {
-      render(<MedicationTracker />);
+      await act(async () => {
+        render(<MedicationTracker />);
+      });
       
       await waitFor(() => {
         const manageButton = within(screen.getByTestId('person-selector')).getByText('Manage Persons');
@@ -706,7 +785,9 @@ describe('MedicationTracker', () => {
         ]
       });
 
-      render(<MedicationTracker />);
+      await act(async () => {
+        render(<MedicationTracker />);
+      });
       
       await waitFor(() => {
         expect(screen.getByText('Previously Recorded Medications')).toBeInTheDocument();
@@ -724,7 +805,9 @@ describe('MedicationTracker', () => {
         value: 500
       });
 
-      render(<MedicationTracker />);
+      await act(async () => {
+        render(<MedicationTracker />);
+      });
       
       await waitFor(() => {
         expect(screen.getByText('Medication Tracker')).toBeInTheDocument();
@@ -744,7 +827,9 @@ describe('MedicationTracker', () => {
     test('handles medication creation error', async () => {
       (medicationApi.create as jest.Mock).mockRejectedValue(new Error('Failed to create'));
       
-      render(<MedicationTracker />);
+      await act(async () => {
+        render(<MedicationTracker />);
+      });
       
       await waitFor(() => {
         const addButton = screen.getByText('+ Add Medication');
@@ -765,7 +850,9 @@ describe('MedicationTracker', () => {
     test('handles dose recording error', async () => {
       (doseApi.recordDoseWithTimezone as jest.Mock).mockRejectedValue(new Error('Failed to record dose'));
       
-      render(<MedicationTracker />);
+      await act(async () => {
+        render(<MedicationTracker />);
+      });
       
       await waitFor(() => {
         const takeDoseButtons = screen.getAllByText('Take Now');
@@ -780,7 +867,9 @@ describe('MedicationTracker', () => {
     test('handles dose history loading error', async () => {
       (doseApi.getDoses as jest.Mock).mockRejectedValue(new Error('Failed to load history'));
       
-      render(<MedicationTracker />);
+      await act(async () => {
+        render(<MedicationTracker />);
+      });
       
       await waitFor(() => {
         const historyButtons = screen.getAllByText('Show History');
@@ -795,7 +884,9 @@ describe('MedicationTracker', () => {
 
   describe('Dose History Modal', () => {
     test('opens dose history modal when medication name is clicked', async () => {
-      render(<MedicationTracker />);
+      await act(async () => {
+        render(<MedicationTracker />);
+      });
       
       await waitFor(() => {
         const medicationName = screen.getByText('Aspirin');
@@ -811,7 +902,9 @@ describe('MedicationTracker', () => {
     test('requires person selection before adding medication', async () => {
       (personApi.getAll as jest.Mock).mockResolvedValue([]);
       
-      render(<MedicationTracker />);
+      await act(async () => {
+        render(<MedicationTracker />);
+      });
       
       await waitFor(() => {
         expect(screen.getByText(/Welcome to MediTrack!/)).toBeInTheDocument();
