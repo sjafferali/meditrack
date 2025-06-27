@@ -69,7 +69,6 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
       
       // Calculate vertical position
       let top = rect.bottom + padding;
-      let positionedAbove = false;
       
       // Check if dropdown would go off bottom of screen
       if (top + dropdownHeight > viewportHeight) {
@@ -77,7 +76,6 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
         const topAbove = rect.top - dropdownHeight - padding;
         if (topAbove >= 0) {
           top = topAbove;
-          positionedAbove = true;
         } else {
           // If neither above nor below fits, position at bottom with max viewport height
           top = Math.max(0, viewportHeight - dropdownHeight - padding);
