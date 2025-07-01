@@ -1,22 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { doseApi } from '../services/api';
 
-// Optional import to allow tests to run without react-router-dom
-let useParams: () => { personId?: string } = () => ({ personId: undefined });
-try {
-  const router = require('react-router-dom');
-  if (router && router.useParams) {
-    useParams = router.useParams;
-  }
-} catch (error) {
-  // Silently fail if react-router-dom is not available (in tests)
-}
 
 interface DailyDoseLogProps {
   selectedDate: Date;
   isOpen: boolean;
   onClose: () => void;
-  personId?: string; // Optional prop for tests
 }
 
 interface DailySummary {
@@ -31,15 +20,11 @@ interface DailySummary {
   }>;
 }
 
-const DailyDoseLog: React.FC<DailyDoseLogProps> = ({ selectedDate, isOpen, onClose, personId: propPersonId }) => {
+const DailyDoseLog: React.FC<DailyDoseLogProps> = ({ selectedDate, isOpen, onClose }) => {
   const [summary, setSummary] = useState<DailySummary | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  
-  // Get the current person ID from the URL if available, or from props
-  const { personId: urlPersonId } = useParams();
-  const personId = propPersonId || urlPersonId;
 
   const loadDailySummary = async () => {
     try {
