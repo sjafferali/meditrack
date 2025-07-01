@@ -114,8 +114,8 @@ def create_medication_tracking_pdf(
         # Increase values for more white space, decrease for tighter margins
         "left_margin": 0.75 * inch,  # White space on the left side of the page
         "right_margin": 0.75 * inch,  # White space on the right side of the page
-        "top_margin": 0.75 * inch,  # White space at the top of the page
-        "bottom_margin": 0.75 * inch,  # White space at the bottom of the page
+        "top_margin": 0.50 * inch,  # White space at the top of the page
+        "bottom_margin": 0.50 * inch,  # White space at the bottom of the page
         # ===== Header Settings =====
         # Controls the title and date field positioning on the first page
         "title_font_size": 16,  # Main title text size

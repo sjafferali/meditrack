@@ -9,8 +9,7 @@ echo "Starting backend server..."
 cd backend
 source venv/bin/activate
 # Uncomment to use production db
-# DATABASE_URL=postgresql://meditrackgigi:11AsRHXHYB0f@db.local.samir.systems:5432/meditrackgigi
-uvicorn app.main:app --reload --port 8000 &
+DATABASE_URL=postgresql://meditrackgigi:11AsRHXHYB0f@db.local.samir.systems:5432/meditrackgigi uvicorn app.main:app --reload --port 8000 &
 BACKEND_PID=$!
 
 # Wait for backend to start
