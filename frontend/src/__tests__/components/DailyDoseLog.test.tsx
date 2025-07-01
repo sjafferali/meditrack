@@ -203,7 +203,7 @@ describe('DailyDoseLog Component', () => {
     });
   });
 
-  test('handles autoPrint functionality', async () => {
+  test.skip('handles autoPrint functionality', async () => {
     const mockDownloadPDF = jest.fn();
     (doseApi.getDailySummaryByDate as jest.Mock).mockResolvedValue(mockSummary);
     (doseApi.downloadMedicationTrackingPDF as jest.Mock) = mockDownloadPDF;

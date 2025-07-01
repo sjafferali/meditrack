@@ -20,7 +20,6 @@ const MedicationTracker = () => {
   const [deletedMedications, setDeletedMedications] = useState<Array<{name: string, isDeleted: boolean}>>([]);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [showDailyLog, setShowDailyLog] = useState(false);
-  const [printMedicationTracking, setPrintMedicationTracking] = useState(false);
   const [deleteDoseConfirmId, setDeleteDoseConfirmId] = useState<number | null>(null);
   const [showTimeModal, setShowTimeModal] = useState<{ medicationId: number | null, show: boolean }>({ medicationId: null, show: false });
   const [customTime, setCustomTime] = useState<string>('');
@@ -818,10 +817,27 @@ const MedicationTracker = () => {
           View Daily Log
         </button>
         <button
-          onClick={() => {
-            setShowDailyLog(true);
-            // Set a flag to automatically trigger print dialog when modal opens
-            setPrintMedicationTracking(true);
+          onClick={async () => {
+            try {
+              setError(null);
+              // Format date for the API call
+              const year = selectedDate.getFullYear();
+              const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+              const day = String(selectedDate.getDate()).padStart(2, '0');
+              const dateStr = `${year}-${month}-${day}`;
+              
+              // Get timezone offset
+              const timezoneOffset = new Date().getTimezoneOffset();
+              
+              // Call the API to generate and download the PDF
+              await doseApi.downloadMedicationTrackingPDF(dateStr, {
+                timezoneOffset,
+                days: 1,
+                personId: currentPersonId || undefined
+              });
+            } catch (err) {
+              setError(err instanceof Error ? err.message : 'Failed to generate PDF tracking form');
+            }
           }}
           className="ml-4 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium transition-colors"
           type="button"
@@ -837,9 +853,7 @@ const MedicationTracker = () => {
         isOpen={showDailyLog}
         onClose={() => {
           setShowDailyLog(false);
-          setPrintMedicationTracking(false);
         }}
-        autoPrint={printMedicationTracking}
       />
 
       {/* Time Picker Dropdown */}
