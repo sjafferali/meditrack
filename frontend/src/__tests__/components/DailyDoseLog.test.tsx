@@ -240,7 +240,6 @@ describe('DailyDoseLog Component', () => {
         selectedDate={testDate}
         isOpen={true}
         onClose={jest.fn()}
-        personId="2"
       />
     );
 
